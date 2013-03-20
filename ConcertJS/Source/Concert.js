@@ -596,7 +596,7 @@ var Concert = (function ()
 							// Public methods
 							thisPublic.run = __run;
 							thisPublic.stop = __stop;
-						} // end TransformationTargetConstructor()
+						} // end AutoConstructor()
 
 
 						function __run(callbackFunction)
@@ -649,7 +649,7 @@ var Concert = (function ()
 							// Public methods
 							thisPublic.run = __run;
 							thisPublic.stop = __stop;
-						} // end TransformationTargetConstructor()
+						} // end FixedIntervalConstructor()
 
 
 						function __run(callbackFunction)
@@ -853,10 +853,10 @@ var Concert = (function ()
 			}), // end ObjectSequence definition
 
 
-		TransformationTarget:
+		TargetSequence:
 			BaseObject.extend(function (_getProtectedMembers, BaseConstructor)
 			{
-				function TransformationTargetConstructor(objectTarget)
+				function TargetSequenceConstructor(objectTarget)
 				{
 					// Initialize object:
 					BaseConstructor.call(this);
@@ -872,7 +872,7 @@ var Concert = (function ()
 					thisPublic.getObjectTarget = __getObjectTarget;
 					thisPublic.indexTransformations = __indexTransformations;
 					thisPublic.seek = __seek;
-				} // end TransformationTargetConstructor()
+				} // end TargetSequenceConstructor()
 
 
 				function __addObjectSequence(objectSequence)
@@ -936,8 +936,9 @@ var Concert = (function ()
 				} // end __seek()
 
 
-				return TransformationTargetConstructor;
-			}), // end TransformationTarget definition
+				return TargetSequenceConstructor;
+			}), // end TargetSequence definition
+
 
 		TimelineSegment:
 			function TimelineSegmentConstructor(startTime, endTime)
@@ -957,7 +958,7 @@ var Concert = (function ()
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					// Protected data members
-					thisProtected.transformationTargets = [];
+					thisProtected.targetSequences = [];
 					thisProtected.timelineSegments = [];
 					thisProtected.lastUsedTimelineSegmentNumber = 0;
 					thisProtected.allTransformations = [];
@@ -1154,7 +1155,7 @@ var Concert = (function ()
 					var i, j, k, numTransformationGroups, curTransformationGroup,
 						curGroupObjectTarget, curGroupFeature, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
 						numSegments, curSegment, propertyName, curSegmentT1, curSegmentT2, curSegmentV1, curSegmentV2, curSegmentUnit, curSegmentCalculator, curSegmentEasing,
-						existingTransformationTargets = thisProtected.transformationTargets, numExistingTransformationTargets, curTransformationTarget = null, tempTransformationTarget,
+						existingTargetSequences = thisProtected.targetSequences, numExistingTargetSequences, curTargetSequence = null, tempTargetSequence,
 						newTransformationProperties, newTransformation, curObjectSequence, defaults = thisProtected.defaults, times, values, numKeyFrames,
 						curKeyFrameTime, curKeyFrameValue, lastKeyFrameTime, lastKeyFrameValue, createSegment;
 
@@ -1168,20 +1169,20 @@ var Concert = (function ()
 						curTransformationGroup = transformationSet[i];
 
 						curGroupObjectTarget = curTransformationGroup.target;
-						curTransformationTarget = null;
-						for (j = 0, numTransformationTargets = existingTransformationTargets.length; j < numExistingTransformationTargets; j++)
+						curTargetSequence = null;
+						for (j = 0, numExistingTargetSequences = existingTargetSequences.length; j < numExistingTargetSequences; j++)
 						{
-							tempTransformationTarget = existingTransformationTargets[j];
-							if (tempTransformationTarget.getObjectTarget() === curGroupObjectTarget)
+							tempTargetSequence = existingTargetSequences[j];
+							if (tempTargetSequence.getObjectTarget() === curGroupObjectTarget)
 							{
-								curTransformationTarget = tempTransformationTarget;
+								curTargetSequence = tempTargetSequence;
 								break;
 							}
 						}
-						if (curTransformationTarget == null)
+						if (curTargetSequence == null)
 						{
-							curTransformationTarget = new _Concert.TransformationTarget(curGroupObjectTarget);
-							existingTransformationTargets.push(curTransformationTarget);
+							curTargetSequence = new _Concert.TargetSequence(curGroupObjectTarget);
+							existingTargetSequences.push(curTargetSequence);
 						}
 
 						curGroupFeature = curTransformationGroup.feature;
@@ -1198,11 +1199,11 @@ var Concert = (function ()
 						if (typeof curGroupEasing == "undefined")
 							curGroupEasing = defaults.easing;
 
-						curObjectSequence = curTransformationTarget.findObjectSequenceByFeature(curGroupFeature);
+						curObjectSequence = curTargetSequence.findObjectSequenceByFeature(curGroupFeature);
 						if (curObjectSequence == null)
 						{
 							curObjectSequence = new _Concert.ObjectSequence(curGroupObjectTarget, curGroupFeature);
-							curTransformationTarget.addObjectSequence(curObjectSequence);
+							curTargetSequence.addObjectSequence(curObjectSequence);
 						}
 
 						curGroupKeyFrames = curTransformationGroup.keyframes;
@@ -1316,9 +1317,9 @@ var Concert = (function ()
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					var allTransformations = thisProtected.allTransformations;
-					var timelineSegments, transformationTargets;
+					var timelineSegments, targetSequences;
 					var i, lastBreakPoint, currentBreakPoint;
-					var numTransformations, numTransformationTargets, numTotalBreakPoints, finalDistinctBreakPoint;
+					var numTransformations, numTargetSequences, numTotalBreakPoints, finalDistinctBreakPoint;
 					var allBreakPoints = [], distinctBreakPoints = [];
 
 					for (i = 0, numTransformations = allTransformations.length; i < numTransformations; i++)
@@ -1334,9 +1335,9 @@ var Concert = (function ()
 					for (i = 0; i < finalDistinctBreakPoint; i++)
 						timelineSegments[i] = new _Concert.TimelineSegment(distinctBreakPoints[i], distinctBreakPoints[i + 1]);
 
-					transformationTargets = thisProtected.transformationTargets;
-					for (i = 0, numTransformationTargets = transformationTargets.length; i < numTransformationTargets; i++)
-						transformationTargets[i].indexTransformations(timelineSegments);
+					targetSequences = thisProtected.targetSequences;
+					for (i = 0, numTargetSequences = targetSequences.length; i < numTargetSequences; i++)
+						targetSequences[i].indexTransformations(timelineSegments);
 
 					thisProtected.sequenceStartTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[0].startTime);
 					thisProtected.sequenceEndTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[timelineSegments.length - 1].endTime);
@@ -1461,8 +1462,8 @@ var Concert = (function ()
 
 					var i, segmentMatch, segmentNumber, sequenceStart, sequenceEnd, adjustedTimeContainer, adjustedTime;
 					var hitFinalBoundary = false, returnVal = null;
-					var transformationTargets = thisProtected.transformationTargets;
-					var numTransformationTargets = transformationTargets.length;
+					var targetSequences = thisProtected.targetSequences;
+					var numTargetSequences = targetSequences.length;
 
 					if (!(thisProtected.indexed))
 						thisPublic.index();
@@ -1492,8 +1493,8 @@ var Concert = (function ()
 					if (segmentMatch != null)
 					{
 						segmentNumber = segmentMatch.segmentNumber;
-						for (i = 0; i < numTransformationTargets; i++)
-							transformationTargets[i].seek(segmentNumber, adjustedTime, useSoleControlOptimization);
+						for (i = 0; i < numTargetSequences; i++)
+							targetSequences[i].seek(segmentNumber, adjustedTime, useSoleControlOptimization);
 						returnVal = segmentMatch.timeMatchType;
 					}
 

@@ -1,24 +1,25 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Project", "Project\", "{CA30634A-D4B2-462B-8ED6-26940F0F1A2A}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "ConcertJS", "http://localhost:29861", "{A4054D46-552E-498F-903F-BDABA618C689}"
 	ProjectSection(WebsiteProperties) = preProject
+		UseIISExpress = "true"
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
-		Debug.AspNetCompiler.VirtualPath = "/Project"
-		Debug.AspNetCompiler.PhysicalPath = "..\..\..\..\Projects\TechnologyAndSoftware\Active\ConcertJS\Project.Working.hg\Project\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\Project\"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_29861"
+		Debug.AspNetCompiler.PhysicalPath = "ConcertJS\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_29861\"
 		Debug.AspNetCompiler.Updateable = "true"
 		Debug.AspNetCompiler.ForceOverwrite = "true"
 		Debug.AspNetCompiler.FixedNames = "false"
 		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/Project"
-		Release.AspNetCompiler.PhysicalPath = "..\..\..\..\Projects\TechnologyAndSoftware\Active\ConcertJS\Project.Working.hg\Project\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\Project\"
+		Release.AspNetCompiler.VirtualPath = "/localhost_29861"
+		Release.AspNetCompiler.PhysicalPath = "ConcertJS\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_29861\"
 		Release.AspNetCompiler.Updateable = "true"
 		Release.AspNetCompiler.ForceOverwrite = "true"
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "30383"
+		SlnRelativePath = "ConcertJS\"
 	EndProjectSection
 EndProject
 Global
@@ -26,8 +27,8 @@ Global
 		Debug|Any CPU = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CA30634A-D4B2-462B-8ED6-26940F0F1A2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CA30634A-D4B2-462B-8ED6-26940F0F1A2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4054D46-552E-498F-903F-BDABA618C689}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4054D46-552E-498F-903F-BDABA618C689}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
