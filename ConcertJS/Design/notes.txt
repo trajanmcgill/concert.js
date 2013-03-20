@@ -1,0 +1,111 @@
+﻿For 1.0:
+	Optimizations:
+		X-allow relying on the synchronization being the only thing altering property values, then:
+		X	-Can check, before touching DOM, to see whether current value has changed from last value set
+		X-Instead of array of Elements each having (sorted) array of transformed features each having (sorted) array of transformations, requiring a seek to do a timeline search for every feature of every element:
+		X	-Find all keyframes, sort/break into a single timeline of segments, seek only searches one timeline and then iterates through all segments
+		X-Optimize for regular, forward animation by checking last-used and immediately-following segment as starting point for binary search (will usually hit this and not have to go into full search)
+		X-support using requestAnimationFrame()
+		X-can sync sources all be particular instantiations of the base class rather than inherited from it? (make base class a "generic sync source" instead.) Could maybe reduce code size. (no longer applicable)
+		-cache results of repeated calculations in transformations?
+		-look for code size reductions (one very likely place is duplicated code in the applicators)
+
+	Features:
+		X-non-constant-rate easing functions: QuadIn, QuadOut, QuadInOut, Smoothstep
+		X-Add completion behaviors:
+		X	-Stop
+		X	-Bounce
+		X	-Loop
+		X-Add synchronization sources:
+		X	-stopwatch-like synchronization source
+		X	-custom synchronizer function
+		X	-media synchronization source
+		X-calculators:
+		X	-rotational calculator
+		X	-figure out if there is any overlap/confusion between the discrete calculator and the instantaneous easing function
+		X-allow a sync source to synchronize either absolutely or relatively, to allow running with an offset (useful for looping/bouncing things as, say, a media file runs)- also need to handle multiples somehow
+		X-allow continuous looping or bouncing
+		X-add optional "round" property to transformations that can cause calculations to result in integers
+		X-Color calculator for smooth color transitions
+		X-additional methods of adding / specifying sequences
+		X	-a way to easily declare a whole series of timeline points and values for a single attribute, to follow an irregular pattern of movement, rather than having to individually declare a transformation for each little segment.
+		X	-with add()-type methods after a sequence exists
+		X	-allow default values when adding transformations to sequences (possibly different ones depending on numeric vs non-numeric values)...also maybe create a defaults object and method for setting it per sequence?
+		X	-allow shorter wording in some of the object definitions (t1, t2, v1, v2 vs startTime, endTime, startValue, and endValue, respectively, and others?)
+		X-somehow multiple, linked, synchronized sequences? think side-scroller with parallax, character motion, etc.: this should be achievable simply by synchronizing multiple sequences to the same source.
+		X-allow custom Applicator functions
+		X-svg animation
+		-allow deferred target object discovery (for animating objects that may not yet exist). would be accomplished by allowing passing in a function to retrieve the object, and an additional init step to get them all?
+		-duplicate a sequence onto other target objects (multiple object sets that have same motions)
+
+	Testing:
+		X-ensure last frame is applied and not missed depending on speed or easing function
+		X-yikes figure out why IE takes forever to index!
+		-custom:
+		X	-applicators
+			-calculators
+			-easing functions
+			-synchronization sources
+		-check for memory usage, memory leaks, and memory leak patterns
+		-check for browser incompatibilities
+		-take a look at applyforsure determination
+
+	Cleanup work:
+		-Set up project better
+		-Rework build process
+		-Add good comments everywhere
+		-Get to pass jslint? probably not, but could make it somewhat close.
+		-Make method definitions consistent in name ("_" vs. "__")
+
+
+Documentation:
+-basic use
+-passing arrays
+-requestAnimationFrame()
+-running on own
+-using the sole control optimization
+-applicators
+-calculators
+-easing functions
+-custom functions for:
+	-applicator
+	-calculator
+	-easing function
+	-synchronizer
+-deferred target object discovery
+-rounding
+-asynchronous indexing
+-basic explanation and purpose: synchronization
+-sample applications (captions, tutorials, slider-controlled animations, etc.)
+-alternate methods of adding / specifying sequences, shortcuts and advantages to different methods
+-hints of further possibilities (setting things other than styles and properties, doing things other than animations?)
+-advanced uses: duplicating/applying sequences onto multiple object sets. making games? injecting events into sequences by building custom applicators/calculators around existing ones
+-running time scale factors (don't forget to mention running backwards by using negative values)
+-the sync sources
+-using mediaelement.js for providing an html5 media interface to flash or silverlight video
+-completion behaviors
+-using this for SVG animation
+
+
+Testing notes:
+-Sorting and de-duplicating an all-numeric array of 20,000 elements, roughly half of which are duplicates: Chrome = 10-12 ms, FF = 60-62 ms, IE = >600 ms! (the sort is by far the bulk of this in all three browsers)
+	de-duplication first, then sort: Chrome = 16-19 ms, FF = 45-47 ms, IE = 525-553 ms!
+	de-duplication / sort combination algorithm: Chrome = 8-10 ms, FF = >3000 ms! IE = 280-284 ms
+
+
+Later / possible:
+	Optimizations:
+		-share pollers with the same interval?
+
+	Features:
+		-look at possibility of asynchronous indexing / initialization
+		-More non-constant-rate easing functions (trigonometric? bouncing? gravitational? others?)
+		-Add iteration completion callbacks to iterative completion behaviors
+		-Allow functions to be passed in for speed factor (and for other, similar parameters?)
+		-Some kind of cartesian curve calculator? (bezier curves? other formula of some kind?) Would this need accompanying easing function(s) to make speed correct along different portions of the curve?
+		-debug version that throws errors in helpful ways when invalid parameter values are encountered, etc.
+
+
+easy mistakes:
+	-keyframes definition has a different number of times than values
+	-feature array has different number of elements than values array (or one is an array but the other is not)

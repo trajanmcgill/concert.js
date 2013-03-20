@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Media Synchronization Test</title>
+
+	<script type="text/javascript" src="BaseObject.js"></script>
+
+	<script type="text/javascript" src="jquery-1.7.2.min.js"></script>
+	<script type="text/javascript" src="MediaElement/mediaelement-and-player.min.js"></script>
+
+	<script type="text/javascript" src="MediaSynchronization.js"></script>
+	<script type="text/javascript" src="TestScript.js"></script>
+
+	<link rel="stylesheet" href="MediaElement/mediaelementplayer.css" />
+</head>
+<body>
+	<h1>Test Page</h1>
+
+	<audio id="TestAudioElement" src="YellowShoes.mp3" controls="controls"></audio>
+	<div id="CurrentTime"></div>
+
+	<button id="start" onclick="startTestTimer();" value="Start">start</button>
+	<button id="stop" onclick="stopTestTimer();" value="Stop">stop</button>
+
+	<input id="TestInput" type="text" />
+	<button id="check" onclick="check();" value="Check">check</button>
+
+	<div style="position: relative; width: 500px; height: 500px; border: 2px solid black;">
+		<div id="slide01" style="display: none; background-color: #ffd800; width: 100%; height: 100%; margin-left: auto; margin-right: auto; text-align: center;">
+			<div id="text01">Here is some text.</div>
+			<div id="text02">Here is some text.</div>
+			<div id="text03">Here is some text.</div>
+			<div id="text04">Here is some text.</div>
+			<div id="text05">Here is some text.</div>
+			<div id="text06">Here is some text.</div>
+			<div id="text07">Here is some text.</div>
+			<div id="text08">Here is some text.</div>
+			<div id="text09">Here is some text.</div>
+			<div id="text10">Here is some text.</div>
+		</div>
+		<div id="slide02" style="display: none; background-color: #b6ff00; width: 100%; height: 100%"></div>
+	</div>
+</body>
+</html>
