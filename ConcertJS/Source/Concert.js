@@ -712,8 +712,17 @@ var Concert = (function ()
 					thisProtected.lastAppliedValue = null;
 
 					// Public methods
+					thisPublic.retarget = __retarget;
 					thisPublic.seek = __seek;
 				} // end TransformationConstructor()
+
+
+				function __retarget(newTarget)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					thisProtected.target = newTarget;
+				} // end _retarget()
 
 
 				function __seek(time, useSoleControlOptimization)
@@ -755,6 +764,7 @@ var Concert = (function ()
 					// Public methods
 					thisPublic.addTransformation = __addTransformation;
 					thisPublic.getFeature = __getFeature;
+					thisPublic.retarget = __retarget;
 					thisPublic.indexTransformations = __indexTransformations;
 					thisPublic.seek = __seek;
 				} // end FeatureSequenceConstructor()
@@ -774,6 +784,18 @@ var Concert = (function ()
 
 					return thisProtected.feature;
 				} // end __getFeature()
+
+
+				function __retarget(newTarget)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var i, transformations = thisProtected.transformations, numTransformations = transformations.length;
+					for (i = 0; i < numTransformations; i++)
+						transformations[i].retarget(newTarget);
+
+					thisProtected.target = newTarget;
+				} // end _retarget()
 
 
 				function __indexTransformations(overallSequenceSegments)
@@ -870,6 +892,7 @@ var Concert = (function ()
 					thisPublic.addFeatureSequence = __addFeatureSequence;
 					thisPublic.findFeatureSequenceByFeature = __findFeatureSequenceByFeature;
 					thisPublic.getTarget = __getTarget;
+					thisPublic.retarget = __retarget;
 					thisPublic.indexTransformations = __indexTransformations;
 					thisPublic.seek = __seek;
 				} // end TargetSequenceConstructor()
@@ -911,6 +934,17 @@ var Concert = (function ()
 
 					return thisProtected.target;
 				} // end __getTarget()
+
+
+				function __retarget(newTarget)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var i, featureSequences = thisProtected.featureSequences, numFeatureSequences = featureSequences.length;
+					for(i = 0; i < numFeatureSequences; i++)
+						featureSequences[i].retarget(newTarget);
+					thisProtected.target = newTarget;
+				} // end _retarget()
 
 
 				function __indexTransformations(overallSequenceSegments)
@@ -1297,7 +1331,13 @@ var Concert = (function ()
 				function __retarget(targetLookupFunction)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-					// ADDCODE
+
+					var i, curTargetSequence, targetSequences = thisProtected.targetSequences, numTargetSequences = targetSequences.length;
+					for (i = 0; i < numTargetSequences; i++)
+					{
+						curTargetSequence = targetSequences[i];
+						curTargetSequence.retarget(targetLookupFunction(curTargetSequence.getTarget()));
+					}
 				} // end _retarget()
 
 

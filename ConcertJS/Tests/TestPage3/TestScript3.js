@@ -205,7 +205,7 @@ function init3()
 	sequence.addTransformations(
 		[
 			{
-				target: $d1.get(0),
+				target: "d1",
 				feature: ["left", "top"],
 				unit: "px",
 				keyframes:
@@ -216,7 +216,7 @@ function init3()
 			},
 
 			{
-				target: $d2.get(0),
+				target: "d2",
 				feature: "background-color",
 				calculator: Concert.Calculators.Color,
 				keyframes:
@@ -229,7 +229,7 @@ function init3()
 	
 	sequence.addTransformations(
 		{
-			target: $d1.get(0),
+			target: "d1",
 			feature: ["left", "top"],
 			applicator: Concert.Applicators.Style,
 			easing: Concert.EasingFunctions.QuadInOut,
@@ -244,7 +244,7 @@ function init3()
 
 	sequence.addTransformations(
 		{
-			target: $caption.get(0),
+			target: "caption",
 			feature: "innerHTML",
 			applicator: Concert.Applicators.Property,
 			calculator: Concert.Calculators.Discrete,
@@ -265,7 +265,7 @@ function init3()
 	var svgCircle = document.getElementById("svgObject").getSVGDocument().getElementById("TheCircle");
 	sequence.addTransformations(
 		{
-			target: svgCircle,
+			target: "svgCircle",
 			feature: ["r", "cx", "cy"],
 			applicator: Concert.Applicators.SVG_ElementAttribute,
 			easing: Concert.EasingFunctions.QuadInOut,
@@ -277,6 +277,23 @@ function init3()
 		});
 
 	sequence.index();
+
+	sequence.retarget(
+		function (oldTarget)
+		{
+			if (oldTarget == "d1")
+				return $d1.get(0);
+			else if (oldTarget == "d2")
+				return $d2.get(0);
+			else if (oldTarget == "d3")
+				return $d3.get(0);
+			else if (oldTarget == "caption")
+				return $caption;
+			else if (oldTarget == "svgCircle")
+				return svgCircle;
+			else
+				return oldTarget;
+		});
 }
 
 
