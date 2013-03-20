@@ -196,22 +196,24 @@ function init3()
 
 	sequence = new Concert.Sequence();
 	sequence.setDefaults({ applicator: Concert.Applicators.Style });
-	/*
+	
 	sequence.addTransformations(
 		[
 			{
-				target: $d1.get(0),
+				targets: [$d1.get(0), $d2.get(0)],
 				feature: ["top", "width"],
 				unit: "px",
 				keyframes:
 					{
 						times: [0, 1000, null, 2000, 3000],
-						values: [[100, 50], [200, 50], null, [200, 50], [200, 100]],
-						valueGenerators: [function (sequence) { return [300, 300]; }, null, null, null, null]
+						values: [[100, 50], [200, 50], null, [200, 50], [200, 100]]
+						//,
+						//valueGenerators: [function (sequence) { return [300, 300]; }, null, null, null, null]
 					}
 			}
 		]);
-	*/
+	
+	/*
 	sequence.addTransformations(
 		[
 			{
@@ -225,7 +227,7 @@ function init3()
 					]
 			}
 		]);
-
+	*/
 	sequence.index();
 
 	//sequence2 = sequence.clone(function (oldTarget) { return $d2.get(0); });

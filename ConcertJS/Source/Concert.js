@@ -795,6 +795,7 @@ var Concert = (function ()
 					return ((typeof thisProtected.v1Generator == "function") || (typeof thisProtected.v2Generator == "function"));
 				} // end _hasDynamicValues()
 
+
 				function __generateValues(sequence)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1359,8 +1360,8 @@ var Concert = (function ()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var i, j, k, numTransformationGroups, curTransformationGroup,
-						curGroupTarget, curGroupFeature, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
+					var i, j, k, numTransformationGroups, curTransformationGroup, curGroupTarget, curGroupTargets, numCurGroupTargets, singleTargetVersion,
+						curGroupFeature, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
 						numSegments, curSegment, propertyName, curSegmentT1, curSegmentT2, curSegmentV1, curSegmentV2, curSegmentUnit, curSegmentCalculator, curSegmentEasing,
 						existingTargetSequences = thisProtected.targetSequences, numExistingTargetSequences, curTargetSequence = null, tempTargetSequence,
 						newTransformationProperties, newTransformation, curFeatureSequence, defaults = thisProtected.defaults, numKeyFrames,
@@ -1377,6 +1378,29 @@ var Concert = (function ()
 						curTransformationGroup = transformationSet[i];
 
 						curGroupTarget = curTransformationGroup.target;
+
+						curGroupTargets = curTransformationGroup.targets;
+						if (_Concert.Util.isArray(curGroupTargets))
+						{
+							if ((typeof curGroupTarget != "undefined") && (curGroupTarget !== null))
+								curGroupTargets = [curGroupTarget].concat(curGroupTargets);
+
+							for (j = 0, numCurGroupTargets = curGroupTargets.length; j < numCurGroupTargets; j++)
+							{
+								singleTargetVersion = {};
+								for (propertyName in curTransformationGroup)
+								{
+									if (curTransformationGroup.hasOwnProperty(propertyName))
+										singleTargetVersion[propertyName] = curTransformationGroup[propertyName];
+								}
+								singleTargetVersion.targets = null;
+								singleTargetVersion.target = curGroupTargets[j];
+								thisPublic.addTransformations(singleTargetVersion);
+							}
+
+							continue;
+						}
+
 						curTargetSequence = null;
 						for (j = 0, numExistingTargetSequences = existingTargetSequences.length; j < numExistingTargetSequences; j++)
 						{
@@ -1510,6 +1534,9 @@ var Concert = (function ()
 								curFeatureSequence.addTransformation(newTransformation);
 							} // end loop through segments
 						} // end if/else on (typeof curGroupKeyFrames != "undefined")
+
+
+
 					} // end for loop iterating through transformation groups
 				} // end __addTransformations()
 

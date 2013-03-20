@@ -85,6 +85,7 @@ Documentation:
 -using mediaelement.js for providing an html5 media interface to flash or silverlight video
 -completion behaviors
 -using this for SVG animation
+-using this on other javascript objects, basically anything can be a target
 
 
 Testing notes:
