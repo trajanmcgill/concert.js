@@ -1297,6 +1297,7 @@ var Concert = (function ()
 				function __retarget(targetLookupFunction)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
 					// ADDCODE
 				} // end _retarget()
 
