@@ -91,7 +91,7 @@ var Concert = (function ()
 				Custom:
 					function(customFunction)
 					{
-						function applicatorFunction (objectTarget, featureTarget, valueContainer, lastValueContainer, forceApplication)
+						function applicatorFunction(target, feature, valueContainer, lastValueContainer, forceApplication)
 						{
 							var i, numProperties, currentIndividualValue, applyForSure;
 							var value, lastValue, unit, lastUnit, unitIsArray;
@@ -111,20 +111,20 @@ var Concert = (function ()
 
 							applyForSure = (forceApplication || lastValue == null);
 
-							if ((typeof featureTarget == "string") || (featureTarget instanceof String))
+							if ((typeof feature == "string") || (feature instanceof String))
 							{
 								if (applyForSure || value !== lastValue)
-									customFunction(objectTarget, featureTarget, value, unit);
+									customFunction(target, feature, value, unit);
 							}
 							else
 							{
 								unitIsArray = _Concert.Util.isArray(unit);
 
-								for (i = 0, numProperties = featureTarget.length; i < numProperties; i++)
+								for (i = 0, numProperties = feature.length; i < numProperties; i++)
 								{
 									currentIndividualValue = value[i];
 									if (applyForSure || currentIndividualValue !== lastValue[i])
-										customFunction(objectTarget, featureTarget[i], currentIndividualValue, unitIsArray ? unit[i] : unit);
+										customFunction(target, feature[i], currentIndividualValue, unitIsArray ? unit[i] : unit);
 								}
 							}
 
@@ -135,7 +135,7 @@ var Concert = (function ()
 					},
 
 				Property:
-					function (objectTarget, featureTarget, valueContainer, lastValueContainer, forceApplication)
+					function (target, feature, valueContainer, lastValueContainer, forceApplication)
 					{
 						var i, numProperties, currentIndividualValue, applyForSure;
 						var value, lastValue;
@@ -145,18 +145,18 @@ var Concert = (function ()
 
 						applyForSure = (forceApplication || lastValue == null);
 
-						if ((typeof featureTarget == "string") || (featureTarget instanceof String))
+						if ((typeof feature == "string") || (feature instanceof String))
 						{
 							if (applyForSure || value !== lastValue)
-								objectTarget[featureTarget] = value;
+								target[feature] = value;
 						}
 						else
 						{
-							for (i = 0, numProperties = featureTarget.length; i < numProperties; i++)
+							for (i = 0, numProperties = feature.length; i < numProperties; i++)
 							{
 								currentIndividualValue = value[i];
 								if (applyForSure || currentIndividualValue !== lastValue[i])
-									objectTarget[featureTarget[i]] = currentIndividualValue;
+									target[feature[i]] = currentIndividualValue;
 							}
 						}
 
@@ -164,7 +164,7 @@ var Concert = (function ()
 					},
 
 				Style:
-					function (objectTarget, featureTarget, valueContainer, lastValueContainer, forceApplication)
+					function (target, feature, valueContainer, lastValueContainer, forceApplication)
 					{
 						var i, numStyles, currentIndividualValue, applyForSure;
 						var value, lastValue, unit, lastUnit, unitIsArray;
@@ -184,20 +184,20 @@ var Concert = (function ()
 
 						applyForSure = (forceApplication || lastValue == null || unit !== lastUnit);
 
-						if ((typeof featureTarget == "string") || (featureTarget instanceof String))
+						if ((typeof feature == "string") || (feature instanceof String))
 						{
 							if(applyForSure || value !== lastValue)
-								objectTarget.style[featureTarget] = (unit == null) ? value : (value.toString() + unit);
+								target.style[feature] = (unit == null) ? value : (value.toString() + unit);
 						}
 						else
 						{
 							unitIsArray = _Concert.Util.isArray(unit);
 
-							for (i = 0, numStyles = featureTarget.length; i < numStyles; i++)
+							for (i = 0, numStyles = feature.length; i < numStyles; i++)
 							{
 								currentIndividualValue = value[i];
 								if (applyForSure || currentIndividualValue !== lastValue[i])
-									objectTarget.style[featureTarget[i]] = (unit == null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit));
+									target.style[feature[i]] = (unit == null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit));
 							}
 						}
 
@@ -205,7 +205,7 @@ var Concert = (function ()
 					},
 
 				SVG_ElementAttribute:
-					function (objectTarget, featureTarget, valueContainer, lastValueContainer, forceApplication)
+					function (target, feature, valueContainer, lastValueContainer, forceApplication)
 					{
 						var i, numStyles, currentIndividualValue, applyForSure;
 						var value, lastValue, unit, lastUnit, unitIsArray;
@@ -225,20 +225,20 @@ var Concert = (function ()
 
 						applyForSure = (forceApplication || lastValue == null || unit !== lastUnit);
 
-						if ((typeof featureTarget == "string") || (featureTarget instanceof String))
+						if ((typeof feature == "string") || (feature instanceof String))
 						{
 							if (applyForSure || value !== lastValue)
-								objectTarget.setAttribute(featureTarget, (unit == null) ? value : (value.toString() + unit));
+								target.setAttribute(feature, (unit == null) ? value : (value.toString() + unit));
 						}
 						else
 						{
 							unitIsArray = _Concert.Util.isArray(unit);
 
-							for (i = 0, numStyles = featureTarget.length; i < numStyles; i++)
+							for (i = 0, numStyles = feature.length; i < numStyles; i++)
 							{
 								currentIndividualValue = value[i];
 								if (applyForSure || currentIndividualValue !== lastValue[i])
-									objectTarget.setAttribute(featureTarget[i], (unit == null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit)));
+									target.setAttribute(feature[i], (unit == null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit)));
 							}
 						}
 
@@ -740,21 +740,21 @@ var Concert = (function ()
 		FeatureSequence:
 			BaseObject.extend(function (_getProtectedMembers, BaseConstructor)
 			{
-				function FeatureSequenceConstructor(objectTarget, featureTarget)
+				function FeatureSequenceConstructor(target, feature)
 				{
 					// Initialize object:
 					BaseConstructor.call(this);
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					// Protected data members
-					thisProtected.objectTarget = objectTarget;
-					thisProtected.featureTarget = featureTarget;
+					thisProtected.target = target;
+					thisProtected.feature = feature;
 					thisProtected.transformations = [];
 					thisProtected.transformationIndexBySegment = null;
 
 					// Public methods
 					thisPublic.addTransformation = __addTransformation;
-					thisPublic.getFeatureTarget = __getFeatureTarget;
+					thisPublic.getFeature = __getFeature;
 					thisPublic.indexTransformations = __indexTransformations;
 					thisPublic.seek = __seek;
 				} // end FeatureSequenceConstructor()
@@ -768,12 +768,12 @@ var Concert = (function ()
 				} // end __addTransformation()
 
 
-				function __getFeatureTarget()
+				function __getFeature()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					return thisProtected.featureTarget;
-				} // end __getFeatureTarget()
+					return thisProtected.feature;
+				} // end __getFeature()
 
 
 				function __indexTransformations(overallSequenceSegments)
@@ -856,20 +856,20 @@ var Concert = (function ()
 		TargetSequence:
 			BaseObject.extend(function (_getProtectedMembers, BaseConstructor)
 			{
-				function TargetSequenceConstructor(objectTarget)
+				function TargetSequenceConstructor(target)
 				{
 					// Initialize object:
 					BaseConstructor.call(this);
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					// Protected data members
-					thisProtected.objectTarget = objectTarget;
+					thisProtected.target = target;
 					thisProtected.featureSequences = [];
 
 					// Public methods
 					thisPublic.addFeatureSequence = __addFeatureSequence;
 					thisPublic.findFeatureSequenceByFeature = __findFeatureSequenceByFeature;
-					thisPublic.getObjectTarget = __getObjectTarget;
+					thisPublic.getTarget = __getTarget;
 					thisPublic.indexTransformations = __indexTransformations;
 					thisPublic.seek = __seek;
 				} // end TargetSequenceConstructor()
@@ -894,7 +894,7 @@ var Concert = (function ()
 					for (i = 0, numFeatureSequences = featureSequences.length; i < numFeatureSequences; i++)
 					{
 						curFeatureSequence = featureSequences[i];
-						curFeature = curFeatureSequence.getFeatureTarget();
+						curFeature = curFeatureSequence.getFeature();
 						if (curFeature === feature)
 							return curFeatureSequence;
 						else if (featureIsArray && _Concert.Util.isArray(curFeature) && _Concert.Util.arraysShallowlyEqual(curFeature, feature))
@@ -905,12 +905,12 @@ var Concert = (function ()
 				} // end __findFeatureSequenceByFeature()
 
 
-				function __getObjectTarget()
+				function __getTarget()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					return thisProtected.objectTarget;
-				} // end __getObjectTarget()
+					return thisProtected.target;
+				} // end __getTarget()
 
 
 				function __indexTransformations(overallSequenceSegments)
@@ -1151,7 +1151,7 @@ var Concert = (function ()
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					var i, j, k, numTransformationGroups, curTransformationGroup,
-						curGroupObjectTarget, curGroupFeature, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
+						curGroupTarget, curGroupFeature, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
 						numSegments, curSegment, propertyName, curSegmentT1, curSegmentT2, curSegmentV1, curSegmentV2, curSegmentUnit, curSegmentCalculator, curSegmentEasing,
 						existingTargetSequences = thisProtected.targetSequences, numExistingTargetSequences, curTargetSequence = null, tempTargetSequence,
 						newTransformationProperties, newTransformation, curFeatureSequence, defaults = thisProtected.defaults, times, values, numKeyFrames,
@@ -1166,12 +1166,12 @@ var Concert = (function ()
 					{
 						curTransformationGroup = transformationSet[i];
 
-						curGroupObjectTarget = curTransformationGroup.target;
+						curGroupTarget = curTransformationGroup.target;
 						curTargetSequence = null;
 						for (j = 0, numExistingTargetSequences = existingTargetSequences.length; j < numExistingTargetSequences; j++)
 						{
 							tempTargetSequence = existingTargetSequences[j];
-							if (tempTargetSequence.getObjectTarget() === curGroupObjectTarget)
+							if (tempTargetSequence.getTarget() === curGroupTarget)
 							{
 								curTargetSequence = tempTargetSequence;
 								break;
@@ -1179,7 +1179,7 @@ var Concert = (function ()
 						}
 						if (curTargetSequence == null)
 						{
-							curTargetSequence = new _Concert.TargetSequence(curGroupObjectTarget);
+							curTargetSequence = new _Concert.TargetSequence(curGroupTarget);
 							existingTargetSequences.push(curTargetSequence);
 						}
 
@@ -1200,7 +1200,7 @@ var Concert = (function ()
 						curFeatureSequence = curTargetSequence.findFeatureSequenceByFeature(curGroupFeature);
 						if (curFeatureSequence == null)
 						{
-							curFeatureSequence = new _Concert.FeatureSequence(curGroupObjectTarget, curGroupFeature);
+							curFeatureSequence = new _Concert.FeatureSequence(curGroupTarget, curGroupFeature);
 							curTargetSequence.addFeatureSequence(curFeatureSequence);
 						}
 
@@ -1236,7 +1236,7 @@ var Concert = (function ()
 								{
 									newTransformationProperties =
 										{
-											target: curGroupObjectTarget,
+											target: curGroupTarget,
 											feature: curGroupFeature,
 											applicator: curGroupApplicator,
 											unit: curGroupUnit,
@@ -1268,7 +1268,7 @@ var Concert = (function ()
 
 								newTransformationProperties =
 									{
-										target: curGroupObjectTarget,
+										target: curGroupTarget,
 										feature: curGroupFeature,
 										applicator: curGroupApplicator
 									};
