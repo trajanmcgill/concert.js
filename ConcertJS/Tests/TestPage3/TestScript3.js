@@ -196,7 +196,7 @@ function init3()
 
 	sequence = new Concert.Sequence();
 	sequence.setDefaults({ applicator: Concert.Applicators.Style });
-
+	/*
 	sequence.addTransformations(
 		[
 			{
@@ -206,11 +206,26 @@ function init3()
 				keyframes:
 					{
 						times: [0, 1000, null, 2000, 3000],
-						values: [[100, 50], [200, 50], null, [200, 50], [200, 100]]
+						values: [[100, 50], [200, 50], null, [200, 50], [200, 100]],
+						valueGenerators: [function (sequence) { return [300, 300]; }, null, null, null, null]
 					}
 			}
 		]);
-	
+	*/
+	sequence.addTransformations(
+		[
+			{
+				target: $d1.get(0),
+				feature: ["top", "width"],
+				unit: "px",
+				segments:
+					[
+						{ t1: 0, t2: 1500, v1: [0, 100], v2: [100, 1000], v1Generator: function (sequence) { return [300, 10] } },
+						{ t1: 2000, t2: 3500, v1: [100, 100], v2: [100, 1000] }
+					]
+			}
+		]);
+
 	sequence.index();
 
 	//sequence2 = sequence.clone(function (oldTarget) { return $d2.get(0); });
@@ -286,12 +301,17 @@ function beginClick()
 
 	jQuery("#StatusLabel").text("Begun.");
 
-	sequence.begin({ onAutoStop: function () { jQuery("#StatusLabel").text("Auto-stopped."); } });
-	
+	sequence.begin(
+		{
+			generateValues: true,
+			onAutoStop: function () { jQuery("#StatusLabel").text("Auto-stopped."); }
+		});
+	/*
 	setTimeout(
 		function ()
 		{ sequence2 = sequence.clone(function (oldTarget) { return $("#d2").get(0); }, false, true); },
 		500);
+	*/
 }
 
 function followClick()

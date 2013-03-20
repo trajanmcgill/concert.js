@@ -11,6 +11,9 @@ var Concert = (function ()
 
 	var _Concert =
 	{
+		nextSequenceID: 0,
+
+
 		// Some utility functions for use throughout.
 		Util:
 			{
@@ -82,7 +85,7 @@ var Concert = (function ()
 					return true;
 				}, // end arraysShallowlyEqual()
 
-				
+
 				loadObjectData: function (newPublicData, newProtectedData, publicContext, protectedContext)
 				{
 					var propertyName;
@@ -716,6 +719,8 @@ var Concert = (function ()
 						    || propertyName == "calculator"
 						    || propertyName == "v1"
 						    || propertyName == "v2"
+							|| propertyName == "v1Generator"
+							|| propertyName == "v2Generator"
 						    || propertyName == "unit"
 						    || propertyName == "easing")
 						{
@@ -731,6 +736,8 @@ var Concert = (function ()
 					// Public methods
 					thisPublic.clone = __clone;
 					thisPublic.retarget = __retarget;
+					thisPublic.hasDynamicValues = __hasDynamicValues;
+					thisPublic.generateValues = __generateValues;
 					thisPublic.seek = __seek;
 				} // end TransformationConstructor()
 
@@ -779,6 +786,26 @@ var Concert = (function ()
 
 					thisProtected.target = newTarget;
 				} // end _retarget()
+
+
+				function __hasDynamicValues()
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					return ((typeof thisProtected.v1Generator == "function") || (typeof thisProtected.v2Generator == "function"));
+				} // end _hasDynamicValues()
+
+				function __generateValues(sequence)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var v1Generator = thisProtected.v1Generator, v2Generator = thisProtected.v2Generator;
+
+					if (typeof v1Generator == "function")
+						thisProtected.v1 = v1Generator(sequence);
+					if (typeof v2Generator == "function")
+						thisProtected.v2 = v2Generator(sequence);
+				} // end __generateValues()
 
 
 				function __seek(time, useSoleControlOptimization)
@@ -1118,10 +1145,12 @@ var Concert = (function ()
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					// Protected data members
+					thisProtected.ID = _Concert.nextSequenceID; _Concert.nextSequenceID++;
 					thisProtected.targetSequences = [];
 					thisProtected.timelineSegments = [];
 					thisProtected.lastUsedTimelineSegmentNumber = 0;
 					thisProtected.allTransformations = [];
+					thisProtected.dynamicValueTransformations = [];
 					thisProtected.indexed = false;
 					thisProtected.running = false;
 					thisProtected.currentTime = null;
@@ -1154,10 +1183,12 @@ var Concert = (function ()
 					thisProtected.findSequenceSegmentNumberByTime = __findSequenceSegmentNumberByTime;
 
 					// Public methods
+					thisPublic.getID = __getID;
 					thisPublic.addTransformations = __addTransformations;
 					thisPublic.clone = __clone;
 					thisPublic.retarget = __retarget;
 					thisPublic.index = __index;
+					thisPublic.generateValues = __generateValues;
 					thisPublic.getCurrentTime = __getCurrentTime;
 					thisPublic.getEndTime = __getEndTime;
 					thisPublic.getStartTime = __getStartTime;
@@ -1316,6 +1347,14 @@ var Concert = (function ()
 				} // end __setDefaults()
 
 
+				function __getID()
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					return thisProtected.ID;
+				} // end __getID()
+
+
 				function __addTransformations(transformationSet)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1324,8 +1363,9 @@ var Concert = (function ()
 						curGroupTarget, curGroupFeature, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
 						numSegments, curSegment, propertyName, curSegmentT1, curSegmentT2, curSegmentV1, curSegmentV2, curSegmentUnit, curSegmentCalculator, curSegmentEasing,
 						existingTargetSequences = thisProtected.targetSequences, numExistingTargetSequences, curTargetSequence = null, tempTargetSequence,
-						newTransformationProperties, newTransformation, curFeatureSequence, defaults = thisProtected.defaults, times, values, numKeyFrames,
-						curKeyFrameTime, curKeyFrameValue, lastKeyFrameTime, lastKeyFrameValue, createSegment;
+						newTransformationProperties, newTransformation, curFeatureSequence, defaults = thisProtected.defaults, numKeyFrames,
+						times, values, valueGenerators, curKeyFrameTime, curKeyFrameValue, curKeyFrameValueGenerator, lastKeyFrameTime, lastKeyFrameValue, lastKeyFrameValueGenerator,
+						createSegment, allTransformations = thisProtected.allTransformations, dynamicValueTransformations = thisProtected.dynamicValueTransformations;
 
 					thisProtected.indexed = false;
 
@@ -1379,24 +1419,28 @@ var Concert = (function ()
 						{
 							times = curGroupKeyFrames.times;
 							values = curGroupKeyFrames.values;
+							valueGenerators = curGroupKeyFrames.valueGenerators;
 							
-							lastKeyFrameTime = null;
-							lastKeyFrameValue = null;
+							lastKeyFrameTime = lastKeyFrameValue = lastKeyFrameValueGenerator = curKeyFrameValue = curKeyFrameValueGenerator = null;
 							for (j = 0, numKeyFrames = times.length; j < numKeyFrames; j++)
 							{
 								curKeyFrameTime = times[j];
-								curKeyFrameValue = values[j];
+								if (values)
+									curKeyFrameValue = values[j];
+								if (valueGenerators)
+									curKeyFrameValueGenerator = valueGenerators[j];
 
 								if (lastKeyFrameTime == null)
 								{
 									lastKeyFrameTime = curKeyFrameTime;
 									lastKeyFrameValue = curKeyFrameValue;
+									lastKeyFrameValueGenerator = curKeyFrameValueGenerator;
 
 									createSegment = ((curKeyFrameTime != null) && (j == numKeyFrames - 1)); // If this is the last keyframe, preceded by a null keyframe, create a segment out of just this one keyframe.
 								}
 								else if (curKeyFrameTime == null)
 								{
-									lastKeyFrameTime = lastKeyFrameValue = null;
+									lastKeyFrameTime = lastKeyFrameValue = lastKeyFrameValueGenerator = null;
 									createSegment = false;
 								}
 								else
@@ -1415,10 +1459,14 @@ var Concert = (function ()
 											t1: lastKeyFrameTime,
 											t2: curKeyFrameTime,
 											v1: lastKeyFrameValue,
-											v2: curKeyFrameValue
+											v2: curKeyFrameValue,
+											v1Generator: lastKeyFrameValueGenerator,
+											v2Generator: curKeyFrameValueGenerator
 										};
 									newTransformation = new _Concert.Transformation(newTransformationProperties);
-									thisProtected.allTransformations.push(newTransformation);
+									allTransformations.push(newTransformation);
+									if (lastKeyFrameValueGenerator || curKeyFrameValueGenerator)
+										dynamicValueTransformations.push(newTransformation);
 									curFeatureSequence.addTransformation(newTransformation);
 
 									lastKeyFrameTime = curKeyFrameTime;
@@ -1456,7 +1504,9 @@ var Concert = (function ()
 									newTransformationProperties.easing = curGroupEasing;
 
 								newTransformation = new _Concert.Transformation(newTransformationProperties);
-								thisProtected.allTransformations.push(newTransformation);
+								allTransformations.push(newTransformation);
+								if ((typeof newTransformationProperties.v1Generator != "undefined") || (typeof newTransformationProperties.v2Generator != "undefined"))
+									dynamicValueTransformations.push(newTransformation);
 								curFeatureSequence.addTransformation(newTransformation);
 							} // end loop through segments
 						} // end if/else on (typeof curGroupKeyFrames != "undefined")
@@ -1487,7 +1537,9 @@ var Concert = (function ()
 						newTimeOffset = thisProtected.timeOffset, newPollingInterval = thisProtected.pollingInterval,
 						newInitialSyncSourcePoint = thisProtected.initialSyncSourcePoint,
 						numAllTransformations = thisProtected.allTransformations.length,
-						newTransformationsAdded = 0, allNewTransformations = new Array(numAllTransformations),
+						newTransformationsAdded = 0, newDynamicValueTransformationsAdded = 0,
+						curNewTransformation, allNewTransformations = new Array(numAllTransformations),
+						newDynamicValueTransformations = new Array(thisProtected.dynamicValueTransformations.length),
 						targetSequences = thisProtected.targetSequences, numTargetSequences = targetSequences.length,
 						newTargetSequences = new Array(numTargetSequences), curTargetSequence, targetSequenceCloneReturn,
 						timelineSegments = thisProtected.timelineSegments, numTimelineSegments = timelineSegments.length,
@@ -1505,8 +1557,14 @@ var Concert = (function ()
 						curTargetTransformations = targetSequenceCloneReturn.transformations;
 						for (j = 0, curTargetNumTransformations = curTargetTransformations.length; j < curTargetNumTransformations; j++)
 						{
-							allNewTransformations[newTransformationsAdded] = curTargetTransformations[j];
+							curNewTransformation = curTargetTransformations[j];
+							allNewTransformations[newTransformationsAdded] = curNewTransformation;
 							newTransformationsAdded++;
+							if (curNewTransformation.hasDynamicValues())
+							{
+								newDynamicValueTransformations[newDynamicValueTransformationsAdded] = curNewTransformation;
+								newDynamicValueTransformationsAdded++;
+							}
 						}
 					}
 
@@ -1530,6 +1588,7 @@ var Concert = (function ()
 							timelineSegments: newTimelineSegments,
 							lastUsedTimelineSegmentNumber: thisProtected.lastUsedTimelineSegmentNumber,
 							allTransformations: allNewTransformations,
+							dynamicValueTransformations: newDynamicValueTransformations,
 							indexed: thisProtected.indexed,
 							running: newRunning,
 							currentTime: newCurrentTime,
@@ -1598,6 +1657,17 @@ var Concert = (function ()
 				} // end __index()
 
 
+				function __generateValues()
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var i, dynamicValueTransformations = thisProtected.dynamicValueTransformations, numDynamicValueTransformations = dynamicValueTransformations.length;
+
+					for (i = 0; i < numDynamicValueTransformations; i++)
+						dynamicValueTransformations[i].generateValues(thisPublic);
+				} // end __generateValues();
+
+
 				function __getCurrentTime()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1640,13 +1710,16 @@ var Concert = (function ()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var synchronizeTo, speed, timeOffset, initialSeek, pollingInterval, synchronizer, initialSyncSourcePoint;
+					var i, synchronizeTo, speed, timeOffset, initialSeek, pollingInterval, synchronizer, initialSyncSourcePoint;
 
 					if (thisProtected.running)
 						thisPublic.stop();
 
 					if (!thisProtected.indexed)
 						thisPublic.index();
+
+					if(_getParamValue(parameters, "generateValues", true))
+						thisPublic.generateValues();
 
 					initialSeek = _getParamValue(parameters, "initialSeek", null);
 					if (initialSeek != null)
