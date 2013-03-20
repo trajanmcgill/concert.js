@@ -80,8 +80,25 @@ var Concert = (function ()
 					}
 
 					return true;
-				} // end arraysShallowlyEqual()
+				}, // end arraysShallowlyEqual()
 
+				
+				loadObjectData: function (newPublicData, newProtectedData, publicContext, protectedContext)
+				{
+					var propertyName;
+
+					for (propertyName in newPublicData)
+					{
+						if (newPublicData.hasOwnProperty(propertyName))
+							publicContext[propertyName] = newPublicData[propertyName];
+					}
+
+					for (propertyName in newProtectedData)
+					{
+						if (newProtectedData.hasOwnProperty(propertyName))
+							protectedContext[propertyName] = newProtectedData[propertyName];
+					}
+				} // end loadObjectData()
 			}, // end Util singleton definition
 
 
@@ -712,9 +729,48 @@ var Concert = (function ()
 					thisProtected.lastAppliedValue = null;
 
 					// Public methods
+					thisPublic.clone = __clone;
 					thisPublic.retarget = __retarget;
 					thisPublic.seek = __seek;
 				} // end TransformationConstructor()
+
+
+				function _loadObjectData(newPublicData, newProtectedData)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					_Concert.Util.loadObjectData(newPublicData, newProtectedData, thisPublic, thisProtected);
+				} // end _loadObjectData()
+
+
+				function __clone(newTarget)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var newTransformation, propertyName,
+						additionalProperties = thisProtected.additionalProperties,
+						newPublicData = { t1: thisPublic.t1, t2: thisPublic.t2 },
+						newAdditionalProperties = {}, newProtectedData = {};
+						
+					for (propertyName in thisProtected)
+					{
+						if (thisProtected.hasOwnProperty(propertyName) && propertyName != "additionalProperties")
+							newProtectedData[propertyName] = thisProtected[propertyName];
+					}
+					newProtectedData.target = newTarget;
+
+					for (propertyName in additionalProperties)
+					{
+						if (additionalProperties.hasOwnProperty(propertyName))
+							newAdditionalProperties[propertyName] = additionalProperties[propertyName];
+					}
+					newProtectedData.additionalProperties = newAdditionalProperties;
+
+					newTransformation = new _Concert.Transformation();
+					_loadObjectData.call(newTransformation, newPublicData, newProtectedData);
+
+					return newTransformation;
+				} // end __clone()
 
 
 				function __retarget(newTarget)
@@ -763,11 +819,20 @@ var Concert = (function ()
 
 					// Public methods
 					thisPublic.addTransformation = __addTransformation;
+					thisPublic.clone = __clone;
 					thisPublic.getFeature = __getFeature;
 					thisPublic.retarget = __retarget;
 					thisPublic.indexTransformations = __indexTransformations;
 					thisPublic.seek = __seek;
 				} // end FeatureSequenceConstructor()
+
+
+				function _loadObjectData(newPublicData, newProtectedData)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					_Concert.Util.loadObjectData(newPublicData, newProtectedData, thisPublic, thisProtected);
+				} // end _loadObjectData()
 
 
 				function __addTransformation(newTransformation)
@@ -776,6 +841,48 @@ var Concert = (function ()
 
 					thisProtected.transformations.push(newTransformation);
 				} // end __addTransformation()
+
+
+				function __clone(newTarget)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var i, j, numSegments, curIndexedTransformation,
+						transformations = thisProtected.transformations,
+						numTransformations = transformations.length,
+						newTransformations = new Array(numTransformations),
+						transformationIndexBySegment = thisProtected.transformationIndexBySegment,
+						newTransformationIndexBySegment = null,
+						newFeatureSequence = new _Concert.FeatureSequence(newTarget, thisProtected.feature),
+						returnVal = { featureSequence: newFeatureSequence, transformations: newTransformations };
+
+					for (i = 0; i < numTransformations; i++)
+						newTransformations[i] = transformations[i].clone(newTarget);
+
+					if (transformationIndexBySegment != null)
+					{
+						numSegments = transformationIndexBySegment.length;
+						newTransformationIndexBySegment = new Array(numSegments);
+
+						for (i = 0; i < numSegments; i++)
+						{
+							curIndexedTransformation = transformationIndexBySegment[i];
+							for (j = 0; j < numTransformations; j++)
+							{
+								if (curIndexedTransformation === transformations[j])
+								{
+									newTransformationIndexBySegment[i] = newTransformations[j];
+									break;
+								}
+							}
+						}
+					}
+
+					_loadObjectData.call(newFeatureSequence, {},
+					                     { transformations: newTransformations, transformationIndexBySegment: newTransformationIndexBySegment });
+
+					return returnVal;
+				} // end __clone()
 
 
 				function __getFeature()
@@ -892,6 +999,7 @@ var Concert = (function ()
 					thisPublic.addFeatureSequence = __addFeatureSequence;
 					thisPublic.findFeatureSequenceByFeature = __findFeatureSequenceByFeature;
 					thisPublic.getTarget = __getTarget;
+					thisPublic.clone = __clone;
 					thisPublic.retarget = __retarget;
 					thisPublic.indexTransformations = __indexTransformations;
 					thisPublic.seek = __seek;
@@ -934,6 +1042,26 @@ var Concert = (function ()
 
 					return thisProtected.target;
 				} // end __getTarget()
+
+
+				function __clone(newTarget)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var i, featureSequenceCloneReturn, allNewTransformations = [],
+						featureSequences = thisProtected.featureSequences, numFeatureSequences = featureSequences.length,
+						newTargetSequence = new _Concert.TargetSequence(newTarget),
+						returnVal = { targetSequence: newTargetSequence, transformations: allNewTransformations };
+
+					for (i = 0; i < numFeatureSequences; i++)
+					{
+						featureSequenceCloneReturn = featureSequences[i].clone(newTarget);
+						newTargetSequence.addFeatureSequence(featureSequenceCloneReturn.featureSequence);
+						allNewTransformations.push.apply(allNewTransformations, featureSequenceCloneReturn.transformations);
+					}
+
+					return returnVal;
+				} // end __clone()
 
 
 				function __retarget(newTarget)
@@ -1002,6 +1130,7 @@ var Concert = (function ()
 					thisProtected.sequenceEndTime = null;
 					thisProtected.poller = null;
 					thisProtected.synchronizer = null;
+					thisProtected.initialSyncSourcePoint = null;
 
 					thisProtected.defaults =
 						{
@@ -1013,7 +1142,6 @@ var Concert = (function ()
 
 					thisProtected.synchronizeTo = null;
 					thisProtected.speed = 1;
-					thisProtected.absoluteSync = false;
 					thisProtected.timeOffset = 0;
 					thisProtected.pollingInterval = 0;
 					thisProtected.after = _Concert.Repeating.None;
@@ -1046,6 +1174,14 @@ var Concert = (function ()
 					if (transformationSet)
 						thisPublic.addTransformations(transformationSet);
 				} // end SequenceConstructor()
+
+
+				function _loadObjectData(newPublicData, newProtectedData)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					_Concert.Util.loadObjectData(newPublicData, newProtectedData, thisPublic, thisProtected);
+				} // end _loadObjectData()
 
 
 				function _getParamValue(parameters, paramName, defaultValue)
@@ -1345,7 +1481,82 @@ var Concert = (function ()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					// ADDCODE
+					var i, j, propertyName, curTargetTransformations, curTargetNumTransformations, newPoller,
+						newSynchronizer = thisProtected.synchronizer, newSpeed = thisProtected.speed,
+						newTimeOffset = thisProtected.timeOffset, newPollingInterval = thisProtected.pollingInterval,
+						running = thisProtected.running, newInitialSyncSourcePoint = thisProtected.initialSyncSourcePoint,
+						numAllTransformations = thisProtected.allTransformations.length,
+						newTransformationsAdded = 0, allNewTransformations = new Array(numAllTransformations),
+						targetSequences = thisProtected.targetSequences, numTargetSequences = targetSequences.length,
+						newTargetSequences = new Array(numTargetSequences), curTargetSequence, targetSequenceCloneReturn,
+						timelineSegments = thisProtected.timelineSegments, numTimelineSegments = timelineSegments.length,
+						newTimelineSegments = new Array(numTimelineSegments), curTimelineSegment,
+						defaults = thisProtected.defaults, newDefaults = {},
+						newSequence = new _Concert.Sequence(), newPublicData = {}, newProtectedData;
+
+					for (i = 0; i < numTargetSequences; i++)
+					{
+						curTargetSequence = targetSequences[i];
+						targetSequenceCloneReturn = curTargetSequence.clone(targetLookupFunction(curTargetSequence.getTarget()));
+
+						newTargetSequences[i] = targetSequenceCloneReturn.targetSequence;
+
+						curTargetTransformations = targetSequenceCloneReturn.transformations;
+						for (j = 0, curTargetNumTransformations = curTargetTransformations.length; j < curTargetNumTransformations; j++)
+						{
+							allNewTransformations[newTransformationsAdded] = curTargetTransformations[j];
+							newTransformationsAdded++;
+						}
+					}
+
+					for (i = 0; i < numTimelineSegments; i++)
+					{
+						curTimelineSegment = timelineSegments[i];
+						newTimelineSegments[i] = new _Concert.TimelineSegment(curTimelineSegment.startTime, curTimelineSegment.endTime);
+					}
+
+					for (propertyName in defaults)
+					{
+						if (defaults.hasOwnProperty(propertyName))
+							newDefaults[propertyName] = defaults[propertyName];
+					}
+
+					newPoller = running ? (newPoller = (newPollingInterval < 1) ? (new _Concert.Pollers.Auto()) : (new _Concert.Pollers.FixedInterval(newPollingInterval))) : null;
+
+					newProtectedData =
+						{
+							targetSequences: newTargetSequences,
+							timelineSegments: newTimelineSegments,
+							lastUsedTimelineSegmentNumber: thisProtected.lastUsedTimelineSegmentNumber,
+							allTransformations: allNewTransformations,
+							indexed: thisProtected.indexed,
+							running: running,
+							currentTime: thisProtected.currentTime,
+							unadjustedTime: thisProtected.unadjustedTime,
+							sequenceStartTime: thisProtected.sequenceStartTime,
+							sequenceEndTime: thisProtected.sequenceEndTime,
+							poller: newPoller,
+							synchronizer: newSynchronizer,
+							initialSyncSourcePoint: newInitialSyncSourcePoint,
+
+							defaults: newDefaults,
+
+							synchronizeTo: thisProtected.synchronizeTo,
+							speed: newSpeed,
+							timeOffset: newTimeOffset,
+							pollingInterval: newPollingInterval,
+							after: thisProtected.after,
+							before: thisProtected.before,
+							autoStopAtEnd: thisProtected.autoStopAtEnd,
+							onAutoStop: thisProtected.onAutoStop
+						};
+
+					_loadObjectData.call(newSequence, newPublicData, newProtectedData);
+
+					if (running)
+						newPoller.run(function () { newSequence.seek(newInitialSyncSourcePoint + newSpeed * (newSynchronizer() - newInitialSyncSourcePoint) + newTimeOffset); });
+
+					return newSequence;
 				} // end __clone()
 
 
@@ -1453,19 +1664,14 @@ var Concert = (function ()
 						synchronizer = ((typeof synchronizeTo) == "function") ? synchronizeTo : (function () { return 1000 * synchronizeTo.currentTime; });
 					thisProtected.synchronizer = synchronizer;
 					
-					initialSyncSourcePoint = synchronizer();
+					thisProtected.initialSyncSourcePoint = initialSyncSourcePoint = synchronizer();
 					timeOffset = _getParamValue(parameters, "timeOffset", null);
 					if (timeOffset == null)
 						timeOffset = (thisProtected.unadjustedTime != null) ? (thisProtected.unadjustedTime - initialSyncSourcePoint) : (thisProtected.sequenceStartTime - initialSyncSourcePoint);
+					thisProtected.timeOffset = timeOffset;
 
 					thisProtected.running = true;
-
-					thisProtected.poller.run(
-						function ()
-						{
-							var newUnadjustedTime = initialSyncSourcePoint + speed * (synchronizer() - initialSyncSourcePoint) + timeOffset;
-							thisPublic.seek(newUnadjustedTime);
-						});
+					thisProtected.poller.run(function () { thisPublic.seek(initialSyncSourcePoint + speed * (synchronizer() - initialSyncSourcePoint) + timeOffset); });
 				} // end __run()
 
 
@@ -1539,7 +1745,7 @@ var Concert = (function ()
 					{
 						thisPublic.stop();
 						if (thisProtected.onAutoStop)
-							thisProtected.onAutoStop();
+							thisProtected.onAutoStop(thisPublic);
 					}
 
 					return returnVal;

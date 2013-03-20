@@ -3,7 +3,7 @@
 
 "use strict";
 
-var sequence, syncSource;
+var sequence, sequence2, syncSource;
 
 
 function init()
@@ -189,95 +189,33 @@ function init2()
 
 function init3()
 {
-	var $d1 = $("<div>1</div>").css({ position: "absolute", left: "100px", top: "100px", width: "50px", height: "50px", backgroundColor: "#ff0000" });
-	var $d2 = $("<div>2</div>").css({ position: "absolute", left: "200px", top: "100px", width: "50px", height: "50px", backgroundColor: "#00ff00" });
-	var $d3 = $("<div></div>").css({ position: "absolute", left: "200px", top: "200px", width: "300px", height: "200px", backgroundColor: "#aaaaaa" });
-	var $caption = $("<div></div>").css({ position: "absolute", left: "0px", bottom: "0px", width: "100%", height: "50px", backgroundColor: "#aaaaaa", color: "#000" });
-	$d3.append($caption);
+	var $d1 = $("<div id=\"d1\">1</div>").css({ position: "absolute", left: "100px", top: "100px", width: "50px", height: "50px", backgroundColor: "#ff0000" });
+	var $d2 = $("<div id=\"d2\">2</div>").css({ position: "absolute", left: "200px", top: "100px", width: "50px", height: "50px", backgroundColor: "#00ff00" });
 	var $testArea = $("#TestArea");
-	$testArea.append($d1).append($d2).append($d3);
-
+	$testArea.append($d1).append($d2);
 
 	sequence = new Concert.Sequence();
-
 	sequence.setDefaults({ applicator: Concert.Applicators.Style });
 
 	sequence.addTransformations(
 		[
 			{
-				target: "d1",
-				feature: ["left", "top"],
+				target: $d1.get(0),
+				feature: ["top", "width"],
 				unit: "px",
 				keyframes:
 					{
-						times: [0, 2000, null, 6000, 7000],
-						values: [[100, 100], [200, 100], null, [800, 400], [0, 0]]
+						times: [0, 1000, null, 2000, 3000],
+						values: [[100, 50], [200, 50], null, [200, 50], [200, 100]]
 					}
-			},
-
-			{
-				target: "d2",
-				feature: "background-color",
-				calculator: Concert.Calculators.Color,
-				keyframes:
-					{
-						times: [0, 2000, 4000, 6000, 7000],
-						values: ["rgba(0, 255, 0, 1)", "rgba(0, 255, 0, 0)", "rgba(0, 255, 255, 1)", "rgba(255, 255, 255, 1)", "rgba(255, 255, 255, 0)"]
-					}
-			},
+			}
 		]);
 	
-	sequence.addTransformations(
-		{
-			target: "d1",
-			feature: ["left", "top"],
-			applicator: Concert.Applicators.Style,
-			easing: Concert.EasingFunctions.QuadInOut,
-			calculator: Concert.Calculators.Linear,
-			unit: "px",
-			segments:
-			[
-				{ t1: 4000, t2: 5000, v1: [200, 100], v2: [200, 400] },
-				{ t1: 5000, t2: 5500, v1: [200, 400], v2: [800, 400], easing: Concert.EasingFunctions.QuadOut }
-			]
-		});
-
-	sequence.addTransformations(
-		{
-			target: "caption",
-			feature: "innerHTML",
-			applicator: Concert.Applicators.Property,
-			calculator: Concert.Calculators.Discrete,
-			keyframes:
-				{
-					times: [0, 2000, 4000, 6000, 7000],
-					values:
-						[
-							"Segment 1",
-							"<strong>Segment 2</strong>",
-							"<em>Third</em> Segment",
-							"6 seconds in",
-							"Complete."
-						]
-				}
-		});
-	
-	var svgCircle = document.getElementById("svgObject").getSVGDocument().getElementById("TheCircle");
-	sequence.addTransformations(
-		{
-			target: "svgCircle",
-			feature: ["r", "cx", "cy"],
-			applicator: Concert.Applicators.SVG_ElementAttribute,
-			easing: Concert.EasingFunctions.QuadInOut,
-			keyframes:
-				{
-					times: [0, 2000],
-					values: [[40, 100, 50], [160, 200, 400]]
-				}
-		});
-
 	sequence.index();
 
+	//sequence2 = sequence.clone(function (oldTarget) { return $d2.get(0); });
+
+	/*
 	sequence.retarget(
 		function (oldTarget)
 		{
@@ -289,11 +227,11 @@ function init3()
 				return $d3.get(0);
 			else if (oldTarget == "caption")
 				return $caption;
-			else if (oldTarget == "svgCircle")
-				return svgCircle;
 			else
 				return oldTarget;
 		});
+
+	*/
 }
 
 
@@ -344,8 +282,19 @@ function runClick()
 
 function beginClick()
 {
+	var startTime;
+
 	jQuery("#StatusLabel").text("Begun.");
+
+	sequence2 = sequence.clone(function (oldTarget) { return $("#d2").get(0); });
+	
 	sequence.begin(
+		{
+			//after: Concert.Repeating.Bounce(5),
+			onAutoStop: function () { jQuery("#StatusLabel").text("Auto-stopped."); }
+		});
+	
+	sequence2.begin(
 		{
 			//after: Concert.Repeating.Bounce(5),
 			onAutoStop: function () { jQuery("#StatusLabel").text("Auto-stopped."); }
