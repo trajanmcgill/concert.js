@@ -1477,14 +1477,15 @@ var Concert = (function ()
 				} // end _retarget()
 
 
-				function __clone(targetLookupFunction)
+				function __clone(targetLookupFunction, matchRunningStatus, doInitialSeek)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					var i, j, propertyName, curTargetTransformations, curTargetNumTransformations, newPoller,
+						newRunning = (matchRunningStatus && thisProtected.running), newCurrentTime = thisProtected.currentTime,
 						newSynchronizer = thisProtected.synchronizer, newSpeed = thisProtected.speed,
 						newTimeOffset = thisProtected.timeOffset, newPollingInterval = thisProtected.pollingInterval,
-						running = thisProtected.running, newInitialSyncSourcePoint = thisProtected.initialSyncSourcePoint,
+						newInitialSyncSourcePoint = thisProtected.initialSyncSourcePoint,
 						numAllTransformations = thisProtected.allTransformations.length,
 						newTransformationsAdded = 0, allNewTransformations = new Array(numAllTransformations),
 						targetSequences = thisProtected.targetSequences, numTargetSequences = targetSequences.length,
@@ -1521,7 +1522,7 @@ var Concert = (function ()
 							newDefaults[propertyName] = defaults[propertyName];
 					}
 
-					newPoller = running ? (newPoller = (newPollingInterval < 1) ? (new _Concert.Pollers.Auto()) : (new _Concert.Pollers.FixedInterval(newPollingInterval))) : null;
+					newPoller = newRunning ? (newPoller = (newPollingInterval < 1) ? (new _Concert.Pollers.Auto()) : (new _Concert.Pollers.FixedInterval(newPollingInterval))) : null;
 
 					newProtectedData =
 						{
@@ -1530,8 +1531,8 @@ var Concert = (function ()
 							lastUsedTimelineSegmentNumber: thisProtected.lastUsedTimelineSegmentNumber,
 							allTransformations: allNewTransformations,
 							indexed: thisProtected.indexed,
-							running: running,
-							currentTime: thisProtected.currentTime,
+							running: newRunning,
+							currentTime: newCurrentTime,
 							unadjustedTime: thisProtected.unadjustedTime,
 							sequenceStartTime: thisProtected.sequenceStartTime,
 							sequenceEndTime: thisProtected.sequenceEndTime,
@@ -1553,7 +1554,10 @@ var Concert = (function ()
 
 					_loadObjectData.call(newSequence, newPublicData, newProtectedData);
 
-					if (running)
+					if (doInitialSeek)
+						newSequence.seek(newCurrentTime);
+
+					if (newRunning)
 						newPoller.run(function () { newSequence.seek(newInitialSyncSourcePoint + newSpeed * (newSynchronizer() - newInitialSyncSourcePoint) + newTimeOffset); });
 
 					return newSequence;

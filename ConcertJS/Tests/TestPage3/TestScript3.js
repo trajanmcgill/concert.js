@@ -286,19 +286,12 @@ function beginClick()
 
 	jQuery("#StatusLabel").text("Begun.");
 
-	sequence2 = sequence.clone(function (oldTarget) { return $("#d2").get(0); });
+	sequence.begin({ onAutoStop: function () { jQuery("#StatusLabel").text("Auto-stopped."); } });
 	
-	sequence.begin(
-		{
-			//after: Concert.Repeating.Bounce(5),
-			onAutoStop: function () { jQuery("#StatusLabel").text("Auto-stopped."); }
-		});
-	
-	sequence2.begin(
-		{
-			//after: Concert.Repeating.Bounce(5),
-			onAutoStop: function () { jQuery("#StatusLabel").text("Auto-stopped."); }
-		});
+	setTimeout(
+		function ()
+		{ sequence2 = sequence.clone(function (oldTarget) { return $("#d2").get(0); }, false, true); },
+		500);
 }
 
 function followClick()
