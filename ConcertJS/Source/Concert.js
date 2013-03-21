@@ -1178,6 +1178,7 @@ var Concert = (function ()
 					thisProtected.before = _Concert.Repeating.None;
 					thisProtected.autoStopAtEnd = true;
 					thisProtected.onAutoStop = null;
+					thisProtected.soleControlOptimizationDuringRun = true;
 
 					// Protected methods
 					thisProtected.findSequenceSegmentNumberInRange = __findSequenceSegmentNumberInRange;
@@ -1572,7 +1573,8 @@ var Concert = (function ()
 						timelineSegments = thisProtected.timelineSegments, numTimelineSegments = timelineSegments.length,
 						newTimelineSegments = new Array(numTimelineSegments), curTimelineSegment,
 						defaults = thisProtected.defaults, newDefaults = {},
-						newSequence = new _Concert.Sequence(), newPublicData = {}, newProtectedData;
+						newSequence = new _Concert.Sequence(), newPublicData = {}, newProtectedData,
+						newSoleControlOptimizationDuringRun = thisProtected.soleControlOptimizationDuringRun;
 
 					for (i = 0; i < numTargetSequences; i++)
 					{
@@ -1635,16 +1637,17 @@ var Concert = (function ()
 							after: thisProtected.after,
 							before: thisProtected.before,
 							autoStopAtEnd: thisProtected.autoStopAtEnd,
-							onAutoStop: thisProtected.onAutoStop
+							onAutoStop: thisProtected.onAutoStop,
+							soleControlOptimizationDuringRun: newSoleControlOptimizationDuringRun
 						};
 
 					_loadObjectData.call(newSequence, newPublicData, newProtectedData);
 
 					if (doInitialSeek)
-						newSequence.seek(newCurrentTime);
+						newSequence.seek(newCurrentTime, newSoleControlOptimizationDuringRun);
 
 					if (newRunning)
-						newPoller.run(function () { newSequence.seek(newInitialSyncSourcePoint + newSpeed * (newSynchronizer() - newInitialSyncSourcePoint) + newTimeOffset); });
+						newPoller.run(function () { newSequence.seek(newInitialSyncSourcePoint + newSpeed * (newSynchronizer() - newInitialSyncSourcePoint) + newTimeOffset, newSoleControlOptimizationDuringRun); });
 
 					return newSequence;
 				} // end __clone()
@@ -1737,7 +1740,8 @@ var Concert = (function ()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var i, synchronizeTo, speed, timeOffset, initialSeek, pollingInterval, synchronizer, initialSyncSourcePoint;
+					var i, synchronizeTo, speed, timeOffset, initialSeek, pollingInterval,
+						synchronizer, initialSyncSourcePoint, soleControlOptimizationDuringRun;
 
 					if (thisProtected.running)
 						thisPublic.stop();
@@ -1748,15 +1752,16 @@ var Concert = (function ()
 					if(_getParamValue(parameters, "generateValues", true))
 						thisPublic.generateValues();
 
-					initialSeek = _getParamValue(parameters, "initialSeek", null);
-					if (initialSeek != null)
-						thisPublic.seek(initialSeek);
-
 					thisProtected.speed = speed = _getParamValue(parameters, "speed", thisProtected.speed);
 					thisProtected.after = _getParamValue(parameters, "after", thisProtected.after);
 					thisProtected.before = _getParamValue(parameters, "before", thisProtected.before);
 					thisProtected.autoStopAtEnd = _getParamValue(parameters, "autoStopAtEnd", thisProtected.autoStopAtEnd);
 					thisProtected.onAutoStop = _getParamValue(parameters, "onAutoStop", thisProtected.onAutoStop);
+					thisProtected.soleControlOptimizationDuringRun = soleControlOptimizationDuringRun = _getParamValue(parameters, "soleControlOptimizationDuringRun", thisProtected.soleControlOptimizationDuringRun);
+
+					initialSeek = _getParamValue(parameters, "initialSeek", null);
+					if (initialSeek != null)
+						thisPublic.seek(initialSeek, soleControlOptimizationDuringRun);
 
 					thisProtected.pollingInterval = pollingInterval = _getParamValue(parameters, "pollingInterval", thisProtected.pollingInterval);
 					thisProtected.poller = (pollingInterval < 1) ? (new _Concert.Pollers.Auto()) : (new _Concert.Pollers.FixedInterval(pollingInterval));
@@ -1775,7 +1780,7 @@ var Concert = (function ()
 					thisProtected.timeOffset = timeOffset;
 
 					thisProtected.running = true;
-					thisProtected.poller.run(function () { thisPublic.seek(initialSyncSourcePoint + speed * (synchronizer() - initialSyncSourcePoint) + timeOffset); });
+					thisProtected.poller.run(function () { thisPublic.seek(initialSyncSourcePoint + speed * (synchronizer() - initialSyncSourcePoint) + timeOffset, soleControlOptimizationDuringRun); });
 				} // end __run()
 
 
@@ -1841,7 +1846,7 @@ var Concert = (function ()
 					{
 						segmentNumber = segmentMatch.segmentNumber;
 						for (i = 0; i < numTargetSequences; i++)
-							targetSequences[i].seek(segmentNumber, adjustedTime, useSoleControlOptimization);
+							targetSequences[i].seek(segmentNumber, adjustedTime, (typeof useSoleControlOptimization != "undefined") ? useSoleControlOptimization : false);
 						returnVal = segmentMatch.timeMatchType;
 					}
 
