@@ -1,13 +1,15 @@
-﻿/// <reference path="../Components/BaseObject/BaseObject.js" />
-
-var Concert = (function ()
+﻿var Concert = (function ()
 {
 	"use strict";
 	
+
 	// Save any prior value of the global variable Concert, so the
 	// user can revert to it with revertNameSpace() if there is a collision.
 	var previousNameSpaceValue = Concert;
+
 	
+	var BaseObject = function () { function e() { var e = this; e.thisPublic = this; var t = { thisPublic: e }; e.___accessProtectedMembers = function () { r = t } } function t() { return this.___accessProtectedMembers(), r } function n() { } var r; return e.extend = function (e) { var r = e(t, this); return n.prototype = this.prototype, r.prototype = new n, r.prototype.constructor = r, r.extend = this.extend, r }, e }();
+
 
 	var _Concert =
 	{
