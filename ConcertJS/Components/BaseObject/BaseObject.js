@@ -1,11 +1,5 @@
 var BaseObject = (function ()
 {
-	"use strict";
-
-	// Save any prior value of the global variable BaseObject, so the
-	// user can revert to it with revertNameSpace() if there is a collision.
-	var previousNameSpaceValue = BaseObject;
-
 	var _dataBus;
 
 	function innerConstructor()
@@ -35,11 +29,6 @@ var BaseObject = (function ()
 		childConstructor.extend = this.extend;
 		return childConstructor;
 	};
-
-	innerConstructor.revertNameSpace = function ()
-	{
-		BaseObject = previousNameSpaceValue;
-	}; // end revertNameSpace()
 
 	return innerConstructor;
 })();
