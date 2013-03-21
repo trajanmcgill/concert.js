@@ -1,5 +1,7 @@
 var BaseObject = (function ()
 {
+	"use strict";
+
 	// Save any prior value of the global variable BaseObject, so the
 	// user can revert to it with revertNameSpace() if there is a collision.
 	var previousNameSpaceValue = BaseObject;
@@ -21,14 +23,14 @@ var BaseObject = (function ()
 		return _dataBus;
 	}
 
-	function _prototypeBridge()
+	function PrototypeBridge()
 	{ }
 
 	innerConstructor.extend = function (childDefinition)
 	{
 		var childConstructor = childDefinition(_getProtectedMembers, this);
-		_prototypeBridge.prototype = this.prototype;
-		childConstructor.prototype = new _prototypeBridge();
+		PrototypeBridge.prototype = this.prototype;
+		childConstructor.prototype = new PrototypeBridge();
 		childConstructor.prototype.constructor = childConstructor;
 		childConstructor.extend = this.extend;
 		return childConstructor;
