@@ -17,11 +17,21 @@ var Concert = (function ()
 		// Some utility functions for use throughout.
 		Util:
 			{
-				isArray: function (testVar)
+				arraysShallowlyEqual: function (array1, array2)
 				{
-					return ((typeof testVar == "object") && (Object.prototype.toString.call(testVar) == "[object Array]"))
-				}, // end isArray()
+					var i, arrayLength = array1.length;
 
+					if (array2.length != arrayLength)
+						return false;
+
+					for (i = 0; i < arrayLength; i++)
+					{
+						if (array1[i] !== array2[i])
+							return false;
+					}
+
+					return true;
+				}, // end arraysShallowlyEqual()
 
 				deduplicateAndSort: function (origArray)
 				{
@@ -42,7 +52,7 @@ var Concert = (function ()
 
 						if (searchEnd < 0 || distinctVal > distinctArray[searchEnd])
 							distinctArray.push(distinctVal);
-						else if(distinctVal < distinctArray[0])
+						else if (distinctVal < distinctArray[0])
 							distinctArray.unshift(distinctVal);
 						else
 						{
@@ -62,29 +72,10 @@ var Concert = (function ()
 					return distinctArray;
 				}, // end deduplicateAndSort()
 
-
-				round: function (input, roundFactor)
+				isArray: function (testVar)
 				{
-					return (roundFactor * Math.round(input / roundFactor));
-				}, // end round()
-
-
-				arraysShallowlyEqual: function (array1, array2)
-				{
-					var i, arrayLength = array1.length;
-
-					if (array2.length != arrayLength)
-						return false;
-
-					for (i = 0; i < arrayLength; i++)
-					{
-						if (array1[i] !== array2[i])
-							return false;
-					}
-
-					return true;
-				}, // end arraysShallowlyEqual()
-
+					return ((typeof testVar == "object") && (Object.prototype.toString.call(testVar) == "[object Array]"))
+				}, // end isArray()
 
 				loadObjectData: function (newPublicData, newProtectedData, publicContext, protectedContext)
 				{
@@ -101,7 +92,12 @@ var Concert = (function ()
 						if (newProtectedData.hasOwnProperty(propertyName))
 							protectedContext[propertyName] = newProtectedData[propertyName];
 					}
-				} // end loadObjectData()
+				}, // end loadObjectData()
+
+				round: function (input, roundFactor)
+				{
+					return (roundFactor * Math.round(input / roundFactor));
+				} // end round()
 			}, // end Util singleton definition
 
 
@@ -270,57 +266,6 @@ var Concert = (function ()
 		// Commonly used functions for calculating a current value in the middle of a transformation.
 		Calculators:
 			{
-				Discrete:
-					function (distanceFraction, startValue, endValue, additionalProperties)
-					{
-						var i, curReturnValue, returnValue, valueLength, roundFactor, doRounding = (typeof additionalProperties.round != "undefined");
-						if (doRounding)
-							roundFactor = additionalProperties.round;
-
-						if (_Concert.Util.isArray(startValue))
-						{
-							returnValue = [];
-							for (i = 0, valueLength = startValue.length; i < valueLength; i++)
-							{
-								curReturnValue = ((distanceFraction < 1) ? startValue[i] : endValue[i])
-								returnValue.push(doRounding ? _Concert.Util.round(curReturnValue, roundFactor) : curReturnValue);
-							}
-						}
-						else
-						{
-							curReturnValue = ((distanceFraction < 1) ? startValue : endValue);
-							returnValue = doRounding ? _Concert.Util.round(curReturnValue, roundFactor) : curReturnValue;
-						}
-
-						return returnValue;
-					}, // end Discrete Calculator function
-
-				Linear:
-					function (distanceFraction, startValue, endValue, additionalProperties)
-					{
-						var i, valueLength, curStartValue, curCalcValue, returnValue, roundFactor, doRounding = (typeof additionalProperties.round != "undefined");
-						if (doRounding)
-							roundFactor = additionalProperties.round;
-
-						if (_Concert.Util.isArray(startValue))
-						{
-							returnValue = [];
-							for (i = 0, valueLength = startValue.length; i < valueLength; i++)
-							{
-								curStartValue = startValue[i];
-								curCalcValue = curStartValue + distanceFraction * (endValue[i] - curStartValue);
-								returnValue.push(doRounding ? _Concert.Util.round(curCalcValue, roundFactor) : curCalcValue);
-							}
-						}
-						else
-						{
-							curCalcValue = startValue + distanceFraction * (endValue - startValue);
-							returnValue = doRounding ? _Concert.Util.round(curCalcValue, roundFactor) : curCalcValue;
-						}
-
-						return returnValue;
-					}, // end Linear Calculator function
-
 				Color:
 					function (distanceFraction, startValue, endValue, additionalProperties)
 					{
@@ -359,7 +304,7 @@ var Concert = (function ()
 								for (i = 1; i < 8; i++) // skip the first element, it contains the full string match
 								{
 									curVal1 = color1Pieces[i];
-									if(typeof curVal1 != "undefined")
+									if (typeof curVal1 != "undefined")
 									{
 										curVal1 = (new Number(curVal1)).valueOf();
 										tempVal = curVal1 + distanceFraction * ((new Number(color2Pieces[i])).valueOf() - curVal1);
@@ -415,9 +360,60 @@ var Concert = (function ()
 						}
 						else
 							returnValue = interpolateColor(startValue, endValue, distanceFraction);
-						
+
 						return returnValue;
 					}, // end Color Calculator function
+
+				Discrete:
+					function (distanceFraction, startValue, endValue, additionalProperties)
+					{
+						var i, curReturnValue, returnValue, valueLength, roundFactor, doRounding = (typeof additionalProperties.round != "undefined");
+						if (doRounding)
+							roundFactor = additionalProperties.round;
+
+						if (_Concert.Util.isArray(startValue))
+						{
+							returnValue = [];
+							for (i = 0, valueLength = startValue.length; i < valueLength; i++)
+							{
+								curReturnValue = ((distanceFraction < 1) ? startValue[i] : endValue[i])
+								returnValue.push(doRounding ? _Concert.Util.round(curReturnValue, roundFactor) : curReturnValue);
+							}
+						}
+						else
+						{
+							curReturnValue = ((distanceFraction < 1) ? startValue : endValue);
+							returnValue = doRounding ? _Concert.Util.round(curReturnValue, roundFactor) : curReturnValue;
+						}
+
+						return returnValue;
+					}, // end Discrete Calculator function
+
+				Linear:
+					function (distanceFraction, startValue, endValue, additionalProperties)
+					{
+						var i, valueLength, curStartValue, curCalcValue, returnValue, roundFactor, doRounding = (typeof additionalProperties.round != "undefined");
+						if (doRounding)
+							roundFactor = additionalProperties.round;
+
+						if (_Concert.Util.isArray(startValue))
+						{
+							returnValue = [];
+							for (i = 0, valueLength = startValue.length; i < valueLength; i++)
+							{
+								curStartValue = startValue[i];
+								curCalcValue = curStartValue + distanceFraction * (endValue[i] - curStartValue);
+								returnValue.push(doRounding ? _Concert.Util.round(curCalcValue, roundFactor) : curCalcValue);
+							}
+						}
+						else
+						{
+							curCalcValue = startValue + distanceFraction * (endValue - startValue);
+							returnValue = doRounding ? _Concert.Util.round(curCalcValue, roundFactor) : curCalcValue;
+						}
+
+						return returnValue;
+					}, // end Linear Calculator function
 
 				Rotational:
 					function (distanceFraction, startValue, endValue, additionalProperties)
@@ -470,17 +466,6 @@ var Concert = (function ()
 							return Math.pow((currentTime - startTime) / (endTime - startTime), 2);
 					},
 
-				QuadOut:
-					function (startTime, endTime, currentTime)
-					{
-						if (currentTime >= endTime)
-							return 1;
-						else if (currentTime < startTime)
-							return 0;
-						else
-							return (1 - Math.pow(1 - ((currentTime - startTime) / (endTime - startTime)), 2));
-					},
-
 				QuadInOut:
 					function (startTime, endTime, currentTime)
 					{
@@ -498,6 +483,17 @@ var Concert = (function ()
 							else
 								return (.5 + (1 - Math.pow(1 - (currentTime - halfway) / (endTime - halfway), 2)) / 2);
 						}
+					},
+
+				QuadOut:
+					function (startTime, endTime, currentTime)
+					{
+						if (currentTime >= endTime)
+							return 1;
+						else if (currentTime < startTime)
+							return 0;
+						else
+							return (1 - Math.pow(1 - ((currentTime - startTime) / (endTime - startTime)), 2));
 					},
 
 				Smoothstep:
@@ -520,44 +516,6 @@ var Concert = (function ()
 
 		Repeating:
 			{
-				None:
-					function (sequenceStart, sequenceEnd, unadjustedTime)
-					{
-						return ((unadjustedTime < sequenceStart) ? { adjustedTime: sequenceStart, hitFinalBoundary: true } : { adjustedTime: sequenceEnd, hitFinalBoundary: true });
-					},
-
-				Loop:
-					function (loopbackCount)
-					{
-						var infinite = ((typeof loopbackCount) == "undefined" || loopbackCount == null);
-
-						function loopFunction (sequenceStart, sequenceEnd, unadjustedTime)
-						{
-							var distanceOut, duration = sequenceEnd - sequenceStart;
-
-							if (unadjustedTime < sequenceStart)
-							{
-								distanceOut = sequenceStart - unadjustedTime;
-
-								if (infinite || (distanceOut / duration) <= loopbackCount)
-									return { adjustedTime: (sequenceEnd - (distanceOut % duration)), hitFinalBoundary: false };
-								else
-									return { adjustedTime: sequenceStart, hitFinalBoundary: true };
-							}
-							else
-							{
-								distanceOut = unadjustedTime - sequenceEnd;
-
-								if (infinite || (distanceOut / duration) <= loopbackCount)
-									return { adjustedTime: (sequenceStart + (distanceOut % duration)), hitFinalBoundary: false };
-								else
-									return { adjustedTime: sequenceEnd, hitFinalBoundary: true };
-							}
-						} // end inner loopFunction()
-
-						return loopFunction;
-					},
-
 				Bounce:
 					function (bounceCount)
 					{
@@ -596,8 +554,47 @@ var Concert = (function ()
 						} // end inner bounceFunction()
 
 						return bounceFunction;
-					}
+					},
+
+				Loop:
+					function (loopbackCount)
+					{
+						var infinite = ((typeof loopbackCount) == "undefined" || loopbackCount == null);
+
+						function loopFunction(sequenceStart, sequenceEnd, unadjustedTime)
+						{
+							var distanceOut, duration = sequenceEnd - sequenceStart;
+
+							if (unadjustedTime < sequenceStart)
+							{
+								distanceOut = sequenceStart - unadjustedTime;
+
+								if (infinite || (distanceOut / duration) <= loopbackCount)
+									return { adjustedTime: (sequenceEnd - (distanceOut % duration)), hitFinalBoundary: false };
+								else
+									return { adjustedTime: sequenceStart, hitFinalBoundary: true };
+							}
+							else
+							{
+								distanceOut = unadjustedTime - sequenceEnd;
+
+								if (infinite || (distanceOut / duration) <= loopbackCount)
+									return { adjustedTime: (sequenceStart + (distanceOut % duration)), hitFinalBoundary: false };
+								else
+									return { adjustedTime: sequenceEnd, hitFinalBoundary: true };
+							}
+						} // end inner loopFunction()
+
+						return loopFunction;
+					},
+
+				None:
+					function (sequenceStart, sequenceEnd, unadjustedTime)
+					{
+						return ((unadjustedTime < sequenceStart) ? { adjustedTime: sequenceStart, hitFinalBoundary: true } : { adjustedTime: sequenceEnd, hitFinalBoundary: true });
+					},
 			},
+
 
 		Pollers:
 			{
@@ -735,9 +732,9 @@ var Concert = (function ()
 
 					// Public methods
 					thisPublic.clone = __clone;
-					thisPublic.retarget = __retarget;
-					thisPublic.hasDynamicValues = __hasDynamicValues;
 					thisPublic.generateValues = __generateValues;
+					thisPublic.hasDynamicValues = __hasDynamicValues;
+					thisPublic.retarget = __retarget;
 					thisPublic.seek = __seek;
 				} // end TransformationConstructor()
 
@@ -780,22 +777,6 @@ var Concert = (function ()
 				} // end __clone()
 
 
-				function __retarget(newTarget)
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					thisProtected.target = newTarget;
-				} // end _retarget()
-
-
-				function __hasDynamicValues()
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					return ((typeof thisProtected.v1Generator == "function") || (typeof thisProtected.v2Generator == "function"));
-				} // end _hasDynamicValues()
-
-
 				function __generateValues(sequence)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -807,6 +788,22 @@ var Concert = (function ()
 					if (typeof v2Generator == "function")
 						thisProtected.v2 = v2Generator(sequence);
 				} // end __generateValues()
+
+
+				function __hasDynamicValues()
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					return ((typeof thisProtected.v1Generator == "function") || (typeof thisProtected.v2Generator == "function"));
+				} // end _hasDynamicValues()
+
+
+				function __retarget(newTarget)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					thisProtected.target = newTarget;
+				} // end _retarget()
 
 
 				function __seek(time, forceApplication)
@@ -847,8 +844,8 @@ var Concert = (function ()
 					thisPublic.addTransformation = __addTransformation;
 					thisPublic.clone = __clone;
 					thisPublic.getFeature = __getFeature;
-					thisPublic.retarget = __retarget;
 					thisPublic.indexTransformations = __indexTransformations;
+					thisPublic.retarget = __retarget;
 					thisPublic.seek = __seek;
 				} // end FeatureSequenceConstructor()
 
@@ -919,18 +916,6 @@ var Concert = (function ()
 				} // end __getFeature()
 
 
-				function __retarget(newTarget)
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					var i, transformations = thisProtected.transformations, numTransformations = transformations.length;
-					for (i = 0; i < numTransformations; i++)
-						transformations[i].retarget(newTarget);
-
-					thisProtected.target = newTarget;
-				} // end _retarget()
-
-
 				function __indexTransformations(overallSequenceSegments)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -996,6 +981,18 @@ var Concert = (function ()
 				} // end __indexTransformations()
 
 
+				function __retarget(newTarget)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var i, transformations = thisProtected.transformations, numTransformations = transformations.length;
+					for (i = 0; i < numTransformations; i++)
+						transformations[i].retarget(newTarget);
+
+					thisProtected.target = newTarget;
+				} // end _retarget()
+
+
 				function __seek(sequenceSegmentNumber, time, forceApplication)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1023,11 +1020,11 @@ var Concert = (function ()
 
 					// Public methods
 					thisPublic.addFeatureSequence = __addFeatureSequence;
+					thisPublic.clone = __clone;
 					thisPublic.findFeatureSequenceByFeature = __findFeatureSequenceByFeature;
 					thisPublic.getTarget = __getTarget;
-					thisPublic.clone = __clone;
-					thisPublic.retarget = __retarget;
 					thisPublic.indexTransformations = __indexTransformations;
+					thisPublic.retarget = __retarget;
 					thisPublic.seek = __seek;
 				} // end TargetSequenceConstructor()
 
@@ -1038,6 +1035,26 @@ var Concert = (function ()
 
 					thisProtected.featureSequences.push(featureSequence);
 				} // end __addFeatureSequence()
+
+
+				function __clone(newTarget)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var i, featureSequenceCloneReturn, allNewTransformations = [],
+						featureSequences = thisProtected.featureSequences, numFeatureSequences = featureSequences.length,
+						newTargetSequence = new _Concert.TargetSequence(newTarget),
+						returnVal = { targetSequence: newTargetSequence, transformations: allNewTransformations };
+
+					for (i = 0; i < numFeatureSequences; i++)
+					{
+						featureSequenceCloneReturn = featureSequences[i].clone(newTarget);
+						newTargetSequence.addFeatureSequence(featureSequenceCloneReturn.featureSequence);
+						allNewTransformations.push.apply(allNewTransformations, featureSequenceCloneReturn.transformations);
+					}
+
+					return returnVal;
+				} // end __clone()
 
 
 				function __findFeatureSequenceByFeature(feature)
@@ -1070,24 +1087,15 @@ var Concert = (function ()
 				} // end __getTarget()
 
 
-				function __clone(newTarget)
+				function __indexTransformations(overallSequenceSegments)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var i, featureSequenceCloneReturn, allNewTransformations = [],
-						featureSequences = thisProtected.featureSequences, numFeatureSequences = featureSequences.length,
-						newTargetSequence = new _Concert.TargetSequence(newTarget),
-						returnVal = { targetSequence: newTargetSequence, transformations: allNewTransformations };
-
-					for (i = 0; i < numFeatureSequences; i++)
-					{
-						featureSequenceCloneReturn = featureSequences[i].clone(newTarget);
-						newTargetSequence.addFeatureSequence(featureSequenceCloneReturn.featureSequence);
-						allNewTransformations.push.apply(allNewTransformations, featureSequenceCloneReturn.transformations);
-					}
-
-					return returnVal;
-				} // end __clone()
+					var i, numFeatureSequences;
+					var featureSequences = thisProtected.featureSequences;
+					for (i = 0, numFeatureSequences = featureSequences.length; i < numFeatureSequences; i++)
+						featureSequences[i].indexTransformations(overallSequenceSegments);
+				} // end __indexTransformations()
 
 
 				function __retarget(newTarget)
@@ -1099,17 +1107,6 @@ var Concert = (function ()
 						featureSequences[i].retarget(newTarget);
 					thisProtected.target = newTarget;
 				} // end _retarget()
-
-
-				function __indexTransformations(overallSequenceSegments)
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					var i, numFeatureSequences;
-					var featureSequences = thisProtected.featureSequences;
-					for (i = 0, numFeatureSequences = featureSequences.length; i < numFeatureSequences; i++)
-						featureSequences[i].indexTransformations(overallSequenceSegments);
-				} // end __indexTransformations()
 
 
 				function __seek(sequenceSegmentNumber, time, forceApplication)
@@ -1180,27 +1177,27 @@ var Concert = (function ()
 					thisProtected.soleControlOptimizationDuringRun = true;
 
 					// Protected methods
-					thisProtected.findSequenceSegmentNumberInRange = __findSequenceSegmentNumberInRange;
 					thisProtected.findSequenceSegmentNumberByTime = __findSequenceSegmentNumberByTime;
+					thisProtected.findSequenceSegmentNumberInRange = __findSequenceSegmentNumberInRange;
 
 					// Public methods
-					thisPublic.getID = __getID;
 					thisPublic.addTransformations = __addTransformations;
+					thisPublic.begin = __begin;
 					thisPublic.clone = __clone;
-					thisPublic.retarget = __retarget;
-					thisPublic.index = __index;
+					thisPublic.follow = __follow;
 					thisPublic.generateValues = __generateValues;
 					thisPublic.getCurrentTime = __getCurrentTime;
 					thisPublic.getEndTime = __getEndTime;
+					thisPublic.getID = __getID;
 					thisPublic.getStartTime = __getStartTime;
+					thisPublic.index = __index;
 					thisPublic.isRunning = __isRunning;
+					thisPublic.retarget = __retarget;
 					thisPublic.run = __run;
-					thisPublic.begin = __begin;
-					thisPublic.follow = __follow;
-					thisPublic.syncTo = __syncTo;
 					thisPublic.seek = __seek;
 					thisPublic.setDefaults = __setDefaults;
 					thisPublic.stop = __stop;
+					thisPublic.syncTo = __syncTo;
 
 					// Add transformations if any were specified
 					if (transformationSet)
@@ -1208,19 +1205,9 @@ var Concert = (function ()
 				} // end SequenceConstructor()
 
 
-				function _loadObjectData(newPublicData, newProtectedData)
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					_Concert.Util.loadObjectData(newPublicData, newProtectedData, thisPublic, thisProtected);
-				} // end _loadObjectData()
-
-
-				function _getParamValue(parameters, paramName, defaultValue)
-				{
-					return ((parameters && (typeof parameters[paramName] != "undefined")) ? parameters[paramName] : defaultValue);
-				} // end _getParamValue
-
+				// ================================
+				// -- Internal Function Definitions
 
 				function _getCombinedParams(initialParams, overrides)
 				{
@@ -1248,40 +1235,23 @@ var Concert = (function ()
 				} // end _overrideParams()
 
 
-				function __findSequenceSegmentNumberInRange(time, rangeStart, rangeEnd)
+				function _getParamValue(parameters, paramName, defaultValue)
+				{
+					return ((parameters && (typeof parameters[paramName] != "undefined")) ? parameters[paramName] : defaultValue);
+				} // end _getParamValue
+
+
+				function _loadObjectData(newPublicData, newProtectedData)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var currentSegmentNumber, currentSegment, currentTimeMatchType;
+					_Concert.Util.loadObjectData(newPublicData, newProtectedData, thisPublic, thisProtected);
+				} // end _loadObjectData()
 
-					do
-					{
-						currentSegmentNumber = Math.floor((rangeStart + rangeEnd) / 2);
-						currentSegment = thisProtected.timelineSegments[currentSegmentNumber];
 
-						if (time < currentSegment.startTime)
-						{
-							rangeEnd = currentSegmentNumber - 1;
-							currentTimeMatchType = -1;
-						}
-						else
-						{
-							if (time >= currentSegment.endTime)
-							{
-								rangeStart = currentSegmentNumber + 1;
-								currentTimeMatchType = 1;
-							}
-							else
-							{
-								currentTimeMatchType = 0;
-								break;
-							}
-						}
-					} while (rangeStart < rangeEnd)
 
-					return { segmentNumber: currentSegmentNumber, timeMatchType: currentTimeMatchType };
-				} // end __findSequenceSegmentNumberInRange()
-
+				// ================================
+				// -- Protected Method Definitions
 
 				function __findSequenceSegmentNumberByTime(time)
 				{
@@ -1334,27 +1304,44 @@ var Concert = (function ()
 				} // end __findSequenceSegmentNumberByTime()
 
 
-				function __setDefaults(newDefaults)
+				function __findSequenceSegmentNumberInRange(time, rangeStart, rangeEnd)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var propertyName, defaults = thisProtected.defaults;
+					var currentSegmentNumber, currentSegment, currentTimeMatchType;
 
-					for (propertyName in newDefaults)
+					do
 					{
-						if (newDefaults.hasOwnProperty(propertyName))
-							defaults[propertyName] = newDefaults[propertyName];
-					}
-				} // end __setDefaults()
+						currentSegmentNumber = Math.floor((rangeStart + rangeEnd) / 2);
+						currentSegment = thisProtected.timelineSegments[currentSegmentNumber];
+
+						if (time < currentSegment.startTime)
+						{
+							rangeEnd = currentSegmentNumber - 1;
+							currentTimeMatchType = -1;
+						}
+						else
+						{
+							if (time >= currentSegment.endTime)
+							{
+								rangeStart = currentSegmentNumber + 1;
+								currentTimeMatchType = 1;
+							}
+							else
+							{
+								currentTimeMatchType = 0;
+								break;
+							}
+						}
+					} while (rangeStart < rangeEnd)
+
+					return { segmentNumber: currentSegmentNumber, timeMatchType: currentTimeMatchType };
+				} // end __findSequenceSegmentNumberInRange()
 
 
-				function __getID()
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					return thisProtected.ID;
-				} // end __getID()
-
+				// ================================
+				// -- Public Method Definitions
 
 				function __addTransformations(transformationSet)
 				{
@@ -1444,7 +1431,7 @@ var Concert = (function ()
 							times = curGroupKeyFrames.times;
 							values = curGroupKeyFrames.values;
 							valueGenerators = curGroupKeyFrames.valueGenerators;
-							
+
 							lastKeyFrameTime = lastKeyFrameValue = lastKeyFrameValueGenerator = curKeyFrameValue = curKeyFrameValueGenerator = null;
 							for (j = 0, numKeyFrames = times.length; j < numKeyFrames; j++)
 							{
@@ -1501,7 +1488,7 @@ var Concert = (function ()
 						else
 						{
 							curGroupSegments = curTransformationGroup.segments;
-							if(!(_Concert.Util.isArray(curGroupSegments)))
+							if (!(_Concert.Util.isArray(curGroupSegments)))
 								curGroupSegments = [curGroupSegments];
 
 							for (j = 0, numSegments = curGroupSegments.length; j < numSegments; j++)
@@ -1538,17 +1525,12 @@ var Concert = (function ()
 				} // end __addTransformations()
 
 
-				function __retarget(targetLookupFunction)
+				function __begin(parameters)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var i, curTargetSequence, targetSequences = thisProtected.targetSequences, numTargetSequences = targetSequences.length;
-					for (i = 0; i < numTargetSequences; i++)
-					{
-						curTargetSequence = targetSequences[i];
-						curTargetSequence.retarget(targetLookupFunction(curTargetSequence.getTarget()));
-					}
-				} // end _retarget()
+					thisPublic.run(_getCombinedParams({ synchronizeTo: null, initialSeek: 0, timeOffset: null, autoStopAtEnd: true }, parameters));
+				} // end __begin()
 
 
 				function __clone(targetLookupFunction, matchRunningStatus, doInitialSeek)
@@ -1649,6 +1631,63 @@ var Concert = (function ()
 				} // end __clone()
 
 
+				function __follow(syncSource, parameters)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					thisPublic.run(_getCombinedParams({ synchronizeTo: syncSource, initialSeek: null, timeOffset: null }, parameters));
+				} // end __follow()
+
+
+				function __generateValues()
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var i, dynamicValueTransformations = thisProtected.dynamicValueTransformations, numDynamicValueTransformations = dynamicValueTransformations.length;
+
+					for (i = 0; i < numDynamicValueTransformations; i++)
+						dynamicValueTransformations[i].generateValues(thisPublic);
+				} // end __generateValues();
+
+
+				function __getCurrentTime()
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					return thisProtected.currentTime;
+				} // end _getCurrentTime()
+
+
+				function __getEndTime()
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					if (!(thisProtected.indexed))
+						thisPublic.index();
+
+					return thisProtected.sequenceEndTime;
+				} // end __getEndTime()
+
+
+				function __getID()
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					return thisProtected.ID;
+				} // end __getID()
+
+
+				function __getStartTime()
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					if (!(thisProtected.indexed))
+						thisPublic.index();
+
+					return thisProtected.sequenceStartTime;
+				} // end __getStartTime()
+
+
 				function __index()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1683,53 +1722,25 @@ var Concert = (function ()
 				} // end __index()
 
 
-				function __generateValues()
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					var i, dynamicValueTransformations = thisProtected.dynamicValueTransformations, numDynamicValueTransformations = dynamicValueTransformations.length;
-
-					for (i = 0; i < numDynamicValueTransformations; i++)
-						dynamicValueTransformations[i].generateValues(thisPublic);
-				} // end __generateValues();
-
-
-				function __getCurrentTime()
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					return thisProtected.currentTime;
-				} // end _getCurrentTime()
-
-
-				function __getEndTime()
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					if (!(thisProtected.indexed))
-						thisPublic.index();
-
-					return thisProtected.sequenceEndTime;
-				} // end __getEndTime()
-
-
-				function __getStartTime()
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					if (!(thisProtected.indexed))
-						thisPublic.index();
-
-					return thisProtected.sequenceStartTime;
-				} // end __getStartTime()
-
-
 				function __isRunning()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					return thisProtected.running;
 				} // end __isRunning()
+
+
+				function __retarget(targetLookupFunction)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var i, curTargetSequence, targetSequences = thisProtected.targetSequences, numTargetSequences = targetSequences.length;
+					for (i = 0; i < numTargetSequences; i++)
+					{
+						curTargetSequence = targetSequences[i];
+						curTargetSequence.retarget(targetLookupFunction(curTargetSequence.getTarget()));
+					}
+				} // end _retarget()
 
 
 				function __run(parameters)
@@ -1745,7 +1756,7 @@ var Concert = (function ()
 					if (!thisProtected.indexed)
 						thisPublic.index();
 
-					if(_getParamValue(parameters, "generateValues", true))
+					if (_getParamValue(parameters, "generateValues", true))
 						thisPublic.generateValues();
 
 					initialSeek = _getParamValue(parameters, "initialSeek", null);
@@ -1768,7 +1779,7 @@ var Concert = (function ()
 					else
 						synchronizer = ((typeof synchronizeTo) == "function") ? synchronizeTo : (function () { return 1000 * synchronizeTo.currentTime; });
 					thisProtected.synchronizer = synchronizer;
-					
+
 					thisProtected.initialSyncSourcePoint = initialSyncSourcePoint = synchronizer();
 					timeOffset = _getParamValue(parameters, "timeOffset", null);
 					if (timeOffset == null)
@@ -1778,30 +1789,6 @@ var Concert = (function ()
 					thisProtected.running = true;
 					thisProtected.poller.run(function () { thisPublic.seek(initialSyncSourcePoint + speed * (synchronizer() - initialSyncSourcePoint) + timeOffset, soleControlOptimizationDuringRun); });
 				} // end __run()
-
-
-				function __begin(parameters)
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					thisPublic.run(_getCombinedParams({ synchronizeTo: null, initialSeek: 0, timeOffset: null, autoStopAtEnd: true }, parameters));
-				} // end __begin()
-
-
-				function __follow(syncSource, parameters)
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					thisPublic.run(_getCombinedParams({ synchronizeTo: syncSource, initialSeek: null, timeOffset: null }, parameters));
-				} // end __follow()
-
-
-				function __syncTo(syncSource, parameters)
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					thisPublic.run(_getCombinedParams({ synchronizeTo: syncSource, initialSeek: null, timeOffset: 0, autoStopAtEnd: false }, parameters));
-				} // end __syncTo()
 
 
 				function __seek(time, useSoleControlOptimization)
@@ -1864,6 +1851,20 @@ var Concert = (function ()
 				} // end __seek()
 
 
+				function __setDefaults(newDefaults)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var propertyName, defaults = thisProtected.defaults;
+
+					for (propertyName in newDefaults)
+					{
+						if (newDefaults.hasOwnProperty(propertyName))
+							defaults[propertyName] = newDefaults[propertyName];
+					}
+				} // end __setDefaults()
+
+
 				function __stop()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1875,6 +1876,15 @@ var Concert = (function ()
 						thisProtected.poller = null;
 					}
 				} // end __stop()
+
+
+				function __syncTo(syncSource, parameters)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					thisPublic.run(_getCombinedParams({ synchronizeTo: syncSource, initialSeek: null, timeOffset: 0, autoStopAtEnd: false }, parameters));
+				} // end __syncTo()
+
 
 
 				return SequenceConstructor;
@@ -1891,7 +1901,6 @@ var Concert = (function ()
 			{
 				Concert = previousNameSpaceValue;
 			} // end revertNameSpace()
-
 	}; // end _Concert
 
 
