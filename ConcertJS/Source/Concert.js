@@ -217,8 +217,24 @@ var Concert = (function ()
 							{
 								currentIndividualValue = value[i];
 								if (applyForSure || currentIndividualValue !== lastValue[i])
-									target.style[feature[i]] = (unit == null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit));
+								{
+									var newStyleValue = (unit == null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit));
+									console.log(((lastValueContainer == null) ? "null" : tempMakeString(lastValueContainer)) + " : " + tempMakeString(valueContainer) + " : " + feature[i] + "=" + newStyleValue + "; force=" + forceApplication.toString());
+									target.style[feature[i]] = newStyleValue;
+								}
 							}
+						}
+
+						function tempMakeString(something)
+						{
+							var propName, stringval = "{ ";
+							for (propName in something)
+							{
+								if (something.hasOwnProperty(propName))
+									stringval += propName + ":" + something[propName];
+							}
+							stringval += " }";
+							return stringval;
 						}
 
 						return valueContainer;
@@ -809,20 +825,18 @@ var Concert = (function ()
 				} // end __generateValues()
 
 
-				function __seek(time, useSoleControlOptimization)
+				function __seek(time, forceApplication)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					var round, roundTenPower, newValue;
-
 					newValue = thisProtected.calculator(thisProtected.easing(thisPublic.t1, thisPublic.t2, time),
 					                                    thisProtected.v1, thisProtected.v2,
 														thisProtected.additionalProperties);
 
 					thisProtected.lastAppliedValue = thisProtected.applicator(thisProtected.target, thisProtected.feature,
 					                                                          { value: newValue, unit: thisProtected.unit },
-																			  thisProtected.lastAppliedValue,
-					                                                          !useSoleControlOptimization);
+																			  thisProtected.lastAppliedValue, forceApplication);
 				} // end __seek()
 
 
@@ -998,11 +1012,11 @@ var Concert = (function ()
 				} // end __indexTransformations()
 
 
-				function __seek(sequenceSegmentNumber, time, useSoleControlOptimization)
+				function __seek(sequenceSegmentNumber, time, forceApplication)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					return thisProtected.transformationIndexBySegment[sequenceSegmentNumber].seek(time, useSoleControlOptimization);
+					return thisProtected.transformationIndexBySegment[sequenceSegmentNumber].seek(time, forceApplication);
 				} // end _seek()
 
 
@@ -1114,13 +1128,13 @@ var Concert = (function ()
 				} // end __indexTransformations()
 
 
-				function __seek(sequenceSegmentNumber, time, useSoleControlOptimization)
+				function __seek(sequenceSegmentNumber, time, forceApplication)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					var numFeatureSequences, i, featureSequences = thisProtected.featureSequences;
 					for (i = 0, numFeatureSequences = featureSequences.length; i < numFeatureSequences; i++)
-						featureSequences[i].seek(sequenceSegmentNumber, time, useSoleControlOptimization);
+						featureSequences[i].seek(sequenceSegmentNumber, time, forceApplication);
 				} // end __seek()
 
 
@@ -1161,6 +1175,7 @@ var Concert = (function ()
 					thisProtected.poller = null;
 					thisProtected.synchronizer = null;
 					thisProtected.initialSyncSourcePoint = null;
+					thisProtected.lastSegmentNumber = null;
 
 					thisProtected.defaults =
 						{
@@ -1752,16 +1767,16 @@ var Concert = (function ()
 					if(_getParamValue(parameters, "generateValues", true))
 						thisPublic.generateValues();
 
+					initialSeek = _getParamValue(parameters, "initialSeek", null);
+					if (initialSeek != null)
+						thisPublic.seek(initialSeek, false);
+
 					thisProtected.speed = speed = _getParamValue(parameters, "speed", thisProtected.speed);
 					thisProtected.after = _getParamValue(parameters, "after", thisProtected.after);
 					thisProtected.before = _getParamValue(parameters, "before", thisProtected.before);
 					thisProtected.autoStopAtEnd = _getParamValue(parameters, "autoStopAtEnd", thisProtected.autoStopAtEnd);
 					thisProtected.onAutoStop = _getParamValue(parameters, "onAutoStop", thisProtected.onAutoStop);
-					thisProtected.soleControlOptimizationDuringRun = soleControlOptimizationDuringRun = _getParamValue(parameters, "soleControlOptimizationDuringRun", thisProtected.soleControlOptimizationDuringRun);
-
-					initialSeek = _getParamValue(parameters, "initialSeek", null);
-					if (initialSeek != null)
-						thisPublic.seek(initialSeek, soleControlOptimizationDuringRun);
+					thisProtected.soleControlOptimizationDuringRun = soleControlOptimizationDuringRun = _getParamValue(parameters, "useSoleControlOptimization", thisProtected.soleControlOptimizationDuringRun);
 
 					thisProtected.pollingInterval = pollingInterval = _getParamValue(parameters, "pollingInterval", thisProtected.pollingInterval);
 					thisProtected.poller = (pollingInterval < 1) ? (new _Concert.Pollers.Auto()) : (new _Concert.Pollers.FixedInterval(pollingInterval));
@@ -1812,7 +1827,7 @@ var Concert = (function ()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var i, segmentMatch, segmentNumber, sequenceStart, sequenceEnd, adjustedTimeContainer, adjustedTime;
+					var i, segmentMatch, segmentNumber, sequenceStart, sequenceEnd, adjustedTimeContainer, adjustedTime, forceApplication;
 					var hitFinalBoundary = false, returnVal = null;
 					var targetSequences = thisProtected.targetSequences;
 					var numTargetSequences = targetSequences.length;
@@ -1845,8 +1860,15 @@ var Concert = (function ()
 					if (segmentMatch != null)
 					{
 						segmentNumber = segmentMatch.segmentNumber;
+						if (segmentNumber != thisProtected.lastSegmentNumber)
+						{
+							forceApplication = true;
+							thisProtected.lastSegmentNumber = segmentNumber;
+						}
+						else
+							forceApplication = (typeof useSoleControlOptimization == "undefined") ? true : !useSoleControlOptimization;
 						for (i = 0; i < numTargetSequences; i++)
-							targetSequences[i].seek(segmentNumber, adjustedTime, (typeof useSoleControlOptimization != "undefined") ? useSoleControlOptimization : false);
+							targetSequences[i].seek(segmentNumber, adjustedTime, forceApplication);
 						returnVal = segmentMatch.timeMatchType;
 					}
 

@@ -200,9 +200,17 @@ function init3()
 	sequence.addTransformations(
 		[
 			{
-				targets: [$d1.get(0), $d2.get(0)],
+				target: $d1.get(0),
 				feature: ["top", "width"],
 				unit: "px",
+				calculator:
+					function (distanceFraction, startValue, endValue, additionalProperties)
+					{
+						var i, returnValue = [];
+						for (i = 0; i < startValue.length; i++)
+							returnValue.push(startValue[i] + Math.random() * (endValue[i] - startValue[i]));
+						return returnValue;
+					},
 				keyframes:
 					{
 						times: [0, 1000, null, 2000, 3000],
@@ -306,7 +314,8 @@ function beginClick()
 	sequence.begin(
 		{
 			generateValues: true,
-			onAutoStop: function () { jQuery("#StatusLabel").text("Auto-stopped."); }
+			onAutoStop: function () { jQuery("#StatusLabel").text("Auto-stopped."); },
+			useSoleControlOptimization: true
 		});
 	/*
 	setTimeout(
