@@ -23,7 +23,7 @@
 				{
 					var i, arrayLength = array1.length;
 
-					if (array2.length != arrayLength)
+					if (array2.length !== arrayLength)
 						return false;
 
 					for (i = 0; i < arrayLength; i++)
@@ -48,26 +48,29 @@
 
 					for (distinctValStr in pigeonholer)
 					{
-						distinctVal = pigeonholer[distinctValStr];
-						searchStart = 0;
-						searchEnd = distinctArray.length - 1;
-
-						if (searchEnd < 0 || distinctVal > distinctArray[searchEnd])
-							distinctArray.push(distinctVal);
-						else if (distinctVal < distinctArray[0])
-							distinctArray.unshift(distinctVal);
-						else
+						if (pigeonholer.hasOwnProperty(distinctValStr))
 						{
-							while (searchStart + 1 < searchEnd)
-							{
-								middle = Math.floor((searchStart + searchEnd) / 2);
-								if (distinctVal < distinctArray[middle])
-									searchEnd = middle;
-								else
-									searchStart = middle;
-							}
+							distinctVal = pigeonholer[distinctValStr];
+							searchStart = 0;
+							searchEnd = distinctArray.length - 1;
 
-							distinctArray.splice(searchEnd, 0, distinctVal);
+							if (searchEnd < 0 || distinctVal > distinctArray[searchEnd])
+								distinctArray.push(distinctVal);
+							else if (distinctVal < distinctArray[0])
+								distinctArray.unshift(distinctVal);
+							else
+							{
+								while (searchStart + 1 < searchEnd)
+								{
+									middle = Math.floor((searchStart + searchEnd) / 2);
+									if (distinctVal < distinctArray[middle])
+										searchEnd = middle;
+									else
+										searchStart = middle;
+								}
+
+								distinctArray.splice(searchEnd, 0, distinctVal);
+							}
 						}
 					}
 
@@ -76,7 +79,7 @@
 
 				isArray: function (testVar)
 				{
-					return ((typeof testVar == "object") && (Object.prototype.toString.call(testVar) == "[object Array]"))
+					return ((typeof testVar === "object") && (Object.prototype.toString.call(testVar) === "[object Array]"));
 				}, // end isArray()
 
 				loadObjectData: function (newPublicData, newProtectedData, publicContext, protectedContext)
@@ -116,7 +119,7 @@
 
 							value = valueContainer.value;
 							unit = valueContainer.unit;
-							if (lastValueContainer == null)
+							if (lastValueContainer === null)
 							{
 								lastValue = null;
 								lastUnit = null;
@@ -127,9 +130,9 @@
 								lastUnit = lastValueContainer.unit;
 							}
 
-							applyForSure = (forceApplication || lastValue == null);
+							applyForSure = (forceApplication || lastValue === null);
 
-							if ((typeof feature == "string") || (feature instanceof String))
+							if ((typeof feature === "string") || (feature instanceof String))
 							{
 								if (applyForSure || value !== lastValue)
 									customFunction(target, feature, value, unit);
@@ -159,11 +162,11 @@
 						var value, lastValue;
 
 						value = valueContainer.value;
-						lastValue = (lastValueContainer == null) ? null : lastValueContainer.value;
+						lastValue = (lastValueContainer === null) ? null : lastValueContainer.value;
 
-						applyForSure = (forceApplication || lastValue == null);
+						applyForSure = (forceApplication || lastValue === null);
 
-						if ((typeof feature == "string") || (feature instanceof String))
+						if ((typeof feature === "string") || (feature instanceof String))
 						{
 							if (applyForSure || value !== lastValue)
 								target[feature] = value;
@@ -189,7 +192,7 @@
 
 						value = valueContainer.value;
 						unit = valueContainer.unit;
-						if (lastValueContainer == null)
+						if (lastValueContainer === null)
 						{
 							lastValue = null;
 							lastUnit = null;
@@ -200,12 +203,12 @@
 							lastUnit = lastValueContainer.unit;
 						}
 
-						applyForSure = (forceApplication || lastValue == null || unit !== lastUnit);
+						applyForSure = (forceApplication || lastValue === null || unit !== lastUnit);
 
-						if ((typeof feature == "string") || (feature instanceof String))
+						if ((typeof feature === "string") || (feature instanceof String))
 						{
 							if(applyForSure || value !== lastValue)
-								target.style[feature] = (unit == null) ? value : (value.toString() + unit);
+								target.style[feature] = (unit === null) ? value : (value.toString() + unit);
 						}
 						else
 						{
@@ -215,7 +218,7 @@
 							{
 								currentIndividualValue = value[i];
 								if (applyForSure || currentIndividualValue !== lastValue[i])
-									target.style[feature[i]] = (unit == null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit));
+									target.style[feature[i]] = (unit === null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit));
 							}
 						}
 
@@ -230,7 +233,7 @@
 
 						value = valueContainer.value;
 						unit = valueContainer.unit;
-						if (lastValueContainer == null)
+						if (lastValueContainer === null)
 						{
 							lastValue = null;
 							lastUnit = null;
@@ -241,12 +244,12 @@
 							lastUnit = lastValueContainer.unit;
 						}
 
-						applyForSure = (forceApplication || lastValue == null || unit !== lastUnit);
+						applyForSure = (forceApplication || lastValue === null || unit !== lastUnit);
 
-						if ((typeof feature == "string") || (feature instanceof String))
+						if ((typeof feature === "string") || (feature instanceof String))
 						{
 							if (applyForSure || value !== lastValue)
-								target.setAttribute(feature, (unit == null) ? value : (value.toString() + unit));
+								target.setAttribute(feature, (unit === null) ? value : (value.toString() + unit));
 						}
 						else
 						{
@@ -256,7 +259,7 @@
 							{
 								currentIndividualValue = value[i];
 								if (applyForSure || currentIndividualValue !== lastValue[i])
-									target.setAttribute(feature[i], (unit == null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit)));
+									target.setAttribute(feature[i], (unit === null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit)));
 							}
 						}
 
@@ -269,13 +272,13 @@
 		Calculators:
 			{
 				Color:
-					function (distanceFraction, startValue, endValue, additionalProperties)
+					function (distanceFraction, startValue, endValue)
 					{
-						var i, valueLength, curStartValue, returnValue;
+						var i, valueLength, returnValue;
 
 						function hexColorToDecimal(hexStr)
 						{
-							if (hexStr.length == 1)
+							if (hexStr.length === 1)
 								hexStr += hexStr;
 							return parseInt(hexStr, 16);
 						} // end hexColorToDecimal()
@@ -289,12 +292,12 @@
 							var hexRGBPattern = /^#([0-9a-f])([0-9a-f])([0-9a-f])$|^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
 							var rgbFunctionMatch = false, hslFunctionMatch = false;
 
-							if ((color1Pieces = rgbFunctionPattern.exec(color1)) != null)
+							if ((color1Pieces = rgbFunctionPattern.exec(color1)) !== null)
 							{
 								color2Pieces = rgbFunctionPattern.exec(color2);
 								rgbFunctionMatch = true;
 							}
-							else if ((color1Pieces = hslFunctionPattern.exec(color1)) != null)
+							else if ((color1Pieces = hslFunctionPattern.exec(color1)) !== null)
 							{
 								color2Pieces = hslFunctionPattern.exec(color2);
 								hslFunctionMatch = true;
@@ -306,20 +309,20 @@
 								for (i = 1; i < 8; i++) // skip the first element, it contains the full string match
 								{
 									curVal1 = color1Pieces[i];
-									if (typeof curVal1 != "undefined")
+									if (typeof curVal1 !== "undefined")
 									{
-										curVal1 = (new Number(curVal1)).valueOf();
-										tempVal = curVal1 + distanceFraction * ((new Number(color2Pieces[i])).valueOf() - curVal1);
+										curVal1 = parseInt(curVal1, 10);
+										tempVal = curVal1 + distanceFraction * (parseInt(color2Pieces[i], 10) - curVal1);
 										calculatedValues.push((i < 7) ? _Concert.Util.round(tempVal, 1) : tempVal);
 									}
 								}
 
 								if (rgbFunctionMatch)
-									interpolatedValueStr = "rgb" + ((calculatedValues.length == 4) ? "a" : "") + "(" + calculatedValues.join() + ")";
+									interpolatedValueStr = "rgb" + ((calculatedValues.length === 4) ? "a" : "") + "(" + calculatedValues.join() + ")";
 								else
 								{
 									tempVal = calculatedValues[0].toString() + "," + calculatedValues[1].toString() + "%," + calculatedValues[2].toString() + "%";
-									if (calculatedValues.length == 4)
+									if (calculatedValues.length === 4)
 										interpolatedValueStr = "hsla(" + tempVal + "," + calculatedValues[3].toString() + ")";
 									else
 										interpolatedValueStr = "hsl(" + tempVal + ")";
@@ -335,10 +338,10 @@
 								for (i = 1; i < 7; i++)
 								{
 									tempVal = color1Pieces[i];
-									if (typeof tempVal != "undefined")
+									if (typeof tempVal !== "undefined")
 										hexColors1.push(tempVal);
 									tempVal = color2Pieces[i];
-									if (typeof tempVal != "undefined")
+									if (typeof tempVal !== "undefined")
 										hexColors2.push(tempVal);
 								}
 
@@ -369,7 +372,7 @@
 				Discrete:
 					function (distanceFraction, startValue, endValue, additionalProperties)
 					{
-						var i, curReturnValue, returnValue, valueLength, roundFactor, doRounding = (typeof additionalProperties.round != "undefined");
+						var i, curReturnValue, returnValue, valueLength, roundFactor, doRounding = (typeof additionalProperties.round !== "undefined");
 						if (doRounding)
 							roundFactor = additionalProperties.round;
 
@@ -378,7 +381,7 @@
 							returnValue = [];
 							for (i = 0, valueLength = startValue.length; i < valueLength; i++)
 							{
-								curReturnValue = ((distanceFraction < 1) ? startValue[i] : endValue[i])
+								curReturnValue = ((distanceFraction < 1) ? startValue[i] : endValue[i]);
 								returnValue.push(doRounding ? _Concert.Util.round(curReturnValue, roundFactor) : curReturnValue);
 							}
 						}
@@ -394,7 +397,7 @@
 				Linear:
 					function (distanceFraction, startValue, endValue, additionalProperties)
 					{
-						var i, valueLength, curStartValue, curCalcValue, returnValue, roundFactor, doRounding = (typeof additionalProperties.round != "undefined");
+						var i, valueLength, curStartValue, curCalcValue, returnValue, roundFactor, doRounding = (typeof additionalProperties.round !== "undefined");
 						if (doRounding)
 							roundFactor = additionalProperties.round;
 
@@ -420,7 +423,7 @@
 				Rotational:
 					function (distanceFraction, startValue, endValue, additionalProperties)
 					{
-						var roundFactor, doRounding = (typeof additionalProperties.round != "undefined");
+						var roundFactor, doRounding = (typeof additionalProperties.round !== "undefined");
 						if (doRounding)
 							roundFactor = additionalProperties.round;
 						var centerX = additionalProperties.center[0];
@@ -483,7 +486,7 @@
 							if (currentTime < halfway)
 								return (Math.pow((currentTime - startTime) / (halfway - startTime), 2) / 2);
 							else
-								return (.5 + (1 - Math.pow(1 - (currentTime - halfway) / (endTime - halfway), 2)) / 2);
+								return (0.5 + (1 - Math.pow(1 - (currentTime - halfway) / (endTime - halfway), 2)) / 2);
 						}
 					},
 
@@ -521,7 +524,7 @@
 				Bounce:
 					function (bounceCount)
 					{
-						var infinite = ((typeof bounceCount) == "undefined" || bounceCount == null);
+						var infinite = ((typeof bounceCount) === "undefined" || bounceCount === null);
 
 						function bounceFunction(sequenceStart, sequenceEnd, unadjustedTime)
 						{
@@ -535,10 +538,10 @@
 								if (infinite || bounceNum <= bounceCount)
 								{
 									curBounceOffset = distanceOut % duration;
-									return { adjustedTime: (((bounceNum % 2) == 0) ? (sequenceEnd - curBounceOffset) : curBounceOffset), hitFinalBoundary: false };
+									return { adjustedTime: (((bounceNum % 2) === 0) ? (sequenceEnd - curBounceOffset) : curBounceOffset), hitFinalBoundary: false };
 								}
 								else
-									return { adjustedTime: (((bounceCount % 2) == 0) ? sequenceStart : sequenceEnd), hitFinalBoundary: true };
+									return { adjustedTime: (((bounceCount % 2) === 0) ? sequenceStart : sequenceEnd), hitFinalBoundary: true };
 							}
 							else
 							{
@@ -548,10 +551,10 @@
 								if (infinite || bounceNum <= bounceCount)
 								{
 									curBounceOffset = distanceOut % duration;
-									return { adjustedTime: (((bounceNum % 2) == 0) ? curBounceOffset : sequenceEnd - curBounceOffset), hitFinalBoundary: false };
+									return { adjustedTime: (((bounceNum % 2) === 0) ? curBounceOffset : sequenceEnd - curBounceOffset), hitFinalBoundary: false };
 								}
 								else
-									return { adjustedTime: (((bounceCount % 2) == 0) ? sequenceEnd : sequenceStart), hitFinalBoundary: true };
+									return { adjustedTime: (((bounceCount % 2) === 0) ? sequenceEnd : sequenceStart), hitFinalBoundary: true };
 							}
 						} // end inner bounceFunction()
 
@@ -561,7 +564,7 @@
 				Loop:
 					function (loopbackCount)
 					{
-						var infinite = ((typeof loopbackCount) == "undefined" || loopbackCount == null);
+						var infinite = ((typeof loopbackCount) === "undefined" || loopbackCount === null);
 
 						function loopFunction(sequenceStart, sequenceEnd, unadjustedTime)
 						{
@@ -594,7 +597,7 @@
 					function (sequenceStart, sequenceEnd, unadjustedTime)
 					{
 						return ((unadjustedTime < sequenceStart) ? { adjustedTime: sequenceStart, hitFinalBoundary: true } : { adjustedTime: sequenceEnd, hitFinalBoundary: true });
-					},
+					}
 			},
 
 
@@ -624,7 +627,7 @@
 
 							var doNextFrame;
 
-							if (thisProtected.frameRequestID == null)
+							if (thisProtected.frameRequestID === null)
 							{
 								doNextFrame =
 									function ()
@@ -641,7 +644,7 @@
 						{
 							var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-							if (thisProtected.frameRequestID != null)
+							if (thisProtected.frameRequestID !== null)
 							{
 								window.cancelAnimationFrame(thisProtected.frameRequestID);
 								thisProtected.frameRequestID = null;
@@ -675,7 +678,7 @@
 						{
 							var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-							if (thisProtected.intervalID == null)
+							if (thisProtected.intervalID === null)
 								thisProtected.intervalID = setInterval(callbackFunction, thisProtected.interval);
 						} // end __run()
 
@@ -684,7 +687,7 @@
 						{
 							var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-							if (thisProtected.intervalID != null)
+							if (thisProtected.intervalID !== null)
 							{
 								clearInterval(thisProtected.intervalID);
 								thisProtected.intervalID = null;
@@ -715,20 +718,20 @@
 					thisProtected.additionalProperties = {};
 					for (propertyName in properties)
 					{
-						if (propertyName == "target"
-						    || propertyName == "feature"
-						    || propertyName == "applicator"
-						    || propertyName == "calculator"
-						    || propertyName == "v1"
-						    || propertyName == "v2"
-							|| propertyName == "v1Generator"
-							|| propertyName == "v2Generator"
-						    || propertyName == "unit"
-						    || propertyName == "easing")
+						if (propertyName === "target"
+						    || propertyName === "feature"
+						    || propertyName === "applicator"
+						    || propertyName === "calculator"
+						    || propertyName === "v1"
+						    || propertyName === "v2"
+							|| propertyName === "v1Generator"
+							|| propertyName === "v2Generator"
+						    || propertyName === "unit"
+						    || propertyName === "easing")
 						{
 							thisProtected[propertyName] = properties[propertyName];
 						}
-						else if (propertyName == "t1" || propertyName == "t2")
+						else if (propertyName === "t1" || propertyName === "t2")
 							thisPublic[propertyName] = properties[propertyName]; // Making these public rather than requiring accessor methods improves indexing time noticably for large sequences.
 						else if (properties.hasOwnProperty(propertyName))
 							thisProtected.additionalProperties[propertyName] = properties[propertyName];
@@ -768,10 +771,10 @@
 						additionalProperties = thisProtected.additionalProperties,
 						newPublicData = { t1: thisPublic.t1, t2: thisPublic.t2 },
 						newAdditionalProperties = {}, newProtectedData = {};
-						
+
 					for (propertyName in thisProtected)
 					{
-						if (thisProtected.hasOwnProperty(propertyName) && propertyName != "additionalProperties")
+						if (thisProtected.hasOwnProperty(propertyName) && propertyName !== "additionalProperties")
 							newProtectedData[propertyName] = thisProtected[propertyName];
 					}
 					newProtectedData.target = newTarget;
@@ -796,9 +799,9 @@
 
 					var v1Generator = thisProtected.v1Generator, v2Generator = thisProtected.v2Generator;
 
-					if (typeof v1Generator == "function")
+					if (typeof v1Generator === "function")
 						thisProtected.v1 = v1Generator(sequence);
-					if (typeof v2Generator == "function")
+					if (typeof v2Generator === "function")
 						thisProtected.v2 = v2Generator(sequence);
 				} // end __generateValues()
 
@@ -807,7 +810,7 @@
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					return ((typeof thisProtected.v1Generator == "function") || (typeof thisProtected.v2Generator == "function"));
+					return ((typeof thisProtected.v1Generator === "function") || (typeof thisProtected.v2Generator === "function"));
 				} // end _hasDynamicValues()
 
 
@@ -823,10 +826,9 @@
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var round, roundTenPower, newValue;
-					newValue = thisProtected.calculator(thisProtected.easing(thisPublic.t1, thisPublic.t2, time),
-					                                    thisProtected.v1, thisProtected.v2,
-														thisProtected.additionalProperties);
+					var newValue = thisProtected.calculator(thisProtected.easing(thisPublic.t1, thisPublic.t2, time),
+					                                        thisProtected.v1, thisProtected.v2,
+														    thisProtected.additionalProperties);
 
 					thisProtected.lastAppliedValue = thisProtected.applicator(thisProtected.target, thisProtected.feature,
 					                                                          { value: newValue, unit: thisProtected.unit },
@@ -907,7 +909,7 @@
 					for (i = 0; i < numTransformations; i++)
 						newTransformations[i] = transformations[i].clone(newTarget);
 
-					if (transformationIndexBySegment != null)
+					if (transformationIndexBySegment)
 					{
 						numSegments = transformationIndexBySegment.length;
 						newTransformationIndexBySegment = new Array(numSegments);
@@ -962,7 +964,7 @@
 						{
 							var aStartTime = a.t1;
 							var bStartTime = b.t1;
-							return ((aStartTime == bStartTime) ? 0 : ((aStartTime < bStartTime) ? -1 : 1));
+							return ((aStartTime === bStartTime) ? 0 : ((aStartTime < bStartTime) ? -1 : 1));
 						});
 
 					transformationIndexBySegment = thisProtected.transformationIndexBySegment = [];
@@ -1200,7 +1202,7 @@
 							unit: null,
 							applicator: Concert.Applicators.Property,
 							easing: Concert.EasingFunctions.ConstantRate,
-							calculator: Concert.Calculators.Linear,
+							calculator: Concert.Calculators.Linear
 						};
 
 					thisProtected.synchronizeTo = null;
@@ -1274,7 +1276,7 @@
 
 				function _getParamValue(parameters, paramName, defaultValue)
 				{
-					return ((parameters && (typeof parameters[paramName] != "undefined")) ? parameters[paramName] : defaultValue);
+					return ((parameters && (typeof parameters[paramName] !== "undefined")) ? parameters[paramName] : defaultValue);
 				} // end _getParamValue
 
 
@@ -1309,7 +1311,7 @@
 						{
 							if (time < currentSegmentEnd)
 								match = { segmentNumber: currentSegmentNumber, timeMatchType: 0 };
-							else if (currentSegmentNumber == numSegments - 1)
+							else if (currentSegmentNumber === numSegments - 1)
 								match = { segmentNumber: currentSegmentNumber, timeMatchType: 1 };
 							else
 							{
@@ -1319,7 +1321,7 @@
 
 								if (time < currentSegmentEnd)
 									match = { segmentNumber: currentSegmentNumber, timeMatchType: 0 };
-								else if (currentSegmentNumber == numSegments - 1)
+								else if (currentSegmentNumber === numSegments - 1)
 									match = { segmentNumber: currentSegmentNumber, timeMatchType: 1 };
 								else
 									match = thisProtected.findSequenceSegmentNumberInRange(time, currentSegmentNumber + 1, numSegments - 1);
@@ -1327,7 +1329,7 @@
 						}
 						else
 						{
-							if (currentSegmentNumber == 0)
+							if (currentSegmentNumber === 0)
 								match = { segmentNumber: 0, timeMatchType: -1 };
 							else
 								match = thisProtected.findSequenceSegmentNumberInRange(time, 0, currentSegmentNumber - 1);
@@ -1370,7 +1372,7 @@
 								break;
 							}
 						}
-					} while (rangeStart < rangeEnd)
+					} while (rangeStart < rangeEnd);
 
 					return { segmentNumber: currentSegmentNumber, timeMatchType: currentTimeMatchType };
 				} // end __findSequenceSegmentNumberInRange()
@@ -1384,12 +1386,12 @@
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var i, j, k, numTransformationGroups, curTransformationGroup, curGroupTarget, curGroupTargets, numCurGroupTargets, singleTargetVersion,
+					var i, j, numTransformationGroups, curTransformationGroup, curGroupTarget, curGroupTargets, numCurGroupTargets, singleTargetVersion,
 						curGroupFeature, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
-						numSegments, curSegment, propertyName, curSegmentT1, curSegmentT2, curSegmentV1, curSegmentV2, curSegmentUnit, curSegmentCalculator, curSegmentEasing,
-						existingTargetSequences = thisProtected.targetSequences, numExistingTargetSequences, curTargetSequence = null, tempTargetSequence,
-						newTransformationProperties, newTransformation, curFeatureSequence, defaults = thisProtected.defaults, numKeyFrames,
-						times, values, valueGenerators, curKeyFrameTime, curKeyFrameValue, curKeyFrameValueGenerator, lastKeyFrameTime, lastKeyFrameValue, lastKeyFrameValueGenerator,
+						numSegments, curSegment, propertyName, newTransformationProperties, newTransformation, curFeatureSequence,
+						existingTargetSequences = thisProtected.targetSequences, numExistingTargetSequences = existingTargetSequences.length,
+						curTargetSequence = null, tempTargetSequence, defaults = thisProtected.defaults, numKeyFrames, times, values, valueGenerators,
+						curKeyFrameTime, curKeyFrameValue, curKeyFrameValueGenerator, lastKeyFrameTime, lastKeyFrameValue, lastKeyFrameValueGenerator,
 						createSegment, allTransformations = thisProtected.allTransformations, dynamicValueTransformations = thisProtected.dynamicValueTransformations;
 
 					thisProtected.indexed = false;
@@ -1406,7 +1408,7 @@
 						curGroupTargets = curTransformationGroup.targets;
 						if (_Concert.Util.isArray(curGroupTargets))
 						{
-							if ((typeof curGroupTarget != "undefined") && (curGroupTarget !== null))
+							if ((typeof curGroupTarget !== "undefined") && (curGroupTarget !== null))
 								curGroupTargets = [curGroupTarget].concat(curGroupTargets);
 
 							for (j = 0, numCurGroupTargets = curGroupTargets.length; j < numCurGroupTargets; j++)
@@ -1426,7 +1428,7 @@
 						}
 
 						curTargetSequence = null;
-						for (j = 0, numExistingTargetSequences = existingTargetSequences.length; j < numExistingTargetSequences; j++)
+						for (j = 0; j < numExistingTargetSequences; j++)
 						{
 							tempTargetSequence = existingTargetSequences[j];
 							if (tempTargetSequence.getTarget() === curGroupTarget)
@@ -1435,7 +1437,7 @@
 								break;
 							}
 						}
-						if (curTargetSequence == null)
+						if (curTargetSequence === null)
 						{
 							curTargetSequence = new _Concert.TargetSequence(curGroupTarget);
 							existingTargetSequences.push(curTargetSequence);
@@ -1443,27 +1445,27 @@
 
 						curGroupFeature = curTransformationGroup.feature;
 						curGroupApplicator = curTransformationGroup.applicator;
-						if (typeof curGroupApplicator == "undefined")
+						if (typeof curGroupApplicator === "undefined")
 							curGroupApplicator = defaults.applicator;
 						curGroupUnit = curTransformationGroup.unit;
-						if (typeof curGroupUnit == "undefined")
+						if (typeof curGroupUnit === "undefined")
 							curGroupUnit = defaults.unit;
 						curGroupCalculator = curTransformationGroup.calculator;
-						if (typeof curGroupCalculator == "undefined")
+						if (typeof curGroupCalculator === "undefined")
 							curGroupCalculator = defaults.calculator;
 						curGroupEasing = curTransformationGroup.easing;
-						if (typeof curGroupEasing == "undefined")
+						if (typeof curGroupEasing === "undefined")
 							curGroupEasing = defaults.easing;
 
 						curFeatureSequence = curTargetSequence.findFeatureSequenceByFeature(curGroupFeature);
-						if (curFeatureSequence == null)
+						if (curFeatureSequence === null)
 						{
 							curFeatureSequence = new _Concert.FeatureSequence(curGroupTarget, curGroupFeature);
 							curTargetSequence.addFeatureSequence(curFeatureSequence);
 						}
 
 						curGroupKeyFrames = curTransformationGroup.keyframes;
-						if (typeof curGroupKeyFrames != "undefined")
+						if (typeof curGroupKeyFrames !== "undefined")
 						{
 							times = curGroupKeyFrames.times;
 							values = curGroupKeyFrames.values;
@@ -1478,15 +1480,15 @@
 								if (valueGenerators)
 									curKeyFrameValueGenerator = valueGenerators[j];
 
-								if (lastKeyFrameTime == null)
+								if (lastKeyFrameTime === null)
 								{
 									lastKeyFrameTime = curKeyFrameTime;
 									lastKeyFrameValue = curKeyFrameValue;
 									lastKeyFrameValueGenerator = curKeyFrameValueGenerator;
 
-									createSegment = ((curKeyFrameTime != null) && (j == numKeyFrames - 1)); // If this is the last keyframe, preceded by a null keyframe, create a segment out of just this one keyframe.
+									createSegment = ((curKeyFrameTime !== null) && (j === numKeyFrames - 1)); // If this is the last keyframe, preceded by a null keyframe, create a segment out of just this one keyframe.
 								}
-								else if (curKeyFrameTime == null)
+								else if (curKeyFrameTime === null)
 								{
 									lastKeyFrameTime = lastKeyFrameValue = lastKeyFrameValueGenerator = null;
 									createSegment = false;
@@ -1544,16 +1546,16 @@
 									if (curSegment.hasOwnProperty(propertyName))
 										newTransformationProperties[propertyName] = curSegment[propertyName];
 								}
-								if (typeof newTransformationProperties.unit == "undefined")
+								if (typeof newTransformationProperties.unit === "undefined")
 									newTransformationProperties.unit = curGroupUnit;
-								if (typeof newTransformationProperties.calculator == "undefined")
+								if (typeof newTransformationProperties.calculator === "undefined")
 									newTransformationProperties.calculator = curGroupCalculator;
-								if (typeof newTransformationProperties.easing == "undefined")
+								if (typeof newTransformationProperties.easing === "undefined")
 									newTransformationProperties.easing = curGroupEasing;
 
 								newTransformation = new _Concert.Transformation(newTransformationProperties);
 								allTransformations.push(newTransformation);
-								if ((typeof newTransformationProperties.v1Generator != "undefined") || (typeof newTransformationProperties.v2Generator != "undefined"))
+								if ((typeof newTransformationProperties.v1Generator !== "undefined") || (typeof newTransformationProperties.v2Generator !== "undefined"))
 									dynamicValueTransformations.push(newTransformation);
 								curFeatureSequence.addTransformation(newTransformation);
 							} // end loop through segments
@@ -1564,7 +1566,7 @@
 
 				function __begin(parameters)
 				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+					var thisPublic = this.thisPublic; //, thisProtected = _getProtectedMembers.call(thisPublic); // Can save a few bytes in the minified version since thisProtected isn't used in this function
 
 					thisPublic.run(_getCombinedParams({ synchronizeTo: null, initialSeek: 0, timeOffset: null, autoStopAtEnd: true }, parameters));
 				} // end __begin()
@@ -1670,7 +1672,7 @@
 
 				function __follow(syncSource, parameters)
 				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+					var thisPublic = this.thisPublic; //, thisProtected = _getProtectedMembers.call(thisPublic); // Can save a few bytes in the minified version since thisProtected isn't used in this function
 
 					thisPublic.run(_getCombinedParams({ synchronizeTo: syncSource, initialSeek: null, timeOffset: null }, parameters));
 				} // end __follow()
@@ -1729,31 +1731,39 @@
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var allTransformations = thisProtected.allTransformations;
-					var timelineSegments, targetSequences;
-					var i, lastBreakPoint, currentBreakPoint;
-					var numTransformations, numTargetSequences, numTotalBreakPoints, finalDistinctBreakPoint;
-					var allBreakPoints = [], distinctBreakPoints = [];
+					var allTransformations = thisProtected.allTransformations,
+						numTransformations = allTransformations.length,
+					    timelineSegments, targetSequences, i, nextBreakPoint,
+						currentBreakPoint, numTargetSequences, finalDistinctBreakPoint,
+						allBreakPoints = [], distinctBreakPoints = [];
 
-					for (i = 0, numTransformations = allTransformations.length; i < numTransformations; i++)
+					if (numTransformations > 0)
 					{
-						allBreakPoints.push(allTransformations[i].t1);
-						allBreakPoints.push(allTransformations[i].t2);
+						for (i = 0; i < numTransformations; i++)
+						{
+							allBreakPoints.push(allTransformations[i].t1);
+							allBreakPoints.push(allTransformations[i].t2);
+						}
+
+						distinctBreakPoints = _Concert.Util.deduplicateAndSort(allBreakPoints);
+
+						finalDistinctBreakPoint = distinctBreakPoints.length - 1;
+						timelineSegments = thisProtected.timelineSegments = new Array(finalDistinctBreakPoint);
+						currentBreakPoint = distinctBreakPoints[0];
+						for (i = 0; i < finalDistinctBreakPoint; i++)
+						{
+							nextBreakPoint = distinctBreakPoints[i + 1];
+							timelineSegments[i] = new _Concert.TimelineSegment(currentBreakPoint, nextBreakPoint);
+							currentBreakPoint = nextBreakPoint;
+						}
+
+						targetSequences = thisProtected.targetSequences;
+						for (i = 0, numTargetSequences = targetSequences.length; i < numTargetSequences; i++)
+							targetSequences[i].indexTransformations(timelineSegments);
+
+						thisProtected.sequenceStartTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[0].startTime);
+						thisProtected.sequenceEndTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[timelineSegments.length - 1].endTime);
 					}
-
-					distinctBreakPoints = _Concert.Util.deduplicateAndSort(allBreakPoints);
-
-					finalDistinctBreakPoint = distinctBreakPoints.length - 1
-					timelineSegments = thisProtected.timelineSegments = new Array(finalDistinctBreakPoint);
-					for (i = 0; i < finalDistinctBreakPoint; i++)
-						timelineSegments[i] = new _Concert.TimelineSegment(distinctBreakPoints[i], distinctBreakPoints[i + 1]);
-
-					targetSequences = thisProtected.targetSequences;
-					for (i = 0, numTargetSequences = targetSequences.length; i < numTargetSequences; i++)
-						targetSequences[i].indexTransformations(timelineSegments);
-
-					thisProtected.sequenceStartTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[0].startTime);
-					thisProtected.sequenceEndTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[timelineSegments.length - 1].endTime);
 
 					thisProtected.indexed = true;
 				} // end __index()
@@ -1784,7 +1794,7 @@
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var i, synchronizeTo, speed, timeOffset, initialSeek, pollingInterval,
+					var synchronizeTo, speed, timeOffset, initialSeek, pollingInterval,
 						synchronizer, initialSyncSourcePoint, soleControlOptimizationDuringRun;
 
 					if (thisProtected.running)
@@ -1797,7 +1807,7 @@
 						thisPublic.generateValues();
 
 					initialSeek = _getParamValue(parameters, "initialSeek", null);
-					if (initialSeek != null)
+					if (initialSeek !== null)
 						thisPublic.seek(initialSeek, false);
 
 					thisProtected.speed = speed = _getParamValue(parameters, "speed", thisProtected.speed);
@@ -1811,16 +1821,16 @@
 					thisProtected.poller = (pollingInterval < 1) ? (new _Concert.Pollers.Auto()) : (new _Concert.Pollers.FixedInterval(pollingInterval));
 
 					synchronizeTo = _getParamValue(parameters, "synchronizeTo", thisProtected.synchronizeTo);
-					if (synchronizeTo == null)
+					if (synchronizeTo === null)
 						synchronizer = function () { return (new Date()).getTime(); };
 					else
-						synchronizer = ((typeof synchronizeTo) == "function") ? synchronizeTo : (function () { return 1000 * synchronizeTo.currentTime; });
+						synchronizer = ((typeof synchronizeTo) === "function") ? synchronizeTo : function () { return 1000 * synchronizeTo.currentTime; };
 					thisProtected.synchronizer = synchronizer;
 
 					thisProtected.initialSyncSourcePoint = initialSyncSourcePoint = synchronizer();
 					timeOffset = _getParamValue(parameters, "timeOffset", null);
-					if (timeOffset == null)
-						timeOffset = (thisProtected.unadjustedTime != null) ? (thisProtected.unadjustedTime - initialSyncSourcePoint) : (thisProtected.sequenceStartTime - initialSyncSourcePoint);
+					if (timeOffset === null)
+						timeOffset = (thisProtected.unadjustedTime !== null) ? (thisProtected.unadjustedTime - initialSyncSourcePoint) : (thisProtected.sequenceStartTime - initialSyncSourcePoint);
 					thisProtected.timeOffset = timeOffset;
 
 					thisProtected.running = true;
@@ -1862,16 +1872,16 @@
 					thisProtected.unadjustedTime = time;
 
 					segmentMatch = thisProtected.findSequenceSegmentNumberByTime(adjustedTime);
-					if (segmentMatch != null)
+					if (segmentMatch !== null)
 					{
 						segmentNumber = segmentMatch.segmentNumber;
-						if (segmentNumber != thisProtected.lastSegmentNumber)
+						if (segmentNumber !== thisProtected.lastSegmentNumber)
 						{
 							forceApplication = true;
 							thisProtected.lastSegmentNumber = segmentNumber;
 						}
 						else
-							forceApplication = (typeof useSoleControlOptimization == "undefined") ? true : !useSoleControlOptimization;
+							forceApplication = (typeof useSoleControlOptimization === "undefined") ? true : !useSoleControlOptimization;
 						for (i = 0; i < numTargetSequences; i++)
 							targetSequences[i].seek(segmentNumber, adjustedTime, forceApplication);
 						returnVal = segmentMatch.timeMatchType;
@@ -1917,7 +1927,7 @@
 
 				function __syncTo(syncSource, parameters)
 				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+					var thisPublic = this.thisPublic; //, thisProtected = _getProtectedMembers.call(thisPublic); // Can save a few bytes in the minified version since thisProtected isn't used in this function
 
 					thisPublic.run(_getCombinedParams({ synchronizeTo: syncSource, initialSeek: null, timeOffset: 0, autoStopAtEnd: false }, parameters));
 				} // end __syncTo()
