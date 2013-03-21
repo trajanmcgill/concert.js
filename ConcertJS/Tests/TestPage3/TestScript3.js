@@ -203,7 +203,23 @@ function init3()
 				target: $d1.get(0),
 				feature: ["top", "width"],
 				unit: "px",
-				easing: Concert.EasingFunctions.Smoothstep,
+				easing:
+					function (startTime, endTime, currentTime)
+					{
+						var naturalDistance = ((currentTime - startTime) / (endTime - startTime));
+
+						if (currentTime >= endTime)
+							return 1;
+						else if (currentTime < startTime)
+							return 0;
+						else
+						{
+							if (naturalDistance < .75)
+								return naturalDistance * 2;
+							else
+								return (1.5 - (naturalDistance - .75) * 2);
+						}
+					},
 				keyframes:
 					{
 						times: [0, 1000, null, 2000, 3000],
