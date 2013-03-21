@@ -203,23 +203,7 @@ function init3()
 				target: $d1.get(0),
 				feature: ["top", "width"],
 				unit: "px",
-				easing:
-					function (startTime, endTime, currentTime)
-					{
-						var naturalDistance = ((currentTime - startTime) / (endTime - startTime));
-
-						if (currentTime >= endTime)
-							return 1;
-						else if (currentTime < startTime)
-							return 0;
-						else
-						{
-							if (naturalDistance < .75)
-								return naturalDistance * 2;
-							else
-								return (1.5 - (naturalDistance - .75) * 2);
-						}
-					},
+				easing: Concert.EasingFunctions.ConstantRate,
 				keyframes:
 					{
 						times: [0, 1000, null, 2000, 3000],
@@ -297,9 +281,18 @@ function runClick()
 
 	var runParams =
 		{
-			//synchronizeTo: jQuery("#TestAudioElement").get(0),
-			speed: new Number(jQuery("#TimeScaleFactorText").get(0).value),
-			initialSeek: 25000,
+			synchronizeTo:
+				function ()
+				{
+					var p = new Number($("#PositionUpdate").val());
+					if (isNaN(p))
+						p = 0;
+					else
+						p = p.valueOf();
+					return p;
+				},
+			//speed: new Number(jQuery("#TimeScaleFactorText").get(0).value),
+			//initialSeek: 25000,
 			//timeOffset: null,
 			//pollingInterval: new Number(jQuery("#IntervalText").get(0).value),
 			after: Concert.Repeating.Bounce(),
