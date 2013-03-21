@@ -217,24 +217,8 @@ var Concert = (function ()
 							{
 								currentIndividualValue = value[i];
 								if (applyForSure || currentIndividualValue !== lastValue[i])
-								{
-									var newStyleValue = (unit == null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit));
-									console.log(((lastValueContainer == null) ? "null" : tempMakeString(lastValueContainer)) + " : " + tempMakeString(valueContainer) + " : " + feature[i] + "=" + newStyleValue + "; force=" + forceApplication.toString());
-									target.style[feature[i]] = newStyleValue;
-								}
+									target.style[feature[i]] = (unit == null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit));
 							}
-						}
-
-						function tempMakeString(something)
-						{
-							var propName, stringval = "{ ";
-							for (propName in something)
-							{
-								if (something.hasOwnProperty(propName))
-									stringval += propName + ":" + something[propName];
-							}
-							stringval += " }";
-							return stringval;
 						}
 
 						return valueContainer;
@@ -1550,9 +1534,6 @@ var Concert = (function ()
 								curFeatureSequence.addTransformation(newTransformation);
 							} // end loop through segments
 						} // end if/else on (typeof curGroupKeyFrames != "undefined")
-
-
-
 					} // end for loop iterating through transformation groups
 				} // end __addTransformations()
 

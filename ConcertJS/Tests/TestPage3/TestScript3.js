@@ -203,14 +203,7 @@ function init3()
 				target: $d1.get(0),
 				feature: ["top", "width"],
 				unit: "px",
-				calculator:
-					function (distanceFraction, startValue, endValue, additionalProperties)
-					{
-						var i, returnValue = [];
-						for (i = 0; i < startValue.length; i++)
-							returnValue.push(startValue[i] + Math.random() * (endValue[i] - startValue[i]));
-						return returnValue;
-					},
+				easing: Concert.EasingFunctions.Smoothstep,
 				keyframes:
 					{
 						times: [0, 1000, null, 2000, 3000],
