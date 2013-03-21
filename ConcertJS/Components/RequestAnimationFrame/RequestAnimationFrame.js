@@ -11,25 +11,25 @@
 	{
 		var newID = (unusedIDs.length > 0) ? unusedIDs.pop() : callbackList.length;
 		callbackList[newID] = callback;
-		if (timeoutID == null)
+		if (timeoutID === null)
 			timeoutID = window.setTimeout(doProcessing, Math.max(0, 16 - ((new Date()).getTime() - lastFrameTime)));
 		return newID;
-	};
+	}
 
 
 	function cancel(requestID)
 	{
 		if (callbackList[requestID])
 			cancelUnchecked(requestID);
-	};
+	}
 
 
 	function cancelUnchecked(requestID)
 	{
 		callbackList[requestID] = null;
-		if (unusedIDs.length == callbackList.length - 1)
+		if (unusedIDs.length === callbackList.length - 1)
 		{
-			if (timeoutID != null)
+			if (timeoutID !== null)
 			{
 				window.clearTimeout(timeoutID);
 				timeoutID = null;
@@ -39,7 +39,7 @@
 		}
 		else
 			unusedIDs.push(requestID);
-	};
+	}
 
 
 	function doProcessing()
@@ -49,7 +49,7 @@
 		for (i = 0; i < callbackList.length; i++)
 		{
 			currentCallback = callbackList[i];
-			if (currentCallback != null)
+			if (currentCallback !== null)
 			{
 				cancelUnchecked(i);
 
@@ -57,7 +57,8 @@
 				catch (e) { }
 			}
 		}
-	};
+	}
+
 
 	if (!(window.requestAnimationFrame))
 	{
