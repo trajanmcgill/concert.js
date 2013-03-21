@@ -1,14 +1,14 @@
 ﻿var Concert = (function ()
 {
 	"use strict";
-	
+
 
 	// Save any prior value of the global variable Concert, so the
 	// user can revert to it with revertNameSpace() if there is a collision.
 	var previousNameSpaceValue = Concert;
 
-	
-	var BaseObject = function () { function e() { var e = this; e.thisPublic = this; var t = { thisPublic: e }; e.___accessProtectedMembers = function () { r = t } } function t() { return this.___accessProtectedMembers(), r } function n() { } var r; return e.extend = function (e) { var r = e(t, this); return n.prototype = this.prototype, r.prototype = new n, r.prototype.constructor = r, r.extend = this.extend, r }, e }();
+
+	var BaseObject = (function(){function C(){var c=this;c.thisPublic=this;var d={thisPublic:c};c.___accessProtectedMembers=function(){b = d;};}function g(){this.___accessProtectedMembers();return b;}function B(){}var b;C.extend=function(h){var c=h(g, this);B.prototype=this.prototype;c.prototype=new B();c.prototype.constructor=c;c.extend=this.extend;return c;};return C;})();
 
 
 	var _Concert =
