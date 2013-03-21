@@ -698,6 +698,9 @@ var Concert = (function ()
 		Transformation:
 			BaseObject.extend(function (_getProtectedMembers, BaseConstructor)
 			{
+				// ===============================================
+				// -- Transformation Constructor
+
 				function TransformationConstructor(properties)
 				{
 					// Initialize object:
@@ -739,6 +742,10 @@ var Concert = (function ()
 				} // end TransformationConstructor()
 
 
+
+				// ===============================================
+				// -- Transformation Internal Function Definitions
+
 				function _loadObjectData(newPublicData, newProtectedData)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -746,6 +753,10 @@ var Concert = (function ()
 					_Concert.Util.loadObjectData(newPublicData, newProtectedData, thisPublic, thisProtected);
 				} // end _loadObjectData()
 
+
+
+				// ===============================================
+				// -- Transformation Public Method Definitions
 
 				function __clone(newTarget)
 				{
@@ -820,6 +831,7 @@ var Concert = (function ()
 																			  thisProtected.lastAppliedValue, forceApplication);
 				} // end __seek()
 
+				// ===============================================
 
 				return TransformationConstructor;
 			}), // end Transformation definition
@@ -828,6 +840,9 @@ var Concert = (function ()
 		FeatureSequence:
 			BaseObject.extend(function (_getProtectedMembers, BaseConstructor)
 			{
+				// ===============================================
+				// -- FeatureSequence Constructor
+
 				function FeatureSequenceConstructor(target, feature)
 				{
 					// Initialize object:
@@ -850,6 +865,10 @@ var Concert = (function ()
 				} // end FeatureSequenceConstructor()
 
 
+
+				// ===============================================
+				// -- FeatureSequence Internal Function Definitions
+
 				function _loadObjectData(newPublicData, newProtectedData)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -857,6 +876,10 @@ var Concert = (function ()
 					_Concert.Util.loadObjectData(newPublicData, newProtectedData, thisPublic, thisProtected);
 				} // end _loadObjectData()
 
+
+
+				// ===============================================
+				// -- FeatureSequence Public Method Definitions
 
 				function __addTransformation(newTransformation)
 				{
@@ -1000,6 +1023,7 @@ var Concert = (function ()
 					return thisProtected.transformationIndexBySegment[sequenceSegmentNumber].seek(time, forceApplication);
 				} // end _seek()
 
+				// ===============================================
 
 				return FeatureSequenceConstructor;
 			}), // end FeatureSequence definition
@@ -1008,6 +1032,9 @@ var Concert = (function ()
 		TargetSequence:
 			BaseObject.extend(function (_getProtectedMembers, BaseConstructor)
 			{
+				// ===============================================
+				// -- TargetSequence Constructor
+
 				function TargetSequenceConstructor(target)
 				{
 					// Initialize object:
@@ -1028,6 +1055,10 @@ var Concert = (function ()
 					thisPublic.seek = __seek;
 				} // end TargetSequenceConstructor()
 
+
+
+				// ===============================================
+				// -- TargetSequence Public Method Definitions
 
 				function __addFeatureSequence(featureSequence)
 				{
@@ -1118,6 +1149,7 @@ var Concert = (function ()
 						featureSequences[i].seek(sequenceSegmentNumber, time, forceApplication);
 				} // end __seek()
 
+				// ===============================================
 
 				return TargetSequenceConstructor;
 			}), // end TargetSequence definition
@@ -1134,6 +1166,9 @@ var Concert = (function ()
 		Sequence:
 			BaseObject.extend(function (_getProtectedMembers, BaseConstructor)
 			{
+				// ===============================================
+				// -- Sequence Constructor
+
 				function SequenceConstructor(transformationSet)
 				{
 					// Initialize object:
@@ -1206,8 +1241,8 @@ var Concert = (function ()
 
 
 
-				// ================================
-				// -- Internal Function Definitions
+				// ===============================================
+				// -- Sequence Internal Function Definitions
 
 				function _getCombinedParams(initialParams, overrides)
 				{
@@ -1250,8 +1285,8 @@ var Concert = (function ()
 
 
 
-				// ================================
-				// -- Protected Method Definitions
+				// ===============================================
+				// -- Sequence Protected Method Definitions
 
 				function __findSequenceSegmentNumberByTime(time)
 				{
@@ -1340,8 +1375,8 @@ var Concert = (function ()
 
 
 
-				// ================================
-				// -- Public Method Definitions
+				// ===============================================
+				// -- Sequence Public Method Definitions
 
 				function __addTransformations(transformationSet)
 				{
@@ -1885,7 +1920,7 @@ var Concert = (function ()
 					thisPublic.run(_getCombinedParams({ synchronizeTo: syncSource, initialSeek: null, timeOffset: 0, autoStopAtEnd: false }, parameters));
 				} // end __syncTo()
 
-
+				// ===============================================
 
 				return SequenceConstructor;
 			}), // end Sequence definition
@@ -1904,7 +1939,7 @@ var Concert = (function ()
 	}; // end _Concert
 
 
-	var _Concert_PublicInterface =
+	var __Concert_PublicInterface =
 		{
 			Applicators: _Concert.Applicators,
 			Calculators: _Concert.Calculators,
@@ -1917,5 +1952,5 @@ var Concert = (function ()
 		};
 
 
-	return _Concert_PublicInterface;
+	return __Concert_PublicInterface;
 })(); // end Concert namespace
