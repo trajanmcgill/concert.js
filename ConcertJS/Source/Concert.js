@@ -109,161 +109,22 @@
 		// Commonly used functions for applying the current value in the middle of a transformation.
 		Applicators:
 			{
-				Custom:
-					function(customFunction)
-					{
-						function applicatorFunction(target, feature, valueContainer, lastValueContainer, forceApplication)
-						{
-							var i, numProperties, currentIndividualValue, applyForSure;
-							var value, lastValue, unit, lastUnit, unitIsArray;
-
-							value = valueContainer.value;
-							unit = valueContainer.unit;
-							if (lastValueContainer === null)
-							{
-								lastValue = null;
-								lastUnit = null;
-							}
-							else
-							{
-								lastValue = lastValueContainer.value;
-								lastUnit = lastValueContainer.unit;
-							}
-
-							applyForSure = (forceApplication || lastValue === null);
-
-							if ((typeof feature === "string") || (feature instanceof String))
-							{
-								if (applyForSure || value !== lastValue)
-									customFunction(target, feature, value, unit);
-							}
-							else
-							{
-								unitIsArray = _Concert.Util.isArray(unit);
-
-								for (i = 0, numProperties = feature.length; i < numProperties; i++)
-								{
-									currentIndividualValue = value[i];
-									if (applyForSure || currentIndividualValue !== lastValue[i])
-										customFunction(target, feature[i], currentIndividualValue, unitIsArray ? unit[i] : unit);
-								}
-							}
-
-							return valueContainer;
-						}
-
-						return applicatorFunction;
-					},
-
 				Property:
-					function (target, feature, valueContainer, lastValueContainer, forceApplication)
+					function (target, feature, value)
 					{
-						var i, numProperties, currentIndividualValue, applyForSure;
-						var value, lastValue;
-
-						value = valueContainer.value;
-						lastValue = (lastValueContainer === null) ? null : lastValueContainer.value;
-
-						applyForSure = (forceApplication || lastValue === null);
-
-						if ((typeof feature === "string") || (feature instanceof String))
-						{
-							if (applyForSure || value !== lastValue)
-								target[feature] = value;
-						}
-						else
-						{
-							for (i = 0, numProperties = feature.length; i < numProperties; i++)
-							{
-								currentIndividualValue = value[i];
-								if (applyForSure || currentIndividualValue !== lastValue[i])
-									target[feature[i]] = currentIndividualValue;
-							}
-						}
-
-						return valueContainer;
+						target[feature] = value;
 					},
 
 				Style:
-					function (target, feature, valueContainer, lastValueContainer, forceApplication)
+					function (target, feature, value, unit)
 					{
-						var i, numStyles, currentIndividualValue, applyForSure;
-						var value, lastValue, unit, lastUnit, unitIsArray;
-
-						value = valueContainer.value;
-						unit = valueContainer.unit;
-						if (lastValueContainer === null)
-						{
-							lastValue = null;
-							lastUnit = null;
-						}
-						else
-						{
-							lastValue = lastValueContainer.value;
-							lastUnit = lastValueContainer.unit;
-						}
-
-						applyForSure = (forceApplication || lastValue === null || unit !== lastUnit);
-
-						if ((typeof feature === "string") || (feature instanceof String))
-						{
-							if(applyForSure || value !== lastValue)
-								target.style[feature] = (unit === null) ? value : (value.toString() + unit);
-						}
-						else
-						{
-							unitIsArray = _Concert.Util.isArray(unit);
-
-							for (i = 0, numStyles = feature.length; i < numStyles; i++)
-							{
-								currentIndividualValue = value[i];
-								if (applyForSure || currentIndividualValue !== lastValue[i])
-									target.style[feature[i]] = (unit === null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit));
-							}
-						}
-
-						return valueContainer;
+						target.style[feature] = (unit === null) ? value : (value.toString() + unit);
 					},
 
 				SVG_ElementAttribute:
-					function (target, feature, valueContainer, lastValueContainer, forceApplication)
+					function (target, feature, value, unit)
 					{
-						var i, numStyles, currentIndividualValue, applyForSure;
-						var value, lastValue, unit, lastUnit, unitIsArray;
-
-						value = valueContainer.value;
-						unit = valueContainer.unit;
-						if (lastValueContainer === null)
-						{
-							lastValue = null;
-							lastUnit = null;
-						}
-						else
-						{
-							lastValue = lastValueContainer.value;
-							lastUnit = lastValueContainer.unit;
-						}
-
-						applyForSure = (forceApplication || lastValue === null || unit !== lastUnit);
-
-						if ((typeof feature === "string") || (feature instanceof String))
-						{
-							if (applyForSure || value !== lastValue)
-								target.setAttribute(feature, (unit === null) ? value : (value.toString() + unit));
-						}
-						else
-						{
-							unitIsArray = _Concert.Util.isArray(unit);
-
-							for (i = 0, numStyles = feature.length; i < numStyles; i++)
-							{
-								currentIndividualValue = value[i];
-								if (applyForSure || currentIndividualValue !== lastValue[i])
-									target.setAttribute(feature[i], (unit === null) ? currentIndividualValue : (currentIndividualValue.toString() + (unitIsArray ? unit[i] : unit)));
-							}
-						}
-
-						return valueContainer;
+						target.setAttribute(feature, (unit === null) ? value : (value.toString() + unit));
 					}
 			}, // end Applicator singleton / namespace definition
 
@@ -759,6 +620,44 @@
 				} // end _loadObjectData()
 
 
+				function _applyValue(applicator, target, feature, valueContainer, lastValueContainer, forceApplication)
+				{
+					var i, value, unit, lastValue, lastUnit, applyForSure, numFeatures,
+						unitIsArray, currentIndividualValue, currentIndividualUnit;
+
+					value = valueContainer.value;
+					unit = valueContainer.unit;
+					if (lastValueContainer === null)
+						lastValue = lastUnit = null;
+					else
+					{
+						lastValue = lastValueContainer.value;
+						lastUnit = lastValueContainer.unit;
+					}
+
+					applyForSure = (forceApplication || lastValue === null);
+
+					if (_Concert.Util.isArray(feature))
+					{
+						unitIsArray = _Concert.Util.isArray(unit);
+
+						for (i = 0, numFeatures = feature.length; i < numFeatures; i++)
+						{
+							currentIndividualValue = value[i];
+							currentIndividualUnit = unitIsArray ? unit[i] : unit;
+							if (applyForSure || currentIndividualValue !== lastValue[i] || currentIndividualUnit !== (unitIsArray ? lastUnit[i] : lastUnit))
+								applicator(target, feature[i], currentIndividualValue, currentIndividualUnit);
+						}
+					}
+					else
+					{
+						if (applyForSure || value !== lastValue || unit !== lastUnit)
+							applicator(target, feature, value, unit);
+					}
+
+					return valueContainer;
+				} // end _applyValue()
+
 
 				// ===============================================
 				// -- Transformation Public Method Definitions
@@ -830,9 +729,9 @@
 					                                        thisProtected.v1, thisProtected.v2,
 														    thisProtected.additionalProperties);
 
-					thisProtected.lastAppliedValue = thisProtected.applicator(thisProtected.target, thisProtected.feature,
-					                                                          { value: newValue, unit: thisProtected.unit },
-																			  thisProtected.lastAppliedValue, forceApplication);
+					thisProtected.lastAppliedValue = _applyValue(thisProtected.applicator, thisProtected.target, thisProtected.feature,
+					                                             { value: newValue, unit: thisProtected.unit },
+																 thisProtected.lastAppliedValue, forceApplication);
 				} // end __seek()
 
 				// ===============================================

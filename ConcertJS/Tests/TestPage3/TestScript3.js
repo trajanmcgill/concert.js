@@ -88,6 +88,16 @@ function init3()
 						times: [0, 1000, null, 2000, 3000],
 						values: [[100, 50], [200, 50], null, [200, 50], [200, 100]]
 					}
+			},
+			{
+				target: $d1.get(0),
+				feature: "innerHTML",
+				applicator: Concert.Applicators.Property,
+				calculator: Concert.Calculators.Discrete,
+				segments:
+					[
+						{ t1: 0, t2: 3000, v1: "1", v2: "done." }
+					]
 			}
 		]);
 	
