@@ -80,24 +80,25 @@ function init3()
 		[
 			{
 				target: $d1.get(0),
-				feature: ["top", "width"],
+				feature: "left",
 				unit: "px",
 				easing: Concert.EasingFunctions.ConstantRate,
 				keyframes:
 					{
-						times: [0, 1000, null, 2000, 3000],
-						values: [[100, 50], [200, 50], null, [200, 50], [200, 100]]
+						times: [4000, 5000],
+						values: [200, 300]
 					}
 			},
 			{
 				target: $d1.get(0),
-				feature: "innerHTML",
-				applicator: Concert.Applicators.Property,
-				calculator: Concert.Calculators.Discrete,
-				segments:
-					[
-						{ t1: 0, t2: 3000, v1: "1", v2: "done." }
-					]
+				feature: ["top", "left"],
+				unit: "px",
+				easing: Concert.EasingFunctions.ConstantRate,
+				keyframes:
+					{
+						times: [0, 1000, 2000],
+						values: [[100, 100], [100, 200], [200, 200]]
+					}
 			}
 		]);
 	
@@ -168,7 +169,7 @@ function beginClick()
 	sequence.begin(
 		{
 			onAutoStop: function () { jQuery("#StatusLabel").text("Auto-stopped."); },
-			useSoleControlOptimization: true
+			useSoleControlOptimization: false
 		});
 	/*
 	setTimeout(

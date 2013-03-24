@@ -597,7 +597,13 @@
 						else if (properties.hasOwnProperty(propertyName))
 							thisProtected.additionalProperties[propertyName] = properties[propertyName];
 					}
-					thisProtected.lastAppliedValue = null;
+					thisProtected.lastFrameID = null;
+					thisProtected.lastCalculatedValue = null;
+					thisProtected.lastAppliedValueContainer =
+						{
+							value: (_Concert.Util.isArray(thisProtected.feature) ? new Array(thisProtected.feature.length) : null),
+							unit: null
+						};
 
 					// Public methods
 					thisPublic.clone = __clone;
@@ -620,42 +626,50 @@
 				} // end _loadObjectData()
 
 
-				function _applyValue(applicator, target, feature, valueContainer, lastValueContainer, forceApplication)
+				function _applyValue(applicator, target, transformationFeatures, seekFeature, newValueContainer, lastAppliedValueContainer, forceApplication)
 				{
-					var i, value, unit, lastValue, lastUnit, applyForSure, numFeatures,
-						unitIsArray, currentIndividualValue, currentIndividualUnit;
+					var i, newValue, newUnit, lastValue, lastUnit, applyForSure, numTransformationFeatures,
+						curTransformationFeature, unitIsArray, currentIndividualValue, currentIndividualUnit;
 
-					value = valueContainer.value;
-					unit = valueContainer.unit;
-					if (lastValueContainer === null)
-						lastValue = lastUnit = null;
-					else
-					{
-						lastValue = lastValueContainer.value;
-						lastUnit = lastValueContainer.unit;
-					}
+					newValue = newValueContainer.value;
+					newUnit = newValueContainer.unit;
+					lastValue = lastAppliedValueContainer.value;
+					lastUnit = lastAppliedValueContainer.unit;
 
 					applyForSure = (forceApplication || lastValue === null);
 
-					if (_Concert.Util.isArray(feature))
+					if (_Concert.Util.isArray(transformationFeatures))
 					{
-						unitIsArray = _Concert.Util.isArray(unit);
+						unitIsArray = _Concert.Util.isArray(newUnit);
 
-						for (i = 0, numFeatures = feature.length; i < numFeatures; i++)
+						for (i = 0, numTransformationFeatures = transformationFeatures.length; i < numTransformationFeatures; i++)
 						{
-							currentIndividualValue = value[i];
-							currentIndividualUnit = unitIsArray ? unit[i] : unit;
-							if (applyForSure || currentIndividualValue !== lastValue[i] || currentIndividualUnit !== (unitIsArray ? lastUnit[i] : lastUnit))
-								applicator(target, feature[i], currentIndividualValue, currentIndividualUnit);
+							curTransformationFeature = transformationFeatures[i];
+							if (curTransformationFeature === seekFeature)
+							{
+								currentIndividualValue = newValue[i];
+								currentIndividualUnit = unitIsArray ? newUnit[i] : newUnit;
+								if (applyForSure || currentIndividualValue !== lastValue[i] || currentIndividualUnit !== (unitIsArray ? lastUnit[i] : lastUnit))
+								{
+									applicator(target, curTransformationFeature, currentIndividualValue, currentIndividualUnit);
+									lastValue[i] = currentIndividualValue;
+									if (unitIsArray)
+										lastUnit[i] = currentIndividualUnit;
+									else
+										lastAppliedValueContainer.unit = currentIndividualUnit;
+								}
+							}
 						}
 					}
 					else
 					{
-						if (applyForSure || value !== lastValue || unit !== lastUnit)
-							applicator(target, feature, value, unit);
+						if (applyForSure || newValue !== lastValue || newUnit !== lastUnit)
+						{
+							applicator(target, transformationFeatures, newValue, newUnit);
+							lastAppliedValueContainer.value = newValue;
+							lastAppliedValueContainer.unit = newUnit;
+						}
 					}
-
-					return valueContainer;
 				} // end _applyValue()
 
 
@@ -677,6 +691,11 @@
 							newProtectedData[propertyName] = thisProtected[propertyName];
 					}
 					newProtectedData.target = newTarget;
+					newProtectedData.lastAppliedValueContainer =
+						{
+							value: (_Concert.Util.isArray(thisProtected.feature) ? new Array(thisProtected.feature.length) : null),
+							unit: null
+						};
 
 					for (propertyName in additionalProperties)
 					{
@@ -718,20 +737,28 @@
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					thisProtected.target = newTarget;
+					thisProtected.lastAppliedValueContainer =
+						{
+							value: (_Concert.Util.isArray(thisProtected.feature) ? new Array(thisProtected.feature.length) : null),
+							unit: null
+						};
 				} // end _retarget()
 
 
-				function __seek(time, forceApplication)
+				function __seek(time, frameID, seekFeature, forceApplication)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var newValue = thisProtected.calculator(thisProtected.easing(thisPublic.t1, thisPublic.t2, time),
-					                                        thisProtected.v1, thisProtected.v2,
-														    thisProtected.additionalProperties);
+					var newValue =
+						(frameID === thisProtected.lastFrameID)
+						? thisProtected.lastCalculatedValue
+						: thisProtected.calculator(thisProtected.easing(thisPublic.t1, thisPublic.t2, time),
+					                               thisProtected.v1, thisProtected.v2,
+						                           thisProtected.additionalProperties);
 
-					thisProtected.lastAppliedValue = _applyValue(thisProtected.applicator, thisProtected.target, thisProtected.feature,
-					                                             { value: newValue, unit: thisProtected.unit },
-																 thisProtected.lastAppliedValue, forceApplication);
+					_applyValue(thisProtected.applicator, thisProtected.target, thisProtected.feature, seekFeature,
+					            { value: newValue, unit: thisProtected.unit }, thisProtected.lastAppliedValueContainer,
+								forceApplication);
 				} // end __seek()
 
 				// ===============================================
@@ -919,11 +946,11 @@
 				} // end _retarget()
 
 
-				function __seek(sequenceSegmentNumber, time, forceApplication)
+				function __seek(sequenceSegmentNumber, time, frameID, forceApplication)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					return thisProtected.transformationIndexBySegment[sequenceSegmentNumber].seek(time, forceApplication);
+					return thisProtected.transformationIndexBySegment[sequenceSegmentNumber].seek(time, frameID, thisProtected.feature, forceApplication);
 				} // end _seek()
 
 				// ===============================================
@@ -995,17 +1022,12 @@
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var i, numFeatureSequences, curFeatureSequence, curFeature,
-						featureSequences = thisProtected.featureSequences,
-						featureIsArray = _Concert.Util.isArray(feature);
+					var i, curFeatureSequence, featureSequences = thisProtected.featureSequences, numFeatureSequences = featureSequences.length;
 
-					for (i = 0, numFeatureSequences = featureSequences.length; i < numFeatureSequences; i++)
+					for (i = 0; i < numFeatureSequences; i++)
 					{
 						curFeatureSequence = featureSequences[i];
-						curFeature = curFeatureSequence.getFeature();
-						if (curFeature === feature)
-							return curFeatureSequence;
-						else if (featureIsArray && _Concert.Util.isArray(curFeature) && _Concert.Util.arraysShallowlyEqual(curFeature, feature))
+						if (curFeatureSequence.getFeature() === feature)
 							return curFeatureSequence;
 					}
 
@@ -1043,13 +1065,13 @@
 				} // end _retarget()
 
 
-				function __seek(sequenceSegmentNumber, time, forceApplication)
+				function __seek(sequenceSegmentNumber, time, frameID, forceApplication)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					var numFeatureSequences, i, featureSequences = thisProtected.featureSequences;
 					for (i = 0, numFeatureSequences = featureSequences.length; i < numFeatureSequences; i++)
-						featureSequences[i].seek(sequenceSegmentNumber, time, forceApplication);
+						featureSequences[i].seek(sequenceSegmentNumber, time, frameID, forceApplication);
 				} // end __seek()
 
 				// ===============================================
@@ -1080,6 +1102,7 @@
 
 					// Protected data members
 					thisProtected.ID = _Concert.nextSequenceID; _Concert.nextSequenceID++;
+					thisProtected.nextFrameID = 0;
 					thisProtected.targetSequences = [];
 					thisProtected.timelineSegments = [];
 					thisProtected.lastUsedTimelineSegmentNumber = 0;
@@ -1117,6 +1140,7 @@
 					// Protected methods
 					thisProtected.findSequenceSegmentNumberByTime = __findSequenceSegmentNumberByTime;
 					thisProtected.findSequenceSegmentNumberInRange = __findSequenceSegmentNumberInRange;
+					thisProtected.findTargetSequenceByTarget = __findTargetSequenceByTarget;
 
 					// Public methods
 					thisPublic.addTransformations = __addTransformations;
@@ -1277,6 +1301,22 @@
 				} // end __findSequenceSegmentNumberInRange()
 
 
+				function __findTargetSequenceByTarget(target)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var i, targetSequences = thisProtected.targetSequences, numTargetSequences = targetSequences.length;
+
+					for (i = 0; i < numTargetSequences; i++)
+					{
+						if (targetSequences[i].getTarget() === target)
+							return targetSequences[i];
+					}
+
+					return null;
+				} // end _findTargetSequenceByTarget()
+
+
 
 				// ===============================================
 				// -- Sequence Public Method Definitions
@@ -1285,12 +1325,11 @@
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var i, j, numTransformationGroups, curTransformationGroup, curGroupTarget, curGroupTargets, numCurGroupTargets, singleTargetVersion,
-						curGroupFeature, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
-						numSegments, curSegment, propertyName, newTransformationProperties, newTransformation, curFeatureSequence,
-						existingTargetSequences = thisProtected.targetSequences, numExistingTargetSequences = existingTargetSequences.length,
-						curTargetSequence = null, tempTargetSequence, defaults = thisProtected.defaults, numKeyFrames, times, values, valueGenerators,
-						curKeyFrameTime, curKeyFrameValue, curKeyFrameValueGenerator, lastKeyFrameTime, lastKeyFrameValue, lastKeyFrameValueGenerator,
+					var i, j, k, numTransformationGroups, curTransformationGroup, curGroupTarget, curGroupTargets, numCurGroupTargets, singleTargetVersion,
+						curGroupFeatures, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
+						numSegments, curSegment, propertyName, newTransformationProperties, newTransformation, singleFeatureSequence, curFeatureSequences = [],
+						existingTargetSequences = thisProtected.targetSequences, curTargetSequence = null, defaults = thisProtected.defaults, numKeyFrames, times,
+						values, valueGenerators, curKeyFrameTime, curKeyFrameValue, curKeyFrameValueGenerator, lastKeyFrameTime, lastKeyFrameValue, lastKeyFrameValueGenerator,
 						createSegment, allTransformations = thisProtected.allTransformations, dynamicValueTransformations = thisProtected.dynamicValueTransformations;
 
 					thisProtected.indexed = false;
@@ -1326,23 +1365,14 @@
 							continue;
 						}
 
-						curTargetSequence = null;
-						for (j = 0; j < numExistingTargetSequences; j++)
-						{
-							tempTargetSequence = existingTargetSequences[j];
-							if (tempTargetSequence.getTarget() === curGroupTarget)
-							{
-								curTargetSequence = tempTargetSequence;
-								break;
-							}
-						}
+						curTargetSequence = thisProtected.findTargetSequenceByTarget(curGroupTarget);
 						if (curTargetSequence === null)
 						{
 							curTargetSequence = new _Concert.TargetSequence(curGroupTarget);
 							existingTargetSequences.push(curTargetSequence);
 						}
 
-						curGroupFeature = curTransformationGroup.feature;
+						curGroupFeatures = _Concert.Util.isArray(curTransformationGroup.feature) ? curTransformationGroup.feature : [curTransformationGroup.feature];
 						curGroupApplicator = curTransformationGroup.applicator;
 						if (typeof curGroupApplicator === "undefined")
 							curGroupApplicator = defaults.applicator;
@@ -1356,11 +1386,15 @@
 						if (typeof curGroupEasing === "undefined")
 							curGroupEasing = defaults.easing;
 
-						curFeatureSequence = curTargetSequence.findFeatureSequenceByFeature(curGroupFeature);
-						if (curFeatureSequence === null)
+						for (j = 0; j < curGroupFeatures.length; j++)
 						{
-							curFeatureSequence = new _Concert.FeatureSequence(curGroupTarget, curGroupFeature);
-							curTargetSequence.addFeatureSequence(curFeatureSequence);
+							singleFeatureSequence = curTargetSequence.findFeatureSequenceByFeature(curGroupFeatures[j]);
+							if (singleFeatureSequence === null)
+							{
+								singleFeatureSequence = new _Concert.FeatureSequence(curGroupTarget, curGroupFeatures[j]);
+								curTargetSequence.addFeatureSequence(singleFeatureSequence);
+							}
+							curFeatureSequences[j] = singleFeatureSequence;
 						}
 
 						curGroupKeyFrames = curTransformationGroup.keyframes;
@@ -1400,7 +1434,7 @@
 									newTransformationProperties =
 										{
 											target: curGroupTarget,
-											feature: curGroupFeature,
+											feature: (curGroupFeatures.length === 1) ? curGroupFeatures[0] : curGroupFeatures,
 											applicator: curGroupApplicator,
 											unit: curGroupUnit,
 											calculator: curGroupCalculator,
@@ -1416,7 +1450,8 @@
 									allTransformations.push(newTransformation);
 									if (lastKeyFrameValueGenerator || curKeyFrameValueGenerator)
 										dynamicValueTransformations.push(newTransformation);
-									curFeatureSequence.addTransformation(newTransformation);
+									for(k = 0; k < curFeatureSequences.length; k++)
+										curFeatureSequences[k].addTransformation(newTransformation);
 
 									lastKeyFrameTime = curKeyFrameTime;
 									lastKeyFrameValue = curKeyFrameValue;
@@ -1436,7 +1471,7 @@
 								newTransformationProperties =
 									{
 										target: curGroupTarget,
-										feature: curGroupFeature,
+										feature: (curGroupFeatures.length === 1) ? curGroupFeatures[0] : curGroupFeatures,
 										applicator: curGroupApplicator
 									};
 
@@ -1456,7 +1491,8 @@
 								allTransformations.push(newTransformation);
 								if ((typeof newTransformationProperties.v1Generator !== "undefined") || (typeof newTransformationProperties.v2Generator !== "undefined"))
 									dynamicValueTransformations.push(newTransformation);
-								curFeatureSequence.addTransformation(newTransformation);
+								for (k = 0; k < curFeatureSequences.length; k++)
+									curFeatureSequences[k].addTransformation(newTransformation);
 							} // end loop through segments
 						} // end if/else on (typeof curGroupKeyFrames != "undefined")
 					} // end for loop iterating through transformation groups
@@ -1741,16 +1777,19 @@
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var i, segmentMatch, segmentNumber, sequenceStart, sequenceEnd, adjustedTimeContainer, adjustedTime, forceApplication;
-					var hitFinalBoundary = false, returnVal = null;
-					var targetSequences = thisProtected.targetSequences;
-					var numTargetSequences = targetSequences.length;
+					var i, segmentMatch, segmentNumber, sequenceStart, sequenceEnd,
+						adjustedTimeContainer, adjustedTime, frameID, forceApplication,
+					    hitFinalBoundary = false, returnVal = null,
+					    targetSequences = thisProtected.targetSequences,
+					    numTargetSequences = targetSequences.length;
 
 					if (!(thisProtected.indexed))
 						thisPublic.index();
 
 					sequenceStart = thisProtected.sequenceStartTime;
 					sequenceEnd = thisProtected.sequenceEndTime;
+
+					frameID = thisProtected.nextFrameID++;
 
 					if (time < sequenceStart)
 					{
@@ -1782,7 +1821,7 @@
 						else
 							forceApplication = (typeof useSoleControlOptimization === "undefined") ? true : !useSoleControlOptimization;
 						for (i = 0; i < numTargetSequences; i++)
-							targetSequences[i].seek(segmentNumber, adjustedTime, forceApplication);
+							targetSequences[i].seek(segmentNumber, adjustedTime, frameID, forceApplication);
 						returnVal = segmentMatch.timeMatchType;
 					}
 
