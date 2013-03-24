@@ -469,6 +469,9 @@
 					{
 						function AutoConstructor()
 						{
+							if (!window.cancelAnimationFrame)
+								return new _Concert.Pollers.FixedInterval(16);
+
 							// Initialize object:
 							BaseConstructor.call(this);
 							var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
