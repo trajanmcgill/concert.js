@@ -1806,15 +1806,36 @@
 				} // end __getStartTime()
 
 
-				function __index()
+				function __index(asynchronousCallback)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var allTransformations = thisProtected.allTransformations, curTransformation,
+					var allTransformations = thisProtected.allTransformations,
 						numTransformations = allTransformations.length,
 					    timelineSegments, targetSequences, i, j, nextBreakPoint,
 						currentBreakPoint, numTargetSequences, finalDistinctBreakPoint,
-						allBreakPoints, distinctBreakPoints = [];
+						allBreakPoints, distinctBreakPoints = [],
+						isAsynchronous = asynchronousCallback ? true : false;
+
+
+					function buildBreakPointList(transformationList)
+					{
+						// Build a list of all the beginning and end times for all the transformations.
+						var curTransformation, curTransformationIndex = 0, curBreakpointIndex = 0,
+							localNumTransformations = numTransformations,
+							localBreakpointList = new Array(numTransformations * 2);
+
+						while(curTransformationIndex < localNumTransformations)
+						{
+							curTransformation = transformationList[curTransformationIndex];
+							localBreakpointList[curBreakpointIndex++] = curTransformation.t1;
+							localBreakpointList[curBreakpointIndex++] = curTransformation.t2;
+							curTransformationIndex++;
+						}
+
+						allBreakPoints = localBreakpointList;
+					}
+
 
 					if (numTransformations > 0)
 					{
@@ -1822,14 +1843,7 @@
 
 						m0 = (new Date()).getTime();
 
-						// Build a list of all the beginning and end times for all the transformations.
-						allBreakPoints = new Array(numTransformations * 2);
-						for (i = 0, j = 0; i < numTransformations; i++)
-						{
-							curTransformation = allTransformations[i];
-							allBreakPoints[j++] = curTransformation.t1;
-							allBreakPoints[j++] = curTransformation.t2;
-						}
+						buildBreakPointList(allTransformations);
 
 						m1 = (new Date()).getTime();
 
