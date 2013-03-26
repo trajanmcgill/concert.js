@@ -12,8 +12,8 @@ function init()
 	var lastKeyframeTime;
 	var numSegments, thisKeyframeTime;
 
-	var numDots = 100;
-	var numSegmentsMin = 100, numSegmentsMax = 100;
+	var numDots = 200;
+	var numSegmentsMin = 200, numSegmentsMax = 200;
 	var segmentTimeMin = 100, segmentTimeMax = 5000;
 	var easingFunction = Concert.EasingFunctions.Smoothstep;
 

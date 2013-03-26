@@ -35,52 +35,156 @@
 					return true;
 				}, // end arraysShallowlyEqual()
 
-				deduplicateAndSort: function (origArray)
-				{
-					var i, distinctValStr, distinctVal, distinctArray = [], pigeonholer = {}, origNumValues = origArray.length;
-					var searchStart, searchEnd, middle, curOrigVal;
 
-					for (i = 0; i < origNumValues; i++)
+				deduplicateAndSort: function (origArray, asynchCallback)
+				{
+					var sortedArray = [], pigeonholer = {}, distinctArray = [], doneFillingDistinctArray = false, distinctArrayLength = 0,
+						origNumValues = origArray.length, origArrayIterator = 0, distinctArrayIterator = 0, roundTimeHalfBound = 200,
+						consolidationsPerRound = 1000, sortInsertionsPerRound = 1000,
+						doneBuildingSortedArray = false, isAsynchronous = (asynchCallback ? true : false);
+
+					function consolidateDistinctValues()
 					{
-						curOrigVal = origArray[i];
-						pigeonholer[curOrigVal] = curOrigVal;
+						var roundStart, roundEnd, localIterator = origArrayIterator, curOrigVal, localPigeonHolerRef = pigeonholer,
+							iterationEndIndex = isAsynchronous ? Math.min(origNumValues, localIterator + consolidationsPerRound) : origNumValues;
+
+						console.log("consolidateDistinctValues: consolidationsPerRound=" + consolidationsPerRound);
+
+						if (isAsynchronous)
+							roundStart = (new Date()).getTime();
+
+						while (localIterator < iterationEndIndex)
+						{
+							curOrigVal = origArray[localIterator];
+							localPigeonHolerRef[curOrigVal] = curOrigVal;
+							localIterator++;
+						}
+
+						if (isAsynchronous)
+						{
+							origArrayIterator = localIterator;
+
+							roundEnd = (new Date()).getTime();
+
+							if ((roundEnd - roundStart) < roundTimeHalfBound)
+								consolidationsPerRound *= 2;
+						}
 					}
 
-					for (distinctValStr in pigeonholer)
-					{
-						if (pigeonholer.hasOwnProperty(distinctValStr))
-						{
-							distinctVal = pigeonholer[distinctValStr];
-							searchStart = 0;
-							searchEnd = distinctArray.length - 1;
 
-							if (searchEnd < 0 || distinctVal > distinctArray[searchEnd])
-								distinctArray.push(distinctVal);
-							else if (distinctVal < distinctArray[0])
-								distinctArray.unshift(distinctVal);
+					function sortSingleValue(distinctVal, workingArray)
+					{
+						var searchStart = 0, searchEnd = workingArray.length - 1, middle;
+
+						if (searchEnd < 0 || distinctVal > workingArray[searchEnd])
+							workingArray.push(distinctVal);
+						else if (distinctVal < workingArray[0])
+							workingArray.unshift(distinctVal);
+						else
+						{
+							while (searchStart + 1 < searchEnd)
+							{
+								middle = Math.floor((searchStart + searchEnd) / 2);
+								if (distinctVal < workingArray[middle])
+									searchEnd = middle;
+								else
+									searchStart = middle;
+							}
+
+							workingArray.splice(searchEnd, 0, distinctVal);
+						}
+					}
+
+
+					function buildSortedArray()
+					{
+						var distinctValStr, localPigeonholerRef = pigeonholer, localDistinctArrayRef, roundStart, roundEnd,
+							iterationEndIndex, localIterator, localSortedArrayRef = sortedArray;
+
+						console.log("buildSortedArray: sortInsertionsPerRound=" + sortInsertionsPerRound);
+
+						if (isAsynchronous)
+						{
+							localDistinctArrayRef = distinctArray;
+
+							if (!doneFillingDistinctArray)
+							{
+								for (distinctValStr in localPigeonholerRef) if (localPigeonholerRef.hasOwnProperty(distinctValStr))
+									localDistinctArrayRef.push(localPigeonholerRef[distinctValStr]);
+								distinctArrayLength = localDistinctArrayRef.length;
+								doneFillingDistinctArray = true;
+								return;
+							}
+
+							roundStart = (new Date()).getTime();
+
+							localIterator = distinctArrayIterator;
+							iterationEndIndex = localIterator + sortInsertionsPerRound;
+							if (iterationEndIndex >= distinctArrayLength)
+							{
+								iterationEndIndex = distinctArrayLength;
+								doneBuildingSortedArray = true;
+							}
+
+							while (localIterator < iterationEndIndex)
+							{
+								sortSingleValue(distinctArray[localIterator], localSortedArrayRef);
+								localIterator++;
+							}
+							distinctArrayIterator = localIterator;
+
+							if (!doneBuildingSortedArray)
+							{
+								roundEnd = (new Date()).getTime();
+
+								if ((roundEnd - roundStart) < roundTimeHalfBound)
+									sortInsertionsPerRound *= 2;
+							}
+						}
+						else
+						{
+							for (distinctValStr in localPigeonholerRef) if (localPigeonholerRef.hasOwnProperty(distinctValStr))
+								sortSingleValue(localPigeonholerRef[distinctValStr], localSortedArrayRef);
+						}
+					}
+
+
+					function processAsynchronously()
+					{
+						if (isAsynchronous)
+						{
+							if (doneBuildingSortedArray)
+								asynchCallback();
 							else
 							{
-								while (searchStart + 1 < searchEnd)
-								{
-									middle = Math.floor((searchStart + searchEnd) / 2);
-									if (distinctVal < distinctArray[middle])
-										searchEnd = middle;
-									else
-										searchStart = middle;
-								}
+								if (origArrayIterator < origNumValues)
+									consolidateDistinctValues();
+								else
+									buildSortedArray();
 
-								distinctArray.splice(searchEnd, 0, distinctVal);
+								window.setInterval(processAsynchronously, 0);
 							}
 						}
 					}
 
-					return distinctArray;
+
+					if (isAsynchronous)
+						window.setTimeout(processAsynchronously, 0);
+					else
+					{
+						consolidateDistinctValues();
+						buildSortedArray();
+					}
+
+					return sortedArray;
 				}, // end deduplicateAndSort()
+
 
 				isArray: function (testVar)
 				{
 					return ((typeof testVar === "object") && (Object.prototype.toString.call(testVar) === "[object Array]"));
 				}, // end isArray()
+
 
 				loadObjectData: function (newPublicData, newProtectedData, publicContext, protectedContext)
 				{
@@ -98,6 +202,7 @@
 							protectedContext[propertyName] = newProtectedData[propertyName];
 					}
 				}, // end loadObjectData()
+
 
 				round: function (input, roundFactor)
 				{
@@ -567,6 +672,8 @@
 		Transformation:
 			BaseObject.extend(function (_getProtectedMembers, BaseConstructor)
 			{
+				var nextTransformationID = 0;
+
 				// ===============================================
 				// -- Transformation Constructor
 
@@ -577,6 +684,9 @@
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					var propertyName;
+
+					// Public data members
+					thisPublic.transformationID = nextTransformationID++;
 
 					// Initialize data members
 					thisProtected.additionalProperties = {};
@@ -791,6 +901,7 @@
 					// Public methods
 					thisPublic.addTransformation = __addTransformation;
 					thisPublic.clone = __clone;
+					thisPublic.getDataString = __getDataString;
 					thisPublic.getFeature = __getFeature;
 					thisPublic.indexTransformations = __indexTransformations;
 					thisPublic.retarget = __retarget;
@@ -862,6 +973,22 @@
 
 					return returnVal;
 				} // end __clone()
+
+				// CHANGECODE : remove these?
+				function __getDataString()
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var i, dataString = "", transformations = thisProtected.transformations, numTransformations = transformations.length, curTransformation;
+
+					for(i = 0; i < numTransformations; i++)
+					{
+						curTransformation = transformations[i];
+						dataString += curTransformation.transformationID + "," + curTransformation.t1 + "," + curTransformation.t2 + ".";
+					}
+
+					return dataString;
+				} // end __getDataString()
 
 
 				function __getFeature()
@@ -982,6 +1109,7 @@
 					thisPublic.addFeatureSequence = __addFeatureSequence;
 					thisPublic.clone = __clone;
 					thisPublic.findFeatureSequenceByFeature = __findFeatureSequenceByFeature;
+					thisPublic.getDataString = __getDataString;
 					thisPublic.getTarget = __getTarget;
 					thisPublic.indexTransformations = __indexTransformations;
 					thisPublic.retarget = __retarget;
@@ -1036,6 +1164,19 @@
 
 					return null;
 				} // end __findFeatureSequenceByFeature()
+
+
+				function __getDataString()
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var i, numFeatureSequences, dataString = "";
+					var featureSequences = thisProtected.featureSequences;
+					for (i = 0, numFeatureSequences = featureSequences.length; i < numFeatureSequences; i++)
+						dataString += featureSequences[i].getDataString() + "|";
+
+					return dataString;
+				} // end __getDataString()
 
 
 				function __getTarget()
@@ -1669,22 +1810,36 @@
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var allTransformations = thisProtected.allTransformations,
+					var allTransformations = thisProtected.allTransformations, curTransformation,
 						numTransformations = allTransformations.length,
-					    timelineSegments, targetSequences, i, nextBreakPoint,
+					    timelineSegments, targetSequences, i, j, nextBreakPoint,
 						currentBreakPoint, numTargetSequences, finalDistinctBreakPoint,
-						allBreakPoints = [], distinctBreakPoints = [];
+						allBreakPoints, distinctBreakPoints = [];
 
 					if (numTransformations > 0)
 					{
-						for (i = 0; i < numTransformations; i++)
+						var m0, m1, m2, m6; // m3, m4, m5, m6;
+
+						m0 = (new Date()).getTime();
+
+						// Build a list of all the beginning and end times for all the transformations.
+						allBreakPoints = new Array(numTransformations * 2);
+						for (i = 0, j = 0; i < numTransformations; i++)
 						{
-							allBreakPoints.push(allTransformations[i].t1);
-							allBreakPoints.push(allTransformations[i].t2);
+							curTransformation = allTransformations[i];
+							allBreakPoints[j++] = curTransformation.t1;
+							allBreakPoints[j++] = curTransformation.t2;
 						}
 
-						distinctBreakPoints = _Concert.Util.deduplicateAndSort(allBreakPoints);
+						m1 = (new Date()).getTime();
 
+						// Filter out all duplicate entries from the list of start and end times, and sort them in ascending order.
+						distinctBreakPoints = _Concert.Util.deduplicateAndSort(allBreakPoints, function () { m2 = (new Date()).getTime(); });
+
+						/*
+						m3 = (new Date()).getTime();
+
+						// Build an array of distinct segments in the overall timeline.
 						finalDistinctBreakPoint = distinctBreakPoints.length - 1;
 						timelineSegments = thisProtected.timelineSegments = new Array(finalDistinctBreakPoint);
 						currentBreakPoint = distinctBreakPoints[0];
@@ -1695,12 +1850,42 @@
 							currentBreakPoint = nextBreakPoint;
 						}
 
+						m4 = (new Date()).getTime();
+
+						// Pass the list of timeline segments to each of the target sequences in turn,
+						// having each one build an index of its transformations against that timeline segment list.
 						targetSequences = thisProtected.targetSequences;
 						for (i = 0, numTargetSequences = targetSequences.length; i < numTargetSequences; i++)
 							targetSequences[i].indexTransformations(timelineSegments);
 
+						m5 = (new Date()).getTime();
+
+						// Store the start and end time of the first and last timeline segment for later use.
 						thisProtected.sequenceStartTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[0].startTime);
 						thisProtected.sequenceEndTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[timelineSegments.length - 1].endTime);
+						*/
+						m6 = (new Date()).getTime();
+
+						var interval = setInterval(
+							function ()
+							{
+								if (m2)
+								{
+									clearInterval(interval);
+									console.log("building list of breakpoints: " + (m1 - m0).toString());
+									console.log("de-duplication and sorting breakpoints: " + (m2 - m1).toString());
+									console.log("total: " + (m6 - m0).toString());
+									console.log("all breakpoints: " + allBreakPoints.length.toString());
+									console.log("distinct breakpoints: " + distinctBreakPoints.length.toString());
+								}
+							});
+						//console.log("de-duplication and sorting breakpoints: " + (m3 - m2).toString());
+						//console.log("building array of timeline segments: " + (m4 - m3).toString());
+						//console.log("indexing transformations: " + (m5 - m4).toString());
+						//console.log("getting overall start and end times: " + (m6 - m5).toString());
+
+						//console.log("dataString length=" + dataString.length);
+						//console.log("dataString=" + dataString);
 					}
 
 					thisProtected.indexed = true;
