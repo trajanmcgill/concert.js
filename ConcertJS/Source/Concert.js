@@ -15,10 +15,27 @@
 	{
 		nextSequenceID: 0,
 
+		// "Constants", things worth gathering together to avoid using magic numbers throughout the code.
+		Definitions:
+			{
+				FallbackAutoPollerInterval: 16,
+
+				StartingIterationsPerAsynchProcessingRound:
+					{
+						buildBreakPointList: 0,
+						consolidateDistinctValues: 0,
+						sortSingleValue: 0,
+						buildSortedArray: 0,
+						buildDistinctSegmentList: 0,
+						indexTargetSequences: 0
+					}
+			}, // end Definitions object definition
+
+
 		// Functions used in indexing sequences.
 		Indexing:
 			{
-				buildBreakPointList: function (transformationList)
+				buildBreakPointList: function (transformationList, indexingStatus)
 				{
 					// Build a list of all the beginning and end times for all the transformations.
 					var curTransformation, curTransformationIndex = 0, curBreakpointIndex = 0,
@@ -33,10 +50,11 @@
 						curTransformationIndex++;
 					}
 
+					indexingStatus.step++;
 					return localBreakpointList;
 				}, // end Indexing.buildBreakPointList()
 
-				consolidateDistinctValues: function (arrayWithDuplicates)
+				consolidateDistinctValues: function (arrayWithDuplicates, indexingStatus)
 				{
 					var i = 0, curValue, pigeonholer = {}, totalNumItems = arrayWithDuplicates.length;
 
@@ -47,6 +65,7 @@
 						i++;
 					}
 
+					indexingStatus.step++;
 					return pigeonholer;
 				}, // end Indexing.consolidateDistinctValues()
 
@@ -73,17 +92,18 @@
 					}
 				}, // end Indexing.sortSingleValue()
 
-				buildSortedArray: function (distinctValuesObject)
+				buildSortedArray: function (distinctValuesObject, indexingStatus)
 				{
 					var distinctValStr, sortedArray = [], sortSingleValue = _Concert.Indexing.sortSingleValue;
 
 					for (distinctValStr in distinctValuesObject) if (distinctValuesObject.hasOwnProperty(distinctValStr))
 						sortSingleValue(distinctValuesObject[distinctValStr], sortedArray);
 
+					indexingStatus.step++;
 					return sortedArray;
 				}, // end Indexing.buildSortedArray()
 
-				buildDistinctSegmentList: function (breakpointList)
+				buildDistinctSegmentList: function (breakpointList, indexingStatus)
 				{
 					var i = 0, finalDistinctBreakPoint = breakpointList.length - 1, nextBreakPoint,
 						localTimelineSegments = new Array(finalDistinctBreakPoint),
@@ -97,14 +117,16 @@
 						i++;
 					}
 
+					indexingStatus.step++;
 					return localTimelineSegments;
 				}, // end Indexing.buildDistinctSegmentList()
 
-				indexTargetSequences: function (targetSequences, timelineSegments)
+				indexTargetSequences: function (targetSequences, timelineSegments, indexingStatus)
 				{
 					var i, numTargetSequences = targetSequences.length;
 					for (i = 0; i < numTargetSequences; i++)
 						targetSequences[i].indexTransformations(timelineSegments);
+					indexingStatus.step++;
 				} // end Indexing.indexTargetSequences()
 			}, // end Indexing singleton definition
 
@@ -524,7 +546,7 @@
 						function AutoConstructor()
 						{
 							if (!window.cancelAnimationFrame)
-								return new _Concert.Pollers.FixedInterval(16);
+								return new _Concert.Pollers.FixedInterval(_Concert.Definitions.FallbackAutoPollerInterval);
 
 							// Initialize object:
 							BaseConstructor.call(this);
@@ -1755,33 +1777,79 @@
 				} // end __getStartTime()
 
 
-				function __index()
+				function __index(asynchronousCallback)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var timelineSegments, allBreakPoints, unsortedDistinctBreakPoints, sortedDistinctBreakPoints;
+					var timelineSegments, allBreakPoints, unsortedDistinctBreakPoints, sortedDistinctBreakPoints,
+						initialAsynchIterationSettings = _Concert.Definitions.StartingIterationsPerAsynchProcessingRound,
+						asynchIterationSettings = {}, propertyName;
 
-					if (thisProtected.allTransformations.length > 0)
+
+					function _processIndexing()
 					{
-						allBreakPoints = _Concert.Indexing.buildBreakPointList(thisProtected.allTransformations);
+						var indexingStatus = thisProtected.indexingStatus;
 
-						// Filter out all duplicate entries from the list of start and end times, and sort them in ascending order.
-						unsortedDistinctBreakPoints = _Concert.Indexing.consolidateDistinctValues(allBreakPoints);
-						sortedDistinctBreakPoints = _Concert.Indexing.buildSortedArray(unsortedDistinctBreakPoints);
+						if (indexingStatus.step === 0)
+						{
+							allBreakPoints = _Concert.Indexing.buildBreakPointList(thisProtected.allTransformations, indexingStatus);
+							if (asynchronousCallback)
+								window.setTimeout(_processIndexing, 0);
+						}
 
-						// Build an array of distinct segments in the overall timeline.
-						timelineSegments = thisProtected.timelineSegments = _Concert.Indexing.buildDistinctSegmentList(sortedDistinctBreakPoints);
+						if (indexingStatus.step === 1)
+						{
+							unsortedDistinctBreakPoints = _Concert.Indexing.consolidateDistinctValues(allBreakPoints, indexingStatus);
+							if (asynchronousCallback)
+								window.setTimeout(_processIndexing, 0);
+						}
 
-						// Pass the list of timeline segments to each of the target sequences in turn,
-						// having each one build an index of its transformations against that timeline segment list.
-						_Concert.Indexing.indexTargetSequences(thisProtected.targetSequences, timelineSegments);
+						if (indexingStatus.step === 2)
+						{
+							sortedDistinctBreakPoints = _Concert.Indexing.buildSortedArray(unsortedDistinctBreakPoints, indexingStatus);
+							if (asynchronousCallback)
+								window.setTimeout(_processIndexing, 0);
+						}
 
-						// Store the start and end time of the first and last timeline segment for later use.
-						thisProtected.sequenceStartTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[0].startTime);
-						thisProtected.sequenceEndTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[timelineSegments.length - 1].endTime);
-					}
+						if (indexingStatus.step === 3)
+						{
+							timelineSegments = thisProtected.timelineSegments = _Concert.Indexing.buildDistinctSegmentList(sortedDistinctBreakPoints, indexingStatus);
+							if (asynchronousCallback)
+								window.setTimeout(_processIndexing, 0);
+						}
 
-					thisProtected.indexed = true;
+						if (indexingStatus.step === 4)
+						{
+							_Concert.Indexing.indexTargetSequences(thisProtected.targetSequences, timelineSegments, indexingStatus);
+							if (asynchronousCallback)
+								window.setTimeout(_processIndexing, 0);
+						}
+
+						if (indexingStatus.step === 5)
+						{
+							// Store the start and end time of the first and last timeline segment for later use.
+							thisProtected.sequenceStartTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[0].startTime);
+							thisProtected.sequenceEndTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[timelineSegments.length - 1].endTime);
+
+							thisProtected.indexed = true;
+							indexingStatus.step++;
+							if(asynchronousCallback)
+								asynchronousCallback(thisPublic);
+						}
+					} // end _processIndexing()
+
+
+					for (propertyName in initialAsynchIterationSettings) if (initialAsynchIterationSettings.hasOwnProperty(propertyName))
+						asynchIterationSettings[propertyName] = asynchronousCallback ? initialAsynchIterationSettings[propertyName] : 0;
+
+					thisProtected.indexingStatus = { step: 0, iterationsPerRound: 0, iterationSettings: asynchIterationSettings };
+
+					if (thisProtected.allTransformations.length < 1)
+						thisProtected.indexed = true;
+					else if (asynchronousCallback)
+						window.setTimeout(_processIndexing, 0);
+					else
+						_processIndexing();
 				} // end __index()
 
 
