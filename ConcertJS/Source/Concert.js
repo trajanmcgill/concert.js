@@ -20,10 +20,12 @@
 			{
 				FallbackAutoPollerInterval: 16,
 
+				IterationRoundTimeHalfBound: 200,
+
 				StartingIterationsPerAsynchProcessingRound:
 					{
-						buildBreakPointList: 0,
-						consolidateDistinctValues: 0,
+						buildBreakPointList: 100000,
+						consolidateDistinctValues: 1,
 						sortSingleValue: 0,
 						buildSortedArray: 0,
 						buildDistinctSegmentList: 0,
@@ -38,11 +40,25 @@
 				buildBreakPointList: function (transformationList, indexingStatus)
 				{
 					// Build a list of all the beginning and end times for all the transformations.
-					var curTransformation, curTransformationIndex = 0, curBreakpointIndex = 0,
-						numTransformations = transformationList.length,
-						localBreakpointList = new Array(numTransformations * 2);
+					var curTransformation, startTime, endTime, stoppingPoint, iterationsThisRound,
+						numTransformations = transformationList.length, isAsynchronous = indexingStatus.isAsynchronous,
+						curTransformationIndex = indexingStatus.startingIndex, curBreakpointIndex = curTransformationIndex * 2,
+						localBreakpointList = (curTransformationIndex > 0) ? indexingStatus.progressStorage : new Array(numTransformations * 2);
 
-					while (curTransformationIndex < numTransformations)
+					if (isAsynchronous)
+					{
+						startTime = (new Date()).getTime();
+						if (curTransformationIndex === 0)
+							indexingStatus.iterationsPerRound = iterationsThisRound = _Concert.Definitions.StartingIterationsPerAsynchProcessingRound.buildBreakPointList;
+						else
+							iterationsThisRound = indexingStatus.iterationsPerRound;
+						console.log("buildBreakPointList: iterationsThisRound=" + iterationsThisRound);
+						stoppingPoint = Math.min(numTransformations, curTransformationIndex + iterationsThisRound);
+					}
+					else
+						stoppingPoint = numTransformations;
+
+					while (curTransformationIndex < stoppingPoint)
 					{
 						curTransformation = transformationList[curTransformationIndex];
 						localBreakpointList[curBreakpointIndex++] = curTransformation.t1;
@@ -50,24 +66,66 @@
 						curTransformationIndex++;
 					}
 
-					indexingStatus.step++;
+					if (isAsynchronous)
+					{
+						endTime = (new Date()).getTime();
+						indexingStatus.startingIndex = curTransformationIndex;
+						if ((endTime - startTime) < _Concert.Definitions.IterationRoundTimeHalfBound)
+							indexingStatus.iterationsPerRound = iterationsThisRound * 2;
+					}
+
+					if (stoppingPoint === numTransformations)
+						indexingStatus.step++;
+					else
+						indexingStatus.progressStorage = localBreakpointList;
+
 					return localBreakpointList;
 				}, // end Indexing.buildBreakPointList()
 
+
 				consolidateDistinctValues: function (arrayWithDuplicates, indexingStatus)
 				{
-					var i = 0, curValue, pigeonholer = {}, totalNumItems = arrayWithDuplicates.length;
+					var curValue, startTime, endTime, stoppingPoint, iterationsThisRound,
+						totalNumItems = arrayWithDuplicates.length, isAsynchronous = indexingStatus.isAsynchronous,
+						curArrayIndex = indexingStatus.startingIndex,
+						pigeonholer = (curArrayIndex > 0) ? indexingStatus.progressStorage : {};
 
-					while (i < totalNumItems)
+					if (isAsynchronous)
 					{
-						curValue = arrayWithDuplicates[i];
+						startTime = (new Date()).getTime();
+						if (curArrayIndex === 0)
+							indexingStatus.iterationsPerRound = iterationsThisRound = _Concert.Definitions.StartingIterationsPerAsynchProcessingRound.consolidateDistinctValues;
+						else
+							iterationsThisRound = indexingStatus.iterationsPerRound;
+						console.log("consolidateDistinctValues: iterationsThisRound=" + iterationsThisRound);
+						stoppingPoint = Math.min(totalNumItems, curArrayIndex + iterationsThisRound);
+					}
+					else
+						stoppingPoint = totalNumItems;
+
+					while (curArrayIndex < stoppingPoint)
+					{
+						curValue = arrayWithDuplicates[curArrayIndex];
 						pigeonholer[curValue] = curValue;
-						i++;
+						curArrayIndex++;
 					}
 
-					indexingStatus.step++;
+					if (isAsynchronous)
+					{
+						endTime = (new Date()).getTime();
+						indexingStatus.startingIndex = curArrayIndex;
+						if ((endTime - startTime) < _Concert.Definitions.IterationRoundTimeHalfBound)
+							indexingStatus.iterationsPerRound = iterationsThisRound * 2;
+					}
+
+					if (stoppingPoint === totalNumItems)
+						indexingStatus.step++;
+					else
+						indexingStatus.progressStorage = pigeonholer;
+
 					return pigeonholer;
 				}, // end Indexing.consolidateDistinctValues()
+
 
 				sortSingleValue: function (distinctVal, workingArray)
 				{
@@ -92,6 +150,7 @@
 					}
 				}, // end Indexing.sortSingleValue()
 
+
 				buildSortedArray: function (distinctValuesObject, indexingStatus)
 				{
 					var distinctValStr, sortedArray = [], sortSingleValue = _Concert.Indexing.sortSingleValue;
@@ -102,6 +161,7 @@
 					indexingStatus.step++;
 					return sortedArray;
 				}, // end Indexing.buildSortedArray()
+
 
 				buildDistinctSegmentList: function (breakpointList, indexingStatus)
 				{
@@ -120,6 +180,7 @@
 					indexingStatus.step++;
 					return localTimelineSegments;
 				}, // end Indexing.buildDistinctSegmentList()
+
 
 				indexTargetSequences: function (targetSequences, timelineSegments, indexingStatus)
 				{
@@ -1224,6 +1285,8 @@
 					thisProtected.allTransformations = [];
 					thisProtected.dynamicValueTransformations = [];
 					thisProtected.indexed = false;
+					thisProtected.asynchronousIndexingInProgress = false;
+					thisProtected.indexingStatus = { isAsynchronous: false, step: 0, startingIndex: 0, iterationsPerRound: 0, progressStorage: null };
 					thisProtected.running = false;
 					thisProtected.currentTime = null;
 					thisProtected.unadjustedTime = null;
@@ -1256,6 +1319,8 @@
 					thisProtected.findSequenceSegmentNumberByTime = __findSequenceSegmentNumberByTime;
 					thisProtected.findSequenceSegmentNumberInRange = __findSequenceSegmentNumberInRange;
 					thisProtected.findTargetSequenceByTarget = __findTargetSequenceByTarget;
+					thisProtected.resetIndexing = __resetIndexing;
+					thisProtected.resetIndexingCurrentStep = __resetIndexingCurrentStep;
 
 					// Public methods
 					thisPublic.addTransformations = __addTransformations;
@@ -1432,6 +1497,28 @@
 				} // end _findTargetSequenceByTarget()
 
 
+				function __resetIndexing(isAsynchronous)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var indexingStatus = thisProtected.indexingStatus;
+					indexingStatus.isAsynchronous = isAsynchronous;
+					indexingStatus.step = 0;
+					thisProtected.resetIndexingCurrentStep();
+				} // end __resetIndexing()
+
+
+				function __resetIndexingCurrentStep()
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var indexingStatus = thisProtected.indexingStatus;
+					indexingStatus.startingIndex = 0;
+					indexingStatus.iterationsPerRound = 0;
+					indexingStatus.progressStorage = null;
+				} // end __resetIndexingCurrentStep()
+
+
 
 				// ===============================================
 				// -- Sequence Public Method Definitions
@@ -1448,6 +1535,8 @@
 						createSegment, allTransformations = thisProtected.allTransformations, dynamicValueTransformations = thisProtected.dynamicValueTransformations;
 
 					thisProtected.indexed = false;
+					if (thisProtected.asynchronousIndexingInProgress)
+						thisProtected.resetIndexing(true);
 
 					if (!(_Concert.Util.isArray(transformationSet)))
 						transformationSet = [transformationSet];
@@ -1686,6 +1775,7 @@
 							allTransformations: allNewTransformations,
 							dynamicValueTransformations: newDynamicValueTransformations,
 							indexed: thisProtected.indexed,
+							asynchronousIndexingInProgress: false,
 							running: newRunning,
 							currentTime: newCurrentTime,
 							unadjustedTime: thisProtected.unadjustedTime,
@@ -1752,7 +1842,12 @@
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					if (!(thisProtected.indexed))
+					{
+						if(thisProtected.asynchronousIndexingInProgress)
+							return null;
+
 						thisPublic.index();
+					}
 
 					return thisProtected.sequenceEndTime;
 				} // end __getEndTime()
@@ -1771,7 +1866,12 @@
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					if (!(thisProtected.indexed))
+					{
+						if (thisProtected.asynchronousIndexingInProgress)
+							return null;
+
 						thisPublic.index();
+					}
 
 					return thisProtected.sequenceStartTime;
 				} // end __getStartTime()
@@ -1782,9 +1882,9 @@
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					var timelineSegments, allBreakPoints, unsortedDistinctBreakPoints, sortedDistinctBreakPoints,
-						initialAsynchIterationSettings = _Concert.Definitions.StartingIterationsPerAsynchProcessingRound,
-						asynchIterationSettings = {}, propertyName;
+						isAsynchronous = asynchronousCallback ? true : false;
 
+					var m0, m1, m2, m3, m4, m5;
 
 					function _processIndexing()
 					{
@@ -1793,35 +1893,60 @@
 						if (indexingStatus.step === 0)
 						{
 							allBreakPoints = _Concert.Indexing.buildBreakPointList(thisProtected.allTransformations, indexingStatus);
-							if (asynchronousCallback)
+							if (indexingStatus.step === 1)
+							{
+								thisProtected.resetIndexingCurrentStep();
+								m1 = (new Date()).getTime();
+							}
+							if (isAsynchronous)
 								window.setTimeout(_processIndexing, 0);
 						}
 
 						if (indexingStatus.step === 1)
 						{
 							unsortedDistinctBreakPoints = _Concert.Indexing.consolidateDistinctValues(allBreakPoints, indexingStatus);
-							if (asynchronousCallback)
+							if (indexingStatus.step === 2)
+							{
+								thisProtected.resetIndexingCurrentStep();
+								m2 = (new Date()).getTime();
+							}
+							if (isAsynchronous)
 								window.setTimeout(_processIndexing, 0);
 						}
 
 						if (indexingStatus.step === 2)
 						{
 							sortedDistinctBreakPoints = _Concert.Indexing.buildSortedArray(unsortedDistinctBreakPoints, indexingStatus);
-							if (asynchronousCallback)
+							if (indexingStatus.step === 3)
+							{
+								thisProtected.resetIndexingCurrentStep();
+								m3 = (new Date()).getTime();
+							}
+							if (isAsynchronous)
 								window.setTimeout(_processIndexing, 0);
 						}
 
 						if (indexingStatus.step === 3)
 						{
 							timelineSegments = thisProtected.timelineSegments = _Concert.Indexing.buildDistinctSegmentList(sortedDistinctBreakPoints, indexingStatus);
-							if (asynchronousCallback)
+							if (indexingStatus.step === 4)
+							{
+								thisProtected.resetIndexingCurrentStep();
+								m4 = (new Date()).getTime();
+							}
+							if (isAsynchronous)
 								window.setTimeout(_processIndexing, 0);
 						}
 
 						if (indexingStatus.step === 4)
 						{
 							_Concert.Indexing.indexTargetSequences(thisProtected.targetSequences, timelineSegments, indexingStatus);
-							if (asynchronousCallback)
+							if (indexingStatus.step === 5)
+							{
+								thisProtected.resetIndexingCurrentStep();
+								m5 = (new Date()).getTime();
+							}
+							if (isAsynchronous)
 								window.setTimeout(_processIndexing, 0);
 						}
 
@@ -1832,22 +1957,36 @@
 							thisProtected.sequenceEndTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[timelineSegments.length - 1].endTime);
 
 							thisProtected.indexed = true;
+							thisProtected.asynchronousIndexingInProgress = false;
+							indexingStatus.progressStorage = null;
 							indexingStatus.step++;
-							if(asynchronousCallback)
+
+							console.log("buildBreakPointList: " + (m1 - m0));
+							console.log("consolidateDistinctValues: " + (m2 - m1));
+							console.log("buildSortedArray: " + (m3 - m2));
+							console.log("buildDistinctSegmentList: " + (m4 - m3));
+							console.log("indexTargetSequences: " + (m5 - m4));
+							console.log("TOTAL: " + (m5 - m0));
+
+							if (isAsynchronous)
 								asynchronousCallback(thisPublic);
 						}
 					} // end _processIndexing()
 
 
-					for (propertyName in initialAsynchIterationSettings) if (initialAsynchIterationSettings.hasOwnProperty(propertyName))
-						asynchIterationSettings[propertyName] = asynchronousCallback ? initialAsynchIterationSettings[propertyName] : 0;
+					thisProtected.resetIndexing(isAsynchronous);
 
-					thisProtected.indexingStatus = { step: 0, iterationsPerRound: 0, iterationSettings: asynchIterationSettings };
-
+					m0 = (new Date()).getTime();
 					if (thisProtected.allTransformations.length < 1)
+					{
 						thisProtected.indexed = true;
-					else if (asynchronousCallback)
+						thisProtected.asynchronousIndexingInProgress = false;
+					}
+					else if (isAsynchronous)
+					{
+						thisProtected.asynchronousIndexingInProgress = true;
 						window.setTimeout(_processIndexing, 0);
+					}
 					else
 						_processIndexing();
 				} // end __index()
@@ -1885,7 +2024,12 @@
 						thisPublic.stop();
 
 					if (!thisProtected.indexed)
+					{
+						if (thisProtected.asynchronousIndexingInProgress)
+							return;
+
 						thisPublic.index();
+					}
 
 					if (_getParamValue(parameters, "generateValues", true))
 						thisPublic.generateValues();
@@ -1933,7 +2077,12 @@
 					    numTargetSequences = targetSequences.length;
 
 					if (!(thisProtected.indexed))
+					{
+						if (thisProtected.asynchronousIndexingInProgress)
+							return;
+
 						thisPublic.index();
+					}
 
 					sequenceStart = thisProtected.sequenceStartTime;
 					sequenceEnd = thisProtected.sequenceEndTime;
