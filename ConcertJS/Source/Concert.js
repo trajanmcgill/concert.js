@@ -15,6 +15,99 @@
 	{
 		nextSequenceID: 0,
 
+		// Functions used in indexing sequences.
+		Indexing:
+			{
+				buildBreakPointList: function (transformationList)
+				{
+					// Build a list of all the beginning and end times for all the transformations.
+					var curTransformation, curTransformationIndex = 0, curBreakpointIndex = 0,
+						numTransformations = transformationList.length,
+						localBreakpointList = new Array(numTransformations * 2);
+
+					while (curTransformationIndex < numTransformations)
+					{
+						curTransformation = transformationList[curTransformationIndex];
+						localBreakpointList[curBreakpointIndex++] = curTransformation.t1;
+						localBreakpointList[curBreakpointIndex++] = curTransformation.t2;
+						curTransformationIndex++;
+					}
+
+					return localBreakpointList;
+				}, // end Indexing.buildBreakPointList()
+
+				consolidateDistinctValues: function (arrayWithDuplicates)
+				{
+					var i = 0, curValue, pigeonholer = {}, totalNumItems = arrayWithDuplicates.length;
+
+					while (i < totalNumItems)
+					{
+						curValue = arrayWithDuplicates[i];
+						pigeonholer[curValue] = curValue;
+						i++;
+					}
+
+					return pigeonholer;
+				}, // end Indexing.consolidateDistinctValues()
+
+				sortSingleValue: function (distinctVal, workingArray)
+				{
+					var searchStart = 0, searchEnd = workingArray.length - 1, middle;
+
+					if (searchEnd < 0 || distinctVal > workingArray[searchEnd])
+						workingArray.push(distinctVal);
+					else if (distinctVal < workingArray[0])
+						workingArray.unshift(distinctVal);
+					else
+					{
+						while (searchStart + 1 < searchEnd)
+						{
+							middle = Math.floor((searchStart + searchEnd) / 2);
+							if (distinctVal < workingArray[middle])
+								searchEnd = middle;
+							else
+								searchStart = middle;
+						}
+
+						workingArray.splice(searchEnd, 0, distinctVal);
+					}
+				}, // end Indexing.sortSingleValue()
+
+				buildSortedArray: function (distinctValuesObject)
+				{
+					var distinctValStr, sortedArray = [], sortSingleValue = _Concert.Indexing.sortSingleValue;
+
+					for (distinctValStr in distinctValuesObject) if (distinctValuesObject.hasOwnProperty(distinctValStr))
+						sortSingleValue(distinctValuesObject[distinctValStr], sortedArray);
+
+					return sortedArray;
+				}, // end Indexing.buildSortedArray()
+
+				buildDistinctSegmentList: function (breakpointList)
+				{
+					var i = 0, finalDistinctBreakPoint = breakpointList.length - 1, nextBreakPoint,
+						localTimelineSegments = new Array(finalDistinctBreakPoint),
+						currentBreakPoint = breakpointList[0];
+
+					while (i < finalDistinctBreakPoint)
+					{
+						nextBreakPoint = breakpointList[i + 1];
+						localTimelineSegments[i] = new _Concert.TimelineSegment(currentBreakPoint, nextBreakPoint);
+						currentBreakPoint = nextBreakPoint;
+						i++;
+					}
+
+					return localTimelineSegments;
+				}, // end Indexing.buildDistinctSegmentList()
+
+				indexTargetSequences: function (targetSequences, timelineSegments)
+				{
+					var i, numTargetSequences = targetSequences.length;
+					for (i = 0; i < numTargetSequences; i++)
+						targetSequences[i].indexTransformations(timelineSegments);
+				} // end Indexing.indexTargetSequences()
+			}, // end Indexing singleton definition
+
 
 		// Some utility functions for use throughout.
 		Util:
@@ -1668,116 +1761,20 @@
 
 					var timelineSegments, allBreakPoints, unsortedDistinctBreakPoints, sortedDistinctBreakPoints;
 
-
-					function buildBreakPointList(transformationList)
-					{
-						// Build a list of all the beginning and end times for all the transformations.
-						var curTransformation, curTransformationIndex = 0, curBreakpointIndex = 0,
-							numTransformations = transformationList.length,
-							localBreakpointList = new Array(numTransformations * 2);
-
-						while (curTransformationIndex < numTransformations)
-						{
-							curTransformation = transformationList[curTransformationIndex];
-							localBreakpointList[curBreakpointIndex++] = curTransformation.t1;
-							localBreakpointList[curBreakpointIndex++] = curTransformation.t2;
-							curTransformationIndex++;
-						}
-
-						return localBreakpointList;
-					}
-
-
-					function consolidateDistinctValues(arrayWithDuplicates)
-					{
-						var i = 0, curValue, pigeonholer = {}, totalNumItems = arrayWithDuplicates.length;
-
-						while (i < totalNumItems)
-						{
-							curValue = arrayWithDuplicates[i];
-							pigeonholer[curValue] = curValue;
-							i++;
-						}
-
-						return pigeonholer;
-					}
-
-
-					function sortSingleValue(distinctVal, workingArray)
-					{
-						var searchStart = 0, searchEnd = workingArray.length - 1, middle;
-
-						if (searchEnd < 0 || distinctVal > workingArray[searchEnd])
-							workingArray.push(distinctVal);
-						else if (distinctVal < workingArray[0])
-							workingArray.unshift(distinctVal);
-						else
-						{
-							while (searchStart + 1 < searchEnd)
-							{
-								middle = Math.floor((searchStart + searchEnd) / 2);
-								if (distinctVal < workingArray[middle])
-									searchEnd = middle;
-								else
-									searchStart = middle;
-							}
-
-							workingArray.splice(searchEnd, 0, distinctVal);
-						}
-					}
-
-
-					function buildSortedArray(distinctValuesObject)
-					{
-						var distinctValStr, sortedArray = [];
-
-						for (distinctValStr in distinctValuesObject) if (distinctValuesObject.hasOwnProperty(distinctValStr))
-							sortSingleValue(distinctValuesObject[distinctValStr], sortedArray);
-
-						return sortedArray;
-					}
-
-
-					function buildDistinctSegmentList(breakpointList)
-					{
-						var i = 0, finalDistinctBreakPoint = breakpointList.length - 1, nextBreakPoint,
-						    localTimelineSegments = new Array(finalDistinctBreakPoint),
-						    currentBreakPoint = breakpointList[0];
-
-						while (i < finalDistinctBreakPoint)
-						{
-							nextBreakPoint = breakpointList[i + 1];
-							localTimelineSegments[i] = new _Concert.TimelineSegment(currentBreakPoint, nextBreakPoint);
-							currentBreakPoint = nextBreakPoint;
-							i++;
-						}
-
-						return localTimelineSegments;
-					}
-
-
-					function indexTargetSequences(timelineSegmentList)
-					{
-						var i, targetSequences = thisProtected.targetSequences, numTargetSequences = targetSequences.length;
-						for (i = 0; i < numTargetSequences; i++)
-							targetSequences[i].indexTransformations(timelineSegmentList);
-					}
-
-
 					if (thisProtected.allTransformations.length > 0)
 					{
-						allBreakPoints = buildBreakPointList(thisProtected.allTransformations);
+						allBreakPoints = _Concert.Indexing.buildBreakPointList(thisProtected.allTransformations);
 
 						// Filter out all duplicate entries from the list of start and end times, and sort them in ascending order.
-						unsortedDistinctBreakPoints = consolidateDistinctValues(allBreakPoints);
-						sortedDistinctBreakPoints = buildSortedArray(unsortedDistinctBreakPoints);
+						unsortedDistinctBreakPoints = _Concert.Indexing.consolidateDistinctValues(allBreakPoints);
+						sortedDistinctBreakPoints = _Concert.Indexing.buildSortedArray(unsortedDistinctBreakPoints);
 
 						// Build an array of distinct segments in the overall timeline.
-						timelineSegments = thisProtected.timelineSegments = buildDistinctSegmentList(sortedDistinctBreakPoints);
+						timelineSegments = thisProtected.timelineSegments = _Concert.Indexing.buildDistinctSegmentList(sortedDistinctBreakPoints);
 
 						// Pass the list of timeline segments to each of the target sequences in turn,
 						// having each one build an index of its transformations against that timeline segment list.
-						indexTargetSequences(timelineSegments);
+						_Concert.Indexing.indexTargetSequences(thisProtected.targetSequences, timelineSegments);
 
 						// Store the start and end time of the first and last timeline segment for later use.
 						thisProtected.sequenceStartTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[0].startTime);
