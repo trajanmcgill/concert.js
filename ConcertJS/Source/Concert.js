@@ -24,172 +24,13 @@
 
 				StartingIterationsPerAsynchProcessingRound:
 					{
-						buildBreakPointList: 100000,
+						buildBreakPointList: 1,
 						consolidateDistinctValues: 1,
-						sortSingleValue: 0,
-						buildSortedArray: 0,
-						buildDistinctSegmentList: 0,
-						indexTargetSequences: 0
+						buildSortedArray: 1,
+						buildDistinctSegmentList: 1,
+						indexTargetSequences: 1
 					}
 			}, // end Definitions object definition
-
-
-		// Functions used in indexing sequences.
-		Indexing:
-			{
-				buildBreakPointList: function (transformationList, indexingStatus)
-				{
-					// Build a list of all the beginning and end times for all the transformations.
-					var curTransformation, startTime, endTime, stoppingPoint, iterationsThisRound,
-						numTransformations = transformationList.length, isAsynchronous = indexingStatus.isAsynchronous,
-						curTransformationIndex = indexingStatus.startingIndex, curBreakpointIndex = curTransformationIndex * 2,
-						localBreakpointList = (curTransformationIndex > 0) ? indexingStatus.progressStorage : new Array(numTransformations * 2);
-
-					if (isAsynchronous)
-					{
-						startTime = (new Date()).getTime();
-						if (curTransformationIndex === 0)
-							indexingStatus.iterationsPerRound = iterationsThisRound = _Concert.Definitions.StartingIterationsPerAsynchProcessingRound.buildBreakPointList;
-						else
-							iterationsThisRound = indexingStatus.iterationsPerRound;
-						console.log("buildBreakPointList: iterationsThisRound=" + iterationsThisRound);
-						stoppingPoint = Math.min(numTransformations, curTransformationIndex + iterationsThisRound);
-					}
-					else
-						stoppingPoint = numTransformations;
-
-					while (curTransformationIndex < stoppingPoint)
-					{
-						curTransformation = transformationList[curTransformationIndex];
-						localBreakpointList[curBreakpointIndex++] = curTransformation.t1;
-						localBreakpointList[curBreakpointIndex++] = curTransformation.t2;
-						curTransformationIndex++;
-					}
-
-					if (isAsynchronous)
-					{
-						endTime = (new Date()).getTime();
-						indexingStatus.startingIndex = curTransformationIndex;
-						if ((endTime - startTime) < _Concert.Definitions.IterationRoundTimeHalfBound)
-							indexingStatus.iterationsPerRound = iterationsThisRound * 2;
-					}
-
-					if (stoppingPoint === numTransformations)
-						indexingStatus.step++;
-					else
-						indexingStatus.progressStorage = localBreakpointList;
-
-					return localBreakpointList;
-				}, // end Indexing.buildBreakPointList()
-
-
-				consolidateDistinctValues: function (arrayWithDuplicates, indexingStatus)
-				{
-					var curValue, startTime, endTime, stoppingPoint, iterationsThisRound,
-						totalNumItems = arrayWithDuplicates.length, isAsynchronous = indexingStatus.isAsynchronous,
-						curArrayIndex = indexingStatus.startingIndex,
-						pigeonholer = (curArrayIndex > 0) ? indexingStatus.progressStorage : {};
-
-					if (isAsynchronous)
-					{
-						startTime = (new Date()).getTime();
-						if (curArrayIndex === 0)
-							indexingStatus.iterationsPerRound = iterationsThisRound = _Concert.Definitions.StartingIterationsPerAsynchProcessingRound.consolidateDistinctValues;
-						else
-							iterationsThisRound = indexingStatus.iterationsPerRound;
-						console.log("consolidateDistinctValues: iterationsThisRound=" + iterationsThisRound);
-						stoppingPoint = Math.min(totalNumItems, curArrayIndex + iterationsThisRound);
-					}
-					else
-						stoppingPoint = totalNumItems;
-
-					while (curArrayIndex < stoppingPoint)
-					{
-						curValue = arrayWithDuplicates[curArrayIndex];
-						pigeonholer[curValue] = curValue;
-						curArrayIndex++;
-					}
-
-					if (isAsynchronous)
-					{
-						endTime = (new Date()).getTime();
-						indexingStatus.startingIndex = curArrayIndex;
-						if ((endTime - startTime) < _Concert.Definitions.IterationRoundTimeHalfBound)
-							indexingStatus.iterationsPerRound = iterationsThisRound * 2;
-					}
-
-					if (stoppingPoint === totalNumItems)
-						indexingStatus.step++;
-					else
-						indexingStatus.progressStorage = pigeonholer;
-
-					return pigeonholer;
-				}, // end Indexing.consolidateDistinctValues()
-
-
-				sortSingleValue: function (distinctVal, workingArray)
-				{
-					var searchStart = 0, searchEnd = workingArray.length - 1, middle;
-
-					if (searchEnd < 0 || distinctVal > workingArray[searchEnd])
-						workingArray.push(distinctVal);
-					else if (distinctVal < workingArray[0])
-						workingArray.unshift(distinctVal);
-					else
-					{
-						while (searchStart + 1 < searchEnd)
-						{
-							middle = Math.floor((searchStart + searchEnd) / 2);
-							if (distinctVal < workingArray[middle])
-								searchEnd = middle;
-							else
-								searchStart = middle;
-						}
-
-						workingArray.splice(searchEnd, 0, distinctVal);
-					}
-				}, // end Indexing.sortSingleValue()
-
-
-				buildSortedArray: function (distinctValuesObject, indexingStatus)
-				{
-					var distinctValStr, sortedArray = [], sortSingleValue = _Concert.Indexing.sortSingleValue;
-
-					for (distinctValStr in distinctValuesObject) if (distinctValuesObject.hasOwnProperty(distinctValStr))
-						sortSingleValue(distinctValuesObject[distinctValStr], sortedArray);
-
-					indexingStatus.step++;
-					return sortedArray;
-				}, // end Indexing.buildSortedArray()
-
-
-				buildDistinctSegmentList: function (breakpointList, indexingStatus)
-				{
-					var i = 0, finalDistinctBreakPoint = breakpointList.length - 1, nextBreakPoint,
-						localTimelineSegments = new Array(finalDistinctBreakPoint),
-						currentBreakPoint = breakpointList[0];
-
-					while (i < finalDistinctBreakPoint)
-					{
-						nextBreakPoint = breakpointList[i + 1];
-						localTimelineSegments[i] = new _Concert.TimelineSegment(currentBreakPoint, nextBreakPoint);
-						currentBreakPoint = nextBreakPoint;
-						i++;
-					}
-
-					indexingStatus.step++;
-					return localTimelineSegments;
-				}, // end Indexing.buildDistinctSegmentList()
-
-
-				indexTargetSequences: function (targetSequences, timelineSegments, indexingStatus)
-				{
-					var i, numTargetSequences = targetSequences.length;
-					for (i = 0; i < numTargetSequences; i++)
-						targetSequences[i].indexTransformations(timelineSegments);
-					indexingStatus.step++;
-				} // end Indexing.indexTargetSequences()
-			}, // end Indexing singleton definition
 
 
 		// Some utility functions for use throughout.
@@ -1284,9 +1125,11 @@
 					thisProtected.lastUsedTimelineSegmentNumber = 0;
 					thisProtected.allTransformations = [];
 					thisProtected.dynamicValueTransformations = [];
+					thisProtected.indexCompletionCallbacks = [];
 					thisProtected.indexed = false;
-					thisProtected.asynchronousIndexingInProgress = false;
-					thisProtected.indexingStatus = { isAsynchronous: false, step: 0, startingIndex: 0, iterationsPerRound: 0, progressStorage: null };
+					thisProtected.indexingInProgress = false;
+					thisProtected.indexTimerID = null;
+					thisProtected.indexingProcessData = {};
 					thisProtected.running = false;
 					thisProtected.currentTime = null;
 					thisProtected.unadjustedTime = null;
@@ -1316,11 +1159,12 @@
 					thisProtected.soleControlOptimizationDuringRun = true;
 
 					// Protected methods
+					thisProtected.advanceIndexingToNextStep = __advanceIndexingToNextStep;
 					thisProtected.findSequenceSegmentNumberByTime = __findSequenceSegmentNumberByTime;
 					thisProtected.findSequenceSegmentNumberInRange = __findSequenceSegmentNumberInRange;
 					thisProtected.findTargetSequenceByTarget = __findTargetSequenceByTarget;
 					thisProtected.resetIndexing = __resetIndexing;
-					thisProtected.resetIndexingCurrentStep = __resetIndexingCurrentStep;
+					thisProtected.runIndexing = __runIndexing;
 
 					// Public methods
 					thisPublic.addTransformations = __addTransformations;
@@ -1391,9 +1235,107 @@
 				} // end _loadObjectData()
 
 
+				function _sortSingleValue (distinctVal, workingArray)
+				{
+					var searchStart = 0, searchEnd = workingArray.length - 1, middle;
+
+					if (searchEnd < 0 || distinctVal > workingArray[searchEnd])
+						workingArray.push(distinctVal);
+					else if (distinctVal < workingArray[0])
+						workingArray.unshift(distinctVal);
+					else
+					{
+						while (searchStart + 1 < searchEnd)
+						{
+							middle = Math.floor((searchStart + searchEnd) / 2);
+							if (distinctVal < workingArray[middle])
+								searchEnd = middle;
+							else
+								searchStart = middle;
+						}
+
+						workingArray.splice(searchEnd, 0, distinctVal);
+					}
+				} // end _sortSingleValue()
+
 
 				// ===============================================
 				// -- Sequence Protected Method Definitions
+
+				function __advanceIndexingToNextStep()
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					var distinctValuesObject, distinctValStr, distinctValuesArray, timelineSegments,
+						indexingProcessData = thisProtected.indexingProcessData, indexingComplete = false;
+
+					indexingProcessData.step++;
+					indexingProcessData.startingIndex = 0;
+
+					switch (indexingProcessData.step)
+					{
+						case 1:
+							indexingProcessData.inputData = indexingProcessData.outputData;
+							indexingProcessData.iterationsPerRound = _Concert.Definitions.StartingIterationsPerAsynchProcessingRound.consolidateDistinctValues;
+							indexingProcessData.totalIterationsThisStep = indexingProcessData.inputData.length;
+							indexingProcessData.outputData = {};
+							break;
+
+						case 2:
+							indexingProcessData.iterationsPerRound = _Concert.Definitions.StartingIterationsPerAsynchProcessingRound.buildSortedArray;
+							if (indexingProcessData.isAsynchronous)
+							{
+								distinctValuesObject = indexingProcessData.outputData;
+								distinctValuesArray = [];
+								for (distinctValStr in distinctValuesObject) if (distinctValuesObject.hasOwnProperty(distinctValStr))
+									distinctValuesArray.push(distinctValuesObject[distinctValStr]);
+								indexingProcessData.inputData = distinctValuesArray;
+								indexingProcessData.totalIterationsThisStep = distinctValuesArray.length;
+							}
+							else
+							{
+								indexingProcessData.inputData = indexingProcessData.outputData;
+								indexingProcessData.totalIterationsThisStep = 1;
+							}
+							indexingProcessData.outputData = [];
+							break;
+
+						case 3:
+							indexingProcessData.inputData = indexingProcessData.outputData;
+							indexingProcessData.iterationsPerRound = _Concert.Definitions.StartingIterationsPerAsynchProcessingRound.buildDistinctSegmentList;
+							indexingProcessData.totalIterationsThisStep = indexingProcessData.inputData.length - 1;
+							indexingProcessData.outputData = new Array(indexingProcessData.totalIterationsThisStep);
+							break;
+
+						case 4:
+							indexingProcessData.inputData = indexingProcessData.outputData;
+							indexingProcessData.iterationsPerRound = _Concert.Definitions.StartingIterationsPerAsynchProcessingRound.indexTargetSequences;
+							indexingProcessData.totalIterationsThisStep = thisProtected.targetSequences.length;
+							indexingProcessData.outputData = null;
+							break;
+
+						case 5:
+							indexingComplete = true;
+
+							thisProtected.timelineSegments = timelineSegments = indexingProcessData.inputData;
+							thisProtected.sequenceStartTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[0].startTime);
+							thisProtected.sequenceEndTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[timelineSegments.length - 1].endTime);
+
+							thisProtected.indexed = true;
+							thisProtected.indexingInProgress = false;
+
+							indexingProcessData.inputData = null;
+							indexingProcessData.iterationsPerRound = 1;
+							indexingProcessData.totalIterationsThisStep = 0;
+							indexingProcessData.outputData = null;
+
+							while (thisProtected.indexCompletionCallbacks.length)
+								(thisProtected.indexCompletionCallbacks.shift())(thisPublic);
+					} // end switch (indexingProcessData.step)
+
+					return indexingComplete;
+				} // end __setIndexingCurrentStep()
+
 
 				function __findSequenceSegmentNumberByTime(time)
 				{
@@ -1497,26 +1439,122 @@
 				} // end _findTargetSequenceByTarget()
 
 
-				function __resetIndexing(isAsynchronous)
+				function __resetIndexing()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var indexingStatus = thisProtected.indexingStatus;
-					indexingStatus.isAsynchronous = isAsynchronous;
-					indexingStatus.step = 0;
-					thisProtected.resetIndexingCurrentStep();
+					var indexingProcessData = thisProtected.indexingProcessData;
+					indexingProcessData.step = 0;
+					indexingProcessData.startingIndex = 0;
+					indexingProcessData.iterationsPerRound = _Concert.Definitions.StartingIterationsPerAsynchProcessingRound.buildBreakPointList;
+					indexingProcessData.inputData = thisProtected.allTransformations;
+					indexingProcessData.totalIterationsThisStep = thisProtected.allTransformations.length;
+					indexingProcessData.outputData = new Array(indexingProcessData.totalIterationsThisStep * 2);
 				} // end __resetIndexing()
 
 
-				function __resetIndexingCurrentStep()
+				function __runIndexing()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var indexingStatus = thisProtected.indexingStatus;
-					indexingStatus.startingIndex = 0;
-					indexingStatus.iterationsPerRound = 0;
-					indexingStatus.progressStorage = null;
-				} // end __resetIndexingCurrentStep()
+					var indexingProcessData = thisProtected.indexingProcessData, indexingComplete;
+
+
+					function doProcessing()
+					{
+						var step = indexingProcessData.step, isAsynchronous = indexingProcessData.isAsynchronous,
+							startTime, endTime, inputData = indexingProcessData.inputData,
+							curIndex = indexingProcessData.startingIndex, totalItemsToProcessThisStep = indexingProcessData.totalIterationsThisStep,
+							maxItemsToProcessThisRound = isAsynchronous ? indexingProcessData.iterationsPerRound : totalItemsToProcessThisStep,
+							stoppingPoint = Math.min(totalItemsToProcessThisStep, curIndex + maxItemsToProcessThisRound),
+							outputData = indexingProcessData.outputData, indexingComplete = false,
+							curTransformation, curBreakpointIndex = ((step === 0) ? curIndex * 2 : null),
+							curBreakpointValue, distinctValStr, nextBreakpointValue, targetSequences;
+
+						if (isAsynchronous)
+							startTime = (new Date()).getTime();
+
+						if (step === 2 && !isAsynchronous && !_Concert.Util.isArray(inputData))
+						{
+							// If we're doing this synchronously, we skip a step of copying object properties into an array.
+							// This is faster, but doesn't work in asynchronous mode, because there's no good way to break up
+							// the below loop into multiple rounds. We also can't do this if we've already started processing
+							// this step asynchronously and switched to synchronous mode in between rounds, so we also check
+							// whether the input data is an array (in which case we've already skipped the opimization and can
+							// just continue by means of the normal while/switch loop below).
+							for (distinctValStr in inputData) if (inputData.hasOwnProperty(distinctValStr))
+								_sortSingleValue(inputData[distinctValStr], outputData);
+						}
+						else
+						{
+							if (step === 3)
+								curBreakpointValue = inputData[curIndex];
+							else if (step === 4)
+								targetSequences = thisProtected.targetSequences;
+
+							while (curIndex < stoppingPoint)
+							{
+								switch (step)
+								{
+									case 0: // Building breakpoint list
+										curTransformation = inputData[curIndex];
+										outputData[curBreakpointIndex++] = curTransformation.t1;
+										outputData[curBreakpointIndex++] = curTransformation.t2;
+										break;
+									case 1: // Consolidating distinct breakpoint values
+										curBreakpointValue = inputData[curIndex];
+										outputData[curBreakpointValue] = curBreakpointValue;
+										break;
+									case 2: // Building a sorted array of distinct breakpoint values
+										_sortSingleValue(inputData[curIndex], outputData);
+										break;
+									case 3: // Building a sorted array of distinct timeline segments
+										nextBreakpointValue = inputData[curIndex + 1];
+										outputData[curIndex] = new _Concert.TimelineSegment(curBreakpointValue, nextBreakpointValue);
+										curBreakpointValue = nextBreakpointValue;
+										break;
+									case 4: // Indexing the target sequences to the timeline segment list
+										targetSequences[curIndex].indexTransformations(inputData);
+										break;
+								}
+
+								curIndex++;
+							}
+						}
+
+						if (stoppingPoint === totalItemsToProcessThisStep)
+							indexingComplete = thisProtected.advanceIndexingToNextStep();
+						else
+						{
+							endTime = (new Date()).getTime();
+							indexingProcessData.startingIndex = curIndex;
+							if ((endTime - startTime) < _Concert.Definitions.IterationRoundTimeHalfBound)
+								indexingProcessData.iterationsPerRound *= 2;
+						}
+
+						if (isAsynchronous && !indexingComplete)
+							thisProtected.indexTimerID = window.setTimeout(doProcessing, 0);
+
+						return indexingComplete;
+					} // end doProcessing()
+
+
+					if (indexingProcessData.isAsynchronous)
+					{
+						thisProtected.indexingInProgress = true;
+						thisProtected.indexTimerID = window.setTimeout(doProcessing, 0);
+					}
+					else
+					{
+						if (thisProtected.indexTimerID !== null) // This is the "join thread" case, where we're already indexing asynchronously but have been instructed to index synchronously.
+						{
+							window.clearTimeout(thisProtected.indexTimerID);
+							thisProtected.indexTimerID = null;
+						}
+						while (!indexingComplete)
+							indexingComplete = doProcessing();
+					}
+				} // end __startIndexing()
 
 
 
@@ -1534,9 +1572,10 @@
 						values, valueGenerators, curKeyFrameTime, curKeyFrameValue, curKeyFrameValueGenerator, lastKeyFrameTime, lastKeyFrameValue, lastKeyFrameValueGenerator,
 						createSegment, allTransformations = thisProtected.allTransformations, dynamicValueTransformations = thisProtected.dynamicValueTransformations;
 
-					thisProtected.indexed = false;
-					if (thisProtected.asynchronousIndexingInProgress)
-						thisProtected.resetIndexing(true);
+					if (thisProtected.indexingInProgress)
+						thisProtected.resetIndexing();
+					else
+						thisProtected.indexed = false;
 
 					if (!(_Concert.Util.isArray(transformationSet)))
 						transformationSet = [transformationSet];
@@ -1774,8 +1813,11 @@
 							lastUsedTimelineSegmentNumber: thisProtected.lastUsedTimelineSegmentNumber,
 							allTransformations: allNewTransformations,
 							dynamicValueTransformations: newDynamicValueTransformations,
+							indexCompletionCallbacks: [],
 							indexed: thisProtected.indexed,
-							asynchronousIndexingInProgress: false,
+							indexingInProgress: false,
+							indexTimerID: null,
+							indexingProcessData: {},
 							running: newRunning,
 							currentTime: newCurrentTime,
 							unadjustedTime: thisProtected.unadjustedTime,
@@ -1842,12 +1884,7 @@
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					if (!(thisProtected.indexed))
-					{
-						if(thisProtected.asynchronousIndexingInProgress)
-							return null;
-
-						thisPublic.index();
-					}
+						thisPublic.index(null, false);
 
 					return thisProtected.sequenceEndTime;
 				} // end __getEndTime()
@@ -1866,129 +1903,36 @@
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					if (!(thisProtected.indexed))
-					{
-						if (thisProtected.asynchronousIndexingInProgress)
-							return null;
-
-						thisPublic.index();
-					}
+						thisPublic.index(null, false);
 
 					return thisProtected.sequenceStartTime;
 				} // end __getStartTime()
 
 
-				function __index(asynchronousCallback)
+				function __index(completionCallback, isAsynchronous)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var timelineSegments, allBreakPoints, unsortedDistinctBreakPoints, sortedDistinctBreakPoints,
-						isAsynchronous = asynchronousCallback ? true : false;
-
-					var m0, m1, m2, m3, m4, m5;
-
-					function _processIndexing()
-					{
-						var indexingStatus = thisProtected.indexingStatus;
-
-						if (indexingStatus.step === 0)
-						{
-							allBreakPoints = _Concert.Indexing.buildBreakPointList(thisProtected.allTransformations, indexingStatus);
-							if (indexingStatus.step === 1)
-							{
-								thisProtected.resetIndexingCurrentStep();
-								m1 = (new Date()).getTime();
-							}
-							if (isAsynchronous)
-								window.setTimeout(_processIndexing, 0);
-						}
-
-						if (indexingStatus.step === 1)
-						{
-							unsortedDistinctBreakPoints = _Concert.Indexing.consolidateDistinctValues(allBreakPoints, indexingStatus);
-							if (indexingStatus.step === 2)
-							{
-								thisProtected.resetIndexingCurrentStep();
-								m2 = (new Date()).getTime();
-							}
-							if (isAsynchronous)
-								window.setTimeout(_processIndexing, 0);
-						}
-
-						if (indexingStatus.step === 2)
-						{
-							sortedDistinctBreakPoints = _Concert.Indexing.buildSortedArray(unsortedDistinctBreakPoints, indexingStatus);
-							if (indexingStatus.step === 3)
-							{
-								thisProtected.resetIndexingCurrentStep();
-								m3 = (new Date()).getTime();
-							}
-							if (isAsynchronous)
-								window.setTimeout(_processIndexing, 0);
-						}
-
-						if (indexingStatus.step === 3)
-						{
-							timelineSegments = thisProtected.timelineSegments = _Concert.Indexing.buildDistinctSegmentList(sortedDistinctBreakPoints, indexingStatus);
-							if (indexingStatus.step === 4)
-							{
-								thisProtected.resetIndexingCurrentStep();
-								m4 = (new Date()).getTime();
-							}
-							if (isAsynchronous)
-								window.setTimeout(_processIndexing, 0);
-						}
-
-						if (indexingStatus.step === 4)
-						{
-							_Concert.Indexing.indexTargetSequences(thisProtected.targetSequences, timelineSegments, indexingStatus);
-							if (indexingStatus.step === 5)
-							{
-								thisProtected.resetIndexingCurrentStep();
-								m5 = (new Date()).getTime();
-							}
-							if (isAsynchronous)
-								window.setTimeout(_processIndexing, 0);
-						}
-
-						if (indexingStatus.step === 5)
-						{
-							// Store the start and end time of the first and last timeline segment for later use.
-							thisProtected.sequenceStartTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[0].startTime);
-							thisProtected.sequenceEndTime = ((!timelineSegments || timelineSegments.length < 1) ? null : timelineSegments[timelineSegments.length - 1].endTime);
-
-							thisProtected.indexed = true;
-							thisProtected.asynchronousIndexingInProgress = false;
-							indexingStatus.progressStorage = null;
-							indexingStatus.step++;
-
-							console.log("buildBreakPointList: " + (m1 - m0));
-							console.log("consolidateDistinctValues: " + (m2 - m1));
-							console.log("buildSortedArray: " + (m3 - m2));
-							console.log("buildDistinctSegmentList: " + (m4 - m3));
-							console.log("indexTargetSequences: " + (m5 - m4));
-							console.log("TOTAL: " + (m5 - m0));
-
-							if (isAsynchronous)
-								asynchronousCallback(thisPublic);
-						}
-					} // end _processIndexing()
-
-
-					thisProtected.resetIndexing(isAsynchronous);
-
-					m0 = (new Date()).getTime();
-					if (thisProtected.allTransformations.length < 1)
+					if (thisProtected.indexed && completionCallback)
+						completionCallback(thisPublic);
+					else if (thisProtected.allTransformations.length < 1)
 					{
 						thisProtected.indexed = true;
-						thisProtected.asynchronousIndexingInProgress = false;
-					}
-					else if (isAsynchronous)
-					{
-						thisProtected.asynchronousIndexingInProgress = true;
-						window.setTimeout(_processIndexing, 0);
+						if (completionCallback)
+							completionCallback(thisPublic);
 					}
 					else
-						_processIndexing();
+					{
+						if (completionCallback)
+							thisProtected.indexCompletionCallbacks.push(completionCallback);
+
+						if (!thisProtected.indexingInProgress)
+							thisProtected.resetIndexing();
+
+						thisProtected.indexingProcessData.isAsynchronous = isAsynchronous ? true : false;
+
+						thisProtected.runIndexing();
+					}
 				} // end __index()
 
 
@@ -2023,13 +1967,8 @@
 					if (thisProtected.running)
 						thisPublic.stop();
 
-					if (!thisProtected.indexed)
-					{
-						if (thisProtected.asynchronousIndexingInProgress)
-							return;
-
-						thisPublic.index();
-					}
+					if (!(thisProtected.indexed))
+						thisPublic.index(null, false);
 
 					if (_getParamValue(parameters, "generateValues", true))
 						thisPublic.generateValues();
@@ -2077,12 +2016,7 @@
 					    numTargetSequences = targetSequences.length;
 
 					if (!(thisProtected.indexed))
-					{
-						if (thisProtected.asynchronousIndexingInProgress)
-							return;
-
-						thisPublic.index();
-					}
+						thisPublic.index(null, false);
 
 					sequenceStart = thisProtected.sequenceStartTime;
 					sequenceEnd = thisProtected.sequenceEndTime;

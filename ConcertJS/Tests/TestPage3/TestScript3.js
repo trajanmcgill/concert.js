@@ -56,19 +56,27 @@ function init()
 			});
 	}
 
-	var m0, m1, m2, m3;
+	var m0, m1, m2, m3, m4;
+	//var inum = 0, i1 = window.setInterval(function () { console.log(inum); inum++; }, 50);
 
 	m0 = (new Date()).getTime();
 	sequence = new Concert.Sequence();
 	m1 = (new Date()).getTime();
 	sequence.addTransformations(transformationSet);
 	m2 = (new Date()).getTime();
-	sequence.index(function () { sequence.seek(0); });
-	m3 = (new Date()).getTime();
+	sequence.index(
+		function ()
+		{
+			m3 = (new Date()).getTime();
+			console.log("Time to finish indexing:" + (m3 - m2));
+			sequence.seek(0);
+			//window.clearInterval(i1);
+		}, true);
+	m4 = (new Date()).getTime();
 
+	console.log("Time to index() return:" + (m4 - m2));
 	console.log("Creating Sequence:" + (m1 - m0));
 	console.log("Adding Transformations:" + (m2 - m1));
-	console.log("Time to index() return:" + (m3 - m2));
 }
 
 
@@ -112,7 +120,7 @@ function init3()
 			}
 		]);
 	
-	sequence.index();
+	sequence.index(function () { console.log("finished indexing."); }, true);
 }
 
 

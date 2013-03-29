@@ -1,0 +1,32 @@
+When adding new transformations:
+	If indexing is in progress, reset it.
+	Otherwise, set indexed status to false.
+
+When calling getStartTime/getEndTime():
+	If indexing is in progress, join it, then proceed.
+	Otherwise, if sequence is not indexed, index it synchronously, then proceed.
+	Otherwise, proceed.
+
+When calling run/begin/follow():
+	If indexing is in progress, join it, then proceed.
+	Otherwise, if sequence is not indexed, index it synchronously, then proceed.
+	Otherwise, proceed.
+
+When calling seek():
+	If indexing is in progress, join it, then proceed.
+	Otherwise, if sequence is not indexed, index it synchronously, then proceed.
+	Otherwise, proceed.
+
+When calling index() directly:
+	If indexed status is already true, return (calling any specified callback function).
+	If there are no transformations, set indexed status to true and return (calling any specified callback function).
+	If asynchronous indexing is already in progress, add any specified callback function to the list and:
+		If the new call specified asynchronous indexing, return.
+		Otherwise, join the indexing in progress.
+
+
+
+Make sure to set up a new indexer object when cloning a sequence.
+
+
+indexingStatus
