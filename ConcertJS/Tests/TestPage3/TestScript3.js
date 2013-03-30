@@ -12,8 +12,8 @@ function init()
 	var lastKeyframeTime;
 	var numSegments, thisKeyframeTime;
 
-	var numDots = 200;
-	var numSegmentsMin = 200, numSegmentsMax = 200;
+	var numDots = 100;
+	var numSegmentsMin = 100, numSegmentsMax = 100;
 	var segmentTimeMin = 100, segmentTimeMax = 5000;
 	var easingFunction = Concert.EasingFunctions.Smoothstep;
 
@@ -68,15 +68,15 @@ function init()
 		function ()
 		{
 			m3 = (new Date()).getTime();
-			console.log("Time to finish indexing:" + (m3 - m2));
+			showText("Time to finish indexing:" + (m3 - m2));
 			sequence.seek(0);
 			//window.clearInterval(i1);
 		}, true);
 	m4 = (new Date()).getTime();
 
-	console.log("Time to index() return:" + (m4 - m2));
-	console.log("Creating Sequence:" + (m1 - m0));
-	console.log("Adding Transformations:" + (m2 - m1));
+	showText("Time to index() return:" + (m4 - m2));
+	showText("Creating Sequence:" + (m1 - m0));
+	showText("Adding Transformations:" + (m2 - m1));
 }
 
 
@@ -120,9 +120,13 @@ function init3()
 			}
 		]);
 	
-	sequence.index(function () { console.log("finished indexing."); }, true);
+	sequence.index(function () { showText("finished indexing."); }, true);
 }
 
+function showText(text)
+{
+	$("#TextArea").text($("#TextArea").text() + text + "\n");
+}
 
 function onMouseMove(event)
 {

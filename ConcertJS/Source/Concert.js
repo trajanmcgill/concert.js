@@ -20,7 +20,7 @@
 			{
 				FallbackAutoPollerInterval: 16,
 
-				IterationRoundTimeHalfBound: 200,
+				IterationRoundTimeHalfBound: 50,
 
 				StartingIterationsPerAsynchProcessingRound:
 					{
@@ -774,7 +774,6 @@
 					// Public methods
 					thisPublic.addTransformation = __addTransformation;
 					thisPublic.clone = __clone;
-					thisPublic.getDataString = __getDataString;
 					thisPublic.getFeature = __getFeature;
 					thisPublic.indexTransformations = __indexTransformations;
 					thisPublic.retarget = __retarget;
@@ -847,22 +846,6 @@
 					return returnVal;
 				} // end __clone()
 
-				// CHANGECODE : remove these?
-				function __getDataString()
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					var i, dataString = "", transformations = thisProtected.transformations, numTransformations = transformations.length, curTransformation;
-
-					for(i = 0; i < numTransformations; i++)
-					{
-						curTransformation = transformations[i];
-						dataString += curTransformation.transformationID + "," + curTransformation.t1 + "," + curTransformation.t2 + ".";
-					}
-
-					return dataString;
-				} // end __getDataString()
-
 
 				function __getFeature()
 				{
@@ -876,17 +859,13 @@
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var transformations, beforeLastTransformation;
-					var numSegments, currentSegmentNumber, currentTransformation, nextTransformation, nextTransformationStartTime, currentSegmentStartTime;
-					var finalTransformationNumber, currentTransformationNumber;
-					var transformationIndexBySegment;
+					var transformations = thisProtected.transformations, finalTransformationNumber = transformations.length - 1,
+						currentTransformationNumber, beforeLastTransformation, numSegments = overallSequenceSegments.length,
+						transformationIndexBySegment, currentSegmentNumber, currentTransformation, nextTransformation,
+						nextTransformationStartTime, currentSegmentStartTime;
 
-					transformations = thisProtected.transformations;
-					finalTransformationNumber = transformations.length - 1;
 					if (finalTransformationNumber < 0)
 						return;
-
-					numSegments = overallSequenceSegments.length;
 
 					transformations.sort(
 						function (a, b)
@@ -896,7 +875,7 @@
 							return ((aStartTime === bStartTime) ? 0 : ((aStartTime < bStartTime) ? -1 : 1));
 						});
 
-					transformationIndexBySegment = thisProtected.transformationIndexBySegment = [];
+					transformationIndexBySegment = thisProtected.transformationIndexBySegment = new Array(numSegments);
 
 					currentSegmentNumber = 0;
 					currentSegmentStartTime = overallSequenceSegments[0].startTime;
@@ -926,7 +905,7 @@
 						}
 						else
 						{
-							transformationIndexBySegment.push(currentTransformation);
+							transformationIndexBySegment[currentSegmentNumber] = currentTransformation;
 							currentSegmentNumber++;
 							if (currentSegmentNumber < numSegments)
 								currentSegmentStartTime = overallSequenceSegments[currentSegmentNumber].startTime;
@@ -982,7 +961,6 @@
 					thisPublic.addFeatureSequence = __addFeatureSequence;
 					thisPublic.clone = __clone;
 					thisPublic.findFeatureSequenceByFeature = __findFeatureSequenceByFeature;
-					thisPublic.getDataString = __getDataString;
 					thisPublic.getTarget = __getTarget;
 					thisPublic.indexTransformations = __indexTransformations;
 					thisPublic.retarget = __retarget;
@@ -1037,19 +1015,6 @@
 
 					return null;
 				} // end __findFeatureSequenceByFeature()
-
-
-				function __getDataString()
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					var i, numFeatureSequences, dataString = "";
-					var featureSequences = thisProtected.featureSequences;
-					for (i = 0, numFeatureSequences = featureSequences.length; i < numFeatureSequences; i++)
-						dataString += featureSequences[i].getDataString() + "|";
-
-					return dataString;
-				} // end __getDataString()
 
 
 				function __getTarget()
@@ -1519,8 +1484,8 @@
 								}
 
 								curIndex++;
-							}
-						}
+							} // end while (curIndex < stoppingPoint)
+						} // end if/else on (step === 2 && !isAsynchronous && !_Concert.Util.isArray(inputData))
 
 						if (stoppingPoint === totalItemsToProcessThisStep)
 							indexingComplete = thisProtected.advanceIndexingToNextStep();
