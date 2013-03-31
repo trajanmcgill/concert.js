@@ -12,7 +12,7 @@ function init()
 	var lastKeyframeTime;
 	var numSegments, thisKeyframeTime;
 
-	var numDots = 100;
+	var numDots = 200;
 	var numSegmentsMin = 100, numSegmentsMax = 100;
 	var segmentTimeMin = 100, segmentTimeMax = 5000;
 	var easingFunction = Concert.EasingFunctions.Smoothstep;
@@ -71,7 +71,7 @@ function init()
 			showText("Time to finish indexing:" + (m3 - m2));
 			sequence.seek(0);
 			//window.clearInterval(i1);
-		}, true);
+		}, false);
 	m4 = (new Date()).getTime();
 
 	showText("Time to index() return:" + (m4 - m2));

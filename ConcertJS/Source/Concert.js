@@ -543,7 +543,7 @@
 
 
 		Transformation:
-			BaseObject.extend(function (_getProtectedMembers, BaseConstructor)
+			(function ()
 			{
 				var nextTransformationID = 0;
 
@@ -552,23 +552,21 @@
 
 				function TransformationConstructor(properties)
 				{
-					// Initialize object:
-					BaseConstructor.call(this);
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
 					var propertyName;
 
-					// Public data members
-					thisPublic.transformationID = nextTransformationID++;
+					// Initialize data members
+					this.transformationID = nextTransformationID++;
 
 					// Initialize data members
-					thisProtected.additionalProperties = {};
+					this.additionalProperties = {};
 					for (propertyName in properties)
 					{
 						if (propertyName === "target"
 						    || propertyName === "feature"
 						    || propertyName === "applicator"
 						    || propertyName === "calculator"
+						    || propertyName === "t1"
+						    || propertyName === "t2"
 						    || propertyName === "v1"
 						    || propertyName === "v2"
 							|| propertyName === "v1Generator"
@@ -576,41 +574,31 @@
 						    || propertyName === "unit"
 						    || propertyName === "easing")
 						{
-							thisProtected[propertyName] = properties[propertyName];
+							this[propertyName] = properties[propertyName];
 						}
-						else if (propertyName === "t1" || propertyName === "t2")
-							thisPublic[propertyName] = properties[propertyName]; // Making these public rather than requiring accessor methods improves indexing time noticably for large sequences.
 						else if (properties.hasOwnProperty(propertyName))
-							thisProtected.additionalProperties[propertyName] = properties[propertyName];
+							this.additionalProperties[propertyName] = properties[propertyName];
 					}
-					thisProtected.lastFrameID = null;
-					thisProtected.lastCalculatedValue = null;
-					thisProtected.lastAppliedValueContainer =
+					this.lastFrameID = null;
+					this.lastCalculatedValue = null;
+					this.lastAppliedValueContainer =
 						{
-							value: (_Concert.Util.isArray(thisProtected.feature) ? new Array(thisProtected.feature.length) : null),
+							value: (_Concert.Util.isArray(this.feature) ? new Array(this.feature.length) : null),
 							unit: null
 						};
 
-					// Public methods
-					thisPublic.clone = __clone;
-					thisPublic.generateValues = __generateValues;
-					thisPublic.hasDynamicValues = __hasDynamicValues;
-					thisPublic.retarget = __retarget;
-					thisPublic.seek = __seek;
+					// Methods
+					this.clone = __clone;
+					this.generateValues = __generateValues;
+					this.hasDynamicValues = __hasDynamicValues;
+					this.retarget = __retarget;
+					this.seek = __seek;
 				} // end TransformationConstructor()
 
 
 
 				// ===============================================
 				// -- Transformation Internal Function Definitions
-
-				function _loadObjectData(newPublicData, newProtectedData)
-				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					_Concert.Util.loadObjectData(newPublicData, newProtectedData, thisPublic, thisProtected);
-				} // end _loadObjectData()
-
 
 				function _applyValue(applicator, target, transformationFeatures, seekFeature, newValueContainer, lastAppliedValueContainer, forceApplication)
 				{
@@ -659,39 +647,32 @@
 				} // end _applyValue()
 
 
+
 				// ===============================================
 				// -- Transformation Public Method Definitions
 
 				function __clone(newTarget)
 				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+					var newTransformation, propertyName, propertyValue, additionalProperties = this.additionalProperties, newAdditionalProperties;
 
-					var newTransformation, propertyName,
-						additionalProperties = thisProtected.additionalProperties,
-						newPublicData = { t1: thisPublic.t1, t2: thisPublic.t2 },
-						newAdditionalProperties = {}, newProtectedData = {};
+					newTransformation = new _Concert.Transformation();
 
-					for (propertyName in thisProtected)
+					for (propertyName in this) if (this.hasOwnProperty(propertyName) && propertyName !== "additionalProperties")
 					{
-						if (thisProtected.hasOwnProperty(propertyName) && propertyName !== "additionalProperties")
-							newProtectedData[propertyName] = thisProtected[propertyName];
+						propertyValue = this[propertyName];
+						if (typeof propertyValue !== "function")
+							newTransformation[propertyName] = this[propertyName];
 					}
-					newProtectedData.target = newTarget;
-					newProtectedData.lastAppliedValueContainer =
+					newTransformation.target = newTarget;
+					newTransformation.lastAppliedValueContainer =
 						{
-							value: (_Concert.Util.isArray(thisProtected.feature) ? new Array(thisProtected.feature.length) : null),
+							value: (_Concert.Util.isArray(this.feature) ? new Array(this.feature.length) : null),
 							unit: null
 						};
 
-					for (propertyName in additionalProperties)
-					{
-						if (additionalProperties.hasOwnProperty(propertyName))
-							newAdditionalProperties[propertyName] = additionalProperties[propertyName];
-					}
-					newProtectedData.additionalProperties = newAdditionalProperties;
-
-					newTransformation = new _Concert.Transformation();
-					_loadObjectData.call(newTransformation, newPublicData, newProtectedData);
+					newAdditionalProperties = newTransformation.additionalProperties;
+					for (propertyName in additionalProperties) if (additionalProperties.hasOwnProperty(propertyName))
+						newAdditionalProperties[propertyName] = additionalProperties[propertyName];
 
 					return newTransformation;
 				} // end __clone()
@@ -699,33 +680,27 @@
 
 				function __generateValues(sequence)
 				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					var v1Generator = thisProtected.v1Generator, v2Generator = thisProtected.v2Generator;
+					var v1Generator = this.v1Generator, v2Generator = this.v2Generator;
 
 					if (typeof v1Generator === "function")
-						thisProtected.v1 = v1Generator(sequence);
+						this.v1 = v1Generator(sequence);
 					if (typeof v2Generator === "function")
-						thisProtected.v2 = v2Generator(sequence);
+						this.v2 = v2Generator(sequence);
 				} // end __generateValues()
 
 
 				function __hasDynamicValues()
 				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					return ((typeof thisProtected.v1Generator === "function") || (typeof thisProtected.v2Generator === "function"));
+					return ((typeof this.v1Generator === "function") || (typeof this.v2Generator === "function"));
 				} // end _hasDynamicValues()
 
 
 				function __retarget(newTarget)
 				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
-					thisProtected.target = newTarget;
-					thisProtected.lastAppliedValueContainer =
+					this.target = newTarget;
+					this.lastAppliedValueContainer =
 						{
-							value: (_Concert.Util.isArray(thisProtected.feature) ? new Array(thisProtected.feature.length) : null),
+							value: (_Concert.Util.isArray(this.feature) ? new Array(this.feature.length) : null),
 							unit: null
 						};
 				} // end _retarget()
@@ -733,24 +708,20 @@
 
 				function __seek(time, frameID, seekFeature, forceApplication)
 				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
-
 					var newValue =
-						(frameID === thisProtected.lastFrameID)
-						? thisProtected.lastCalculatedValue
-						: thisProtected.calculator(thisProtected.easing(thisPublic.t1, thisPublic.t2, time),
-					                               thisProtected.v1, thisProtected.v2,
-						                           thisProtected.additionalProperties);
+						(frameID === this.lastFrameID)
+						? this.lastCalculatedValue
+						: this.calculator(this.easing(this.t1, this.t2, time), this.v1, this.v2, this.additionalProperties);
 
-					_applyValue(thisProtected.applicator, thisProtected.target, thisProtected.feature, seekFeature,
-					            { value: newValue, unit: thisProtected.unit }, thisProtected.lastAppliedValueContainer,
-								forceApplication);
+					_applyValue(this.applicator, this.target, this.feature, seekFeature,
+					            { value: newValue, unit: this.unit },
+								this.lastAppliedValueContainer, forceApplication);
 				} // end __seek()
 
 				// ===============================================
 
 				return TransformationConstructor;
-			}), // end Transformation definition
+			})(), // end Transformation definition
 
 
 		FeatureSequence:
