@@ -44,6 +44,28 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "www.concertjs.com", "http:/
 		DefaultWebSiteLanguage = "Visual C#"
 	EndProjectSection
 EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "requestAnimationFrame", "http://localhost:18268", "{9A84D6AE-F548-469C-BD0E-3398088DA99D}"
+	ProjectSection(WebsiteProperties) = preProject
+		UseIISExpress = "true"
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_18268"
+		Debug.AspNetCompiler.PhysicalPath = "requestAnimationFrame\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_18268\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_18268"
+		Release.AspNetCompiler.PhysicalPath = "requestAnimationFrame\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_18268\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		SlnRelativePath = "requestAnimationFrame\"
+		DefaultWebSiteLanguage = "Visual C#"
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +75,8 @@ Global
 		{A4054D46-552E-498F-903F-BDABA618C689}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CFF757D7-A1C4-48F0-B19E-5530FF6E8F5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CFF757D7-A1C4-48F0-B19E-5530FF6E8F5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A84D6AE-F548-469C-BD0E-3398088DA99D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A84D6AE-F548-469C-BD0E-3398088DA99D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
