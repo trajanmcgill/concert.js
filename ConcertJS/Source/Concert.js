@@ -1041,6 +1041,15 @@ var Concert = (function ()
 				// ===============================================
 				// -- Sequence Constructor
 
+				/**
+				 * ADDCODE
+				 * @name Sequence
+				 * @public
+				 * @memberof Concert
+				 * @constructor
+				 * @param {Object} [transformationSet] An object defining an initial set of transformations to add to the sequence. The layout of this object is the same as used in the [addTransformations method]{@link Concert.Sequence#addTransformations}.
+				 * @returns {Object} A new Sequence object.
+				 */
 				function SequenceConstructor(transformationSet)
 				{
 					// Initialize object:
@@ -1491,6 +1500,14 @@ var Concert = (function ()
 				// ===============================================
 				// -- Sequence Public Method Definitions
 
+				/**
+				 * ADDCODE
+				 * @name addTransformations
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @param {Object} transformationSet ADDCODE
+				 */
 				function __addTransformations(transformationSet)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1672,6 +1689,14 @@ var Concert = (function ()
 				} // end __addTransformations()
 
 
+				/**
+				 * ADDCODE
+				 * @name begin
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @param {Object} parameters ADDCODE
+				 */
 				function __begin(parameters)
 				{
 					var thisPublic = this.thisPublic; //, thisProtected = _getProtectedMembers.call(thisPublic); // Can save a few bytes in the minified version since thisProtected isn't used in this function
@@ -1680,6 +1705,17 @@ var Concert = (function ()
 				} // end __begin()
 
 
+				/**
+				 * ADDCODE
+				 * @name clone
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @param {function} targetLookupFunction ADDCODE
+				 * @param {Boolean} matchRunningStatus ADDCODE
+				 * @param {Boolean} doInitialSeek ADDCODE
+				 * @returns {Object} ADDCODE
+				 */
 				function __clone(targetLookupFunction, matchRunningStatus, doInitialSeek)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1782,6 +1818,15 @@ var Concert = (function ()
 				} // end __clone()
 
 
+				/**
+				 * ADDCODE
+				 * @name follow
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @param {Object} syncSource ADDCODE
+				 * @param {Object} parameters ADDCODE
+				 */
 				function __follow(syncSource, parameters)
 				{
 					var thisPublic = this.thisPublic; //, thisProtected = _getProtectedMembers.call(thisPublic); // Can save a few bytes in the minified version since thisProtected isn't used in this function
@@ -1790,6 +1835,13 @@ var Concert = (function ()
 				} // end __follow()
 
 
+				/**
+				 * ADDCODE
+				 * @name generateValues
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 */
 				function __generateValues()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1801,6 +1853,14 @@ var Concert = (function ()
 				} // end __generateValues();
 
 
+				/**
+				 * ADDCODE
+				 * @name getCurrentTime
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @returns {Number} ADDCODE
+				 */
 				function __getCurrentTime()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1809,6 +1869,14 @@ var Concert = (function ()
 				} // end _getCurrentTime()
 
 
+				/**
+				 * ADDCODE
+				 * @name getEndTime
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @returns {Number} ADDCODE
+				 */
 				function __getEndTime()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1820,6 +1888,14 @@ var Concert = (function ()
 				} // end __getEndTime()
 
 
+				/**
+				 * ADDCODE
+				 * @name getID
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @returns {Number} ADDCODE
+				 */
 				function __getID()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1828,6 +1904,14 @@ var Concert = (function ()
 				} // end __getID()
 
 
+				/**
+				 * ADDCODE
+				 * @name getStartTime
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @returns {Number} ADDCODE
+				 */
 				function __getStartTime()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1839,6 +1923,15 @@ var Concert = (function ()
 				} // end __getStartTime()
 
 
+				/**
+				 * ADDCODE
+				 * @name index
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @param {requestCallback} completionCallback ADDCODE
+				 * @param {Boolean} isAsynchronous ADDCODE
+				 */
 				function __index(completionCallback, isAsynchronous)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1866,6 +1959,14 @@ var Concert = (function ()
 				} // end __index()
 
 
+				/**
+				 * ADDCODE
+				 * @name isRunning
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @returns {Boolean} ADDCODE
+				 */
 				function __isRunning()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1874,6 +1975,14 @@ var Concert = (function ()
 				} // end __isRunning()
 
 
+				/**
+				 * ADDCODE
+				 * @name retarget
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @param {function} targetLookupFunction ADDCODE
+				 */
 				function __retarget(targetLookupFunction)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1887,6 +1996,14 @@ var Concert = (function ()
 				} // end _retarget()
 
 
+				/**
+				 * ADDCODE
+				 * @name run
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @param {Object} parameters ADDCODE
+				 */
 				function __run(parameters)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1935,6 +2052,15 @@ var Concert = (function ()
 				} // end __run()
 
 
+				/**
+				 * ADDCODE
+				 * @name seek
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @param {Number} time ADDCODE
+				 * @param {Boolean} [useSoleControlOptimization] ADDCODE
+				 */
 				function __seek(time, useSoleControlOptimization)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -1998,6 +2124,14 @@ var Concert = (function ()
 				} // end __seek()
 
 
+				/**
+				 * ADDCODE
+				 * @name setDefaults
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @param {Object} newDefaults ADDCODE
+				 */
 				function __setDefaults(newDefaults)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -2012,6 +2146,13 @@ var Concert = (function ()
 				} // end __setDefaults()
 
 
+				/**
+				 * ADDCODE
+				 * @name stop
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 */
 				function __stop()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
@@ -2025,6 +2166,15 @@ var Concert = (function ()
 				} // end __stop()
 
 
+				/**
+				 * ADDCODE
+				 * @name syncTo
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @param {function} syncSource ADDCODE
+				 * @param {Object} parameters ADDCODE
+				 */
 				function __syncTo(syncSource, parameters)
 				{
 					var thisPublic = this.thisPublic; //, thisProtected = _getProtectedMembers.call(thisPublic); // Can save a few bytes in the minified version since thisProtected isn't used in this function
