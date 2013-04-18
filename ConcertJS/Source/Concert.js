@@ -2038,11 +2038,16 @@ var Concert = (function ()
 			}), // end Sequence definition
 
 
-		// revertNameSpace: Can be used to avoid namespace collision problems.
-		// Sets the global variable Concert back to what it was before this component assigned a new value to it.
-		// Use of this would essentially be to run this definition script (e.g., include it in via script element on a web page),
-		// then immediately capture the object assigned to Concert in some other, non-conflicting variable for
-		// actual use, and then call revertNameSpace() to put back Concert to whatever value it had before.
+		/**
+		 * Can be used to avoid namespace collision problems.
+		 * Sets the global variable Concert back to what it was before this component assigned a new value to it.
+		 * Usage: run the ConcertJS definition script (e.g., include the ConcertJS file via a script element on a web page),
+		 * then immediately capture the object assigned to <code>Concert</code> in some other, non-conflicting variable for
+		 * actual use, and then call <code>Concert.revertNameSpace()</code> to put back <code>Concert</code> to whatever value it had before.
+		 * @public
+		 * @method
+		 * @memberof Concert
+		 */
 		revertNameSpace:
 			function ()
 			{
