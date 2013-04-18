@@ -303,7 +303,17 @@ var Concert = (function ()
 			}, // end Calculator singleton / namespace definition
 
 
-		// Pre-defined functions for calculating the effective distance along a transformation time path.
+		/**
+		 * Pre-defined functions for calculating the current effective distance traveled (represented as a fractional value from 0 to 1) along a transformation time path.
+		 * @public
+		 * @namespace
+		 * @memberof Concert
+		 * @property {function} ConstantRate - Returns a value that increases linearly from 0 to 1 as the current time moves from the start time to the end time; or 0 if the current time is before the start time; or 1 if the current time is after the end time.
+		 * @property {function} QuadIn - Return value is 0 at or before the start time, changes slowly at first, then accelerates as the current time moves closer to the end time, returning 1 at or after the end time. Specifically, uses the formula: <br><code>([currentTime - startTime] / [endTime - startTime])<sup>2</sup></code>
+		 * @property {function} QuadInOut - Return value is 0 at or before the start time, changes slowly at first, then accelerates to reach the halfway point, then decelerates again at the same rate as the current time moves closer to the end time, returning 1 at or after the end time. Effectively is the same as breaking the transformation in half, applying QuadIn to the first half, and QuadOut to the second half.
+		 * @property {function} QuadOut - Return value is 0 at or before the start time, changes quickly at first, then decelerates as the current time moves closer to the end time, returning 1 at or after the end time. Specifically, uses the formula: <br><code>(1 - (1 - ((currentTime - startTime) / (endTime - startTime))<sup>2</sup>))</code>
+		 * @property {function} Smoothstep - Another function which starts slowly, accelerates to the mid-point, then decelerates, returning 0 at or before the start time and 1 at or after the end time (See {@link http://en.wikipedia.org/wiki/Smoothstep}).
+		 */
 		EasingFunctions:
 			{
 				ConstantRate:
