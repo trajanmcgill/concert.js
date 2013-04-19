@@ -1,4 +1,10 @@
-﻿/** @namespace */
+﻿/**
+ * @file Concert.js: Easy synchronized animation with JavaScript.
+ * @version 1.0.0
+ * @author Copyright 2013 Trajan McGill <code@trajanmcgill.com>
+ */
+
+/** @namespace */
 var Concert = (function ()
 {
 	"use strict";
@@ -387,7 +393,7 @@ var Concert = (function ()
 
 
 		/**
-		 * Pre-defined functions for controlling the behavior of a sequence when the current time exceeds the end time or moves before the start time of the sequence. When running a sequence, any of these can be applied to the <code>before</code> or <code>after</code> properties of the parameters object passed into the [run]{@link Concert.Sequence#run}, [begin]{@link Concert.Sequence#begin}, or [follow]{@link Concert.Sequence#follow} methods.
+		 * Pre-defined functions for controlling the behavior of a sequence when the current time exceeds the end time or moves before the start time of the sequence. When running a sequence, any of these can be applied to the <code>before</code> or <code>after</code> properties of the parameters object passed into the [run]{@link Concert.Sequence#run}, [begin]{@link Concert.Sequence#begin}, [follow]{@link Concert.Sequence#follow}, or [syncTo]{@link Concert.Sequence#syncTo} methods.
 		 * @public
 		 * @namespace
 		 * @memberof Concert
@@ -1042,7 +1048,9 @@ var Concert = (function ()
 				// -- Sequence Constructor
 
 				/**
-				 * ADDCODE
+				 * Represents an animation sequence, or, more broadly, a series of changes which are applied to a collection of objects over time.
+				 * A sequence contains a set of transformations that are applied to DOM Elements, JavaScript objects, or anything else that can be manipulated with JavasScript.
+				 * It contains methods that allow defining those transformations, seeking to any point in the sequence timeline, and running the sequence in various ways.
 				 * @name Sequence
 				 * @public
 				 * @memberof Concert
@@ -1501,7 +1509,7 @@ var Concert = (function ()
 				// -- Sequence Public Method Definitions
 
 				/**
-				 * ADDCODE
+				 * Adds a set of transformations (i.e., changes applied to objects over time) to the sequence.
 				 * @name addTransformations
 				 * @memberof Concert.Sequence#
 				 * @public
@@ -1706,14 +1714,19 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Creates a duplicate of a sequence, allowing a sequence to be defined once and cloned to apply to any number of different sets of target objects.
+				 * For example, the same series of animated motions might be applied to numerous on-screen elements.
+				 * Since each sequence may contain transformations targeting numerous different objects, this is accomplished by passing in a function that,
+				 * when passed a transformation target object, returns the corresponding object to be targeted in the new sequence.
+				 * This method is capable of duplicating nearly every aspect of the original sequence, including jumping to the same current point in time and even
+				 * cloning its running or non-running status if desired.
 				 * @name clone
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
 				 * @param {function} targetLookupFunction ADDCODE
-				 * @param {Boolean} matchRunningStatus ADDCODE
-				 * @param {Boolean} doInitialSeek ADDCODE
+				 * @param {boolean} matchRunningStatus ADDCODE
+				 * @param {boolean} doInitialSeek ADDCODE
 				 * @returns {Object} ADDCODE
 				 */
 				function __clone(targetLookupFunction, matchRunningStatus, doInitialSeek)
@@ -1859,7 +1872,7 @@ var Concert = (function ()
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @returns {Number} ADDCODE
+				 * @returns {number} ADDCODE
 				 */
 				function __getCurrentTime()
 				{
@@ -1875,7 +1888,7 @@ var Concert = (function ()
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @returns {Number} ADDCODE
+				 * @returns {number} ADDCODE
 				 */
 				function __getEndTime()
 				{
@@ -1894,7 +1907,7 @@ var Concert = (function ()
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @returns {Number} ADDCODE
+				 * @returns {number} ADDCODE
 				 */
 				function __getID()
 				{
@@ -1910,7 +1923,7 @@ var Concert = (function ()
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @returns {Number} ADDCODE
+				 * @returns {number} ADDCODE
 				 */
 				function __getStartTime()
 				{
@@ -1930,7 +1943,7 @@ var Concert = (function ()
 				 * @public
 				 * @method
 				 * @param {requestCallback} completionCallback ADDCODE
-				 * @param {Boolean} isAsynchronous ADDCODE
+				 * @param {boolean} isAsynchronous ADDCODE
 				 */
 				function __index(completionCallback, isAsynchronous)
 				{
@@ -1965,7 +1978,7 @@ var Concert = (function ()
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @returns {Boolean} ADDCODE
+				 * @returns {boolean} ADDCODE
 				 */
 				function __isRunning()
 				{
@@ -2058,8 +2071,8 @@ var Concert = (function ()
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {Number} time ADDCODE
-				 * @param {Boolean} [useSoleControlOptimization] ADDCODE
+				 * @param {number} time ADDCODE
+				 * @param {boolean} [useSoleControlOptimization] ADDCODE
 				 */
 				function __seek(time, useSoleControlOptimization)
 				{
