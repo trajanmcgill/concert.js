@@ -82,7 +82,36 @@ function init()
 
 
 function init2()
-{}
+{
+	var $d1 = $("<div id=\"UpperElement1\">Upper</div>").css({ position: "absolute", left: "100px", top: "100px", width: "100px", height: "100px", backgroundColor: "#ff0000" });
+	var $d2 = $("<div id=\"LowerElement1\">Lower</div>").css({ position: "absolute", left: "100px", top: "200px", width: "100px", height: "100px", backgroundColor: "#00ff00" });
+	var $d3 = $("<div id=\"UpperElement2\">Upper</div>").css({ position: "absolute", left: "100px", top: "400px", width: "100px", height: "100px", backgroundColor: "#ff0000" });
+	var $d4 = $("<div id=\"LowerElement2\">Lower</div>").css({ position: "absolute", left: "100px", top: "500px", width: "100px", height: "100px", backgroundColor: "#00ff00" });
+	var $testArea = $("#TestArea");
+	$testArea.append($d1).append($d2).append($d3).append($d4);
+
+	var originalSequence, newSequence1, newSequence2;
+
+	originalSequence = new Concert.Sequence();
+	originalSequence.setDefaults({ applicator: Concert.Applicators.Style, easing: Concert.EasingFunctions.ConstantRate });
+	originalSequence.addTransformations(
+		[
+			{ target: "UpperElement", feature: "left", unit: "px", keyframes: { times: [0, 1000], values: [100, 200], easing: Concert.EasingFunctions.ConstantRate, calculator: Concert.Calculators.Linear } },
+			{ target: "LowerElement", feature: "left", unit: "px", keyframes: { times: [0, 1000], values: [100, 200], easing: Concert.EasingFunctions.ConstantRate, calculator: Concert.Calculators.Linear } }
+		]);
+	//originalSequence.begin();
+
+	newSequence1 = originalSequence.clone(function (originalTarget) { return document.getElementById(originalTarget + "1"); });
+	//newSequence2 = originalSequence.clone(function (originalTarget) { return document.getElementById(originalTarget + "2"); });
+
+	newSequence1.begin();
+	window.setTimeout(
+		function ()
+		{
+			newSequence2 = newSequence1.clone(function (originalTarget) { return document.getElementById(originalTarget.id.substr(0, 12) + "2"); }, true);
+			//newSequence2.begin();
+		}, 500)
+}
 
 
 function init3()
