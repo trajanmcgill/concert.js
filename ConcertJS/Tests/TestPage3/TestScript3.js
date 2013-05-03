@@ -90,18 +90,16 @@ function init2()
 	var $testArea = $("#TestArea");
 	$testArea.append($d1).append($d2).append($d3).append($d4);
 
-	var originalSequence, newSequence1, newSequence2;
 
-	originalSequence = new Concert.Sequence();
-	originalSequence.setDefaults({ applicator: Concert.Applicators.Style, easing: Concert.EasingFunctions.ConstantRate });
+	var originalSequence = new Concert.Sequence();
+	originalSequence.setDefaults({ applicator: Concert.Applicators.Style, calculator: Concert.Calculators.Linear, easing: Concert.EasingFunctions.ConstantRate });
 	originalSequence.addTransformations(
 		[
-			{ target: "UpperElement", feature: "left", unit: "px", keyframes: { times: [0, 1000], values: [100, 200], easing: Concert.EasingFunctions.ConstantRate, calculator: Concert.Calculators.Linear } },
-			{ target: "LowerElement", feature: "left", unit: "px", keyframes: { times: [0, 1000], values: [100, 200], easing: Concert.EasingFunctions.ConstantRate, calculator: Concert.Calculators.Linear } }
+			{ target: "UpperElement", feature: "left", unit: "px", keyframes: { times: [0, 1000], values: [100, 200] } },
+			{ target: "LowerElement", feature: "left", unit: "px", keyframes: { times: [0, 1000], values: [100, 200] } }
 		]);
-	//originalSequence.begin();
 
-	newSequence1 = originalSequence.clone(function (originalTarget) { return document.getElementById(originalTarget + "1"); });
+	var newSequence1 = originalSequence.clone(function (originalTarget) { return document.getElementById(originalTarget + "1"); });
 	//newSequence2 = originalSequence.clone(function (originalTarget) { return document.getElementById(originalTarget + "2"); });
 
 	newSequence1.begin();

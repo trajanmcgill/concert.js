@@ -391,9 +391,9 @@ var Concert = (function ()
 		 * @public
 		 * @namespace
 		 * @memberof Concert
-		 * @property {function} Bounce(bounceCount) - The <strong>result of calling this function</strong> with a specified number of times to bounce is a function object that can be passed into one of the run methods as the value of <code>before</code> or <code>after</code> and results in the sequence bouncing (that is, alternating directions to play forward and backward) the specified number of times when it reaches that time boundary. A <code>bounceCount</code> value of <code>0</code> is the same as using <code>Concert.Repeating.None</code>, <code>1</code> means add a single extra run-through in the reverse direction, and so on.
-		 * @property {function} Loop(loopbackCount) - The <strong>result of calling this function</strong> with a specified number of times to loop is a function object that can be passed into one of the run methods as the value of <code>before</code> or <code>after</code> and results in the sequence looping the specified number of times when it reaches that time boundary. A <code>loopbackCount</code> value of <code>0</code> is the same as using <code>Concert.Repeating.None</code>, <code>1</code> means play through twice (that is, loop back to the beginning 1 time), and so on.
-		 * @property {function} None - This function is <strong>passed directly into one of the run methods</strong> as the value of <code>before</code> or <code>after</code> and results in the sequence halting when it reaches that time boundary.
+		 * @property {function} Bounce(bounceCount) - The <strong>result of calling this function</strong> with a specified number of times to bounce is a function object that can be passed into [setBefore]{@link Concert.Sequence#setBefore} or [setAfter]{@link Concert.Sequence#setAfter}, or into one of the run methods as the value of the <code>before</code> or <code>after</code> property. It results in the sequence bouncing (that is, alternating directions to play forward and backward) the specified number of times when it reaches that time boundary. A <code>bounceCount</code> value of <code>0</code> is the same as using <code>Concert.Repeating.None</code>, <code>1</code> means add a single extra run-through in the reverse direction, and so on.
+		 * @property {function} Loop(loopbackCount) - The <strong>result of calling this function</strong> with a specified number of times to loop is a function object that can be passed into [setBefore]{@link Concert.Sequence#setBefore} or [setAfter]{@link Concert.Sequence#setAfter}, or into one of the run methods as the value of the <code>before</code> or <code>after</code> property. It results in the sequence looping the specified number of times when it reaches that time boundary. A <code>loopbackCount</code> value of <code>0</code> is the same as using <code>Concert.Repeating.None</code>, <code>1</code> means play through twice (that is, loop back to the beginning 1 time), and so on.
+		 * @property {function} None - This function should be <strong>passed directly into</strong> the [setBefore]{@link Concert.Sequence#setBefore} or [setAfter]{@link Concert.Sequence#setAfter} method or into one of the run methods as the value of the <code>before</code> or <code>after</code> property. It results in the sequence halting when it reaches that time boundary.
 		 */
 		Repeating:
 			{
@@ -1125,6 +1125,8 @@ var Concert = (function ()
 					thisPublic.retarget = __retarget;
 					thisPublic.run = __run;
 					thisPublic.seek = __seek;
+					thisPublic.setAfter = __setAfter;
+					thisPublic.setBefore = __setBefore;
 					thisPublic.setDefaults = __setDefaults;
 					thisPublic.stop = __stop;
 					thisPublic.syncTo = __syncTo;
@@ -1683,12 +1685,16 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Runs a transformation starting from the beginning, locked to the system clock and automatically stopping upon reaching the end.
+				 * This is really just a shortcut method provided for a common usage scenario; it is exactly the same as calling the [run]{@link Concert.Sequence#run} method with the parameters
+				 * <code>{ synchronizeTo: null, initialSeek: 0, timeOffset: null, autoStopAtEnd: true }</code>. Note that these parameter values can still be overridden, or any of the other parameters
+				 * accepted by the [run]{@link Concert.Sequence#run} method can be specified in the <code>parameters</code> argument passed into this method.
 				 * @name begin
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {Object} parameters ADDCODE
+				 * @param {Object} [parameters] An object with property values setting options for how to run the sequence.
+				 * See the [run]{@link Concert.Sequence#run} method for information on allowable properties and values in this object.
 				 */
 				function __begin(parameters)
 				{
@@ -1699,24 +1705,47 @@ var Concert = (function ()
 
 
 				/**
-				 * Creates a duplicate of a sequence, allowing a sequence to be defined once and cloned to apply to any number of different sets of target objects.
+				 * Creates a duplicate of a sequence, allowing a sequence to be defined once and then cloned to apply to any number of different sets of target objects.
 				 * For example, the same series of animated motions might be applied to numerous on-screen elements.
 				 * Since each sequence may contain transformations targeting numerous different objects, this is accomplished by passing in a function that,
-				 * when passed a transformation target object, returns the corresponding object to be targeted in the new sequence.
+				 * when passed a transformation target from the original sequence, returns the corresponding object to be targeted in the new sequence.
+				 * (Note that one useful way of doing this easily is to set the targets of the original sequence to be strings or integers instead of actual objects. The original sequence then just becomes essentially a dummy sequence with placeholder targets that your function can easily identify and use for looking up substitute target objects.)
 				 * This method is capable of duplicating nearly every aspect of the original sequence, including jumping to the same current point in time and even
 				 * cloning its running or non-running status if desired. (To change the target objects of a sequence without creating a new one, see the [retarget]{@link Concert.Sequence#retarget} method.)
 				 * @name clone
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {function} targetLookupFunction ADDCODE
+				 * @param {function} targetLookupFunction A function taking a single parameter. The value passed in will be one of the transformation targets of the original sequence. The function must return the equivalent object which should be targeted by the equivalent transformation in the new sequence.
 				 * @param {boolean} [matchRunningStatus=false] If <code>true</code>, and the sequence being cloned is currently running, the new sequence will jump to the same point on the timeline and run as well. Otherwise, the new sequence will not automatically start running.
 				 * @param {boolean} [doInitialSeek=false] If <code>true</code>, the new sequence will immediately seek to the same point on the timeline as the original sequence. Otherwise, the new sequence will merely be created, but will not immediately perform any action (unless the matchRunningStatus parameter is <code>true</code>).
 				 * @returns {Object} A new [Sequence]{@link Concert.Sequence} object, with the same properties and duplicates of all the same transformations that were in the original sequence, but with new target objects of those transformations substituted in as controlled by the <code>targetLookupFunction</code> parameter.
-				 * @example <caption>this is a caption</caption>
-				 * some line
-				 *     another line
-				 * var x = y; WORKING HERE
+				 * @example <caption>One possible method of using this function easily for replicating a sequence definition onto any number of targets is shown below. The initial sequence here is defined with two transformations that are given strings ("UpperElement" and "LowerElement") as targets. The initial sequence is thus just a dummy from which we can clone easily and repeatedly, and the strings make helpful placeholders for the function passed into the clone method to use for matching up to real DOM elements or other intended target objects which we may have created dynamically at a later time. Note further that if you index a sequence before cloning it, resulting cloned sequences will already be indexed and can be run instantly without any indexing lag.</caption>
+				 * var originalSequence = new Concert.Sequence();
+				 * originalSequence.setDefaults(
+				 *   {
+				 *     applicator: Concert.Applicators.Style,
+				 *     calculator: Concert.Calculators.Linear,
+				 *     easing: Concert.EasingFunctions.ConstantRate,
+				 *     unit: "px"
+				 *   });
+				 * originalSequence.addTransformations(
+				 *   [
+				 *     {
+				 *       target: "UpperElement", feature: "left",
+				 *       keyframes: { times: [0, 1000], values: [100, 200] }
+				 *     },
+				 *     {
+				 *       target: "LowerElement", feature: "left",
+				 *       keyframes: { times: [0, 1000], values: [100, 200] }
+				 *     }
+				 *   ]);
+				 * 
+				 * // ...some time later, having creating DOM elements with id values
+				 * // of "UpperElement1" and "LowerElement1"...
+				 * var newSequence1 = originalSequence.clone(
+				 *     function (originalTarget)
+				 *     { return document.getElementById(originalTarget + "1"); });
 				 */
 				function __clone(targetLookupFunction, matchRunningStatus, doInitialSeek)
 				{
@@ -1821,13 +1850,28 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Runs a transformation starting from the current timeline position, locked to the specified synchronization source. This differs from the [syncTo]{@link Concert.Sequence#syncTo} method
+				 * in that <code>follow</code> causes the sequence to run exactly in time with the synchronization source and in the same direction, but starting at the current timeline position, whereas
+				 * with [syncTo]{@link Concert.Sequence#syncTo} the sequence will first jump to a timeline position matching the current value of the synchronization source and then do the same.
+				 * This is really just a shortcut method provided for a common usage scenario; it is exactly the same as calling the [run]{@link Concert.Sequence#run} method with the parameters
+				 * <code>{ synchronizeTo: <em>syncSource</em>, initialSeek: null, timeOffset: null }</code>. Note that these parameter values can still be overridden, or any of the other parameters
+				 * accepted by the [run]{@link Concert.Sequence#run} method can be specified in the <code>parameters</code> argument passed into this method.
 				 * @name follow
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {Object} syncSource ADDCODE
-				 * @param {Object} parameters ADDCODE
+				 * @param {Varies} syncSource A synchronization source. Can take any of the following different types of values:<pre>
+				 *   null: locks sequence to the system clock.
+				 *   function object: the passed-in function is called every time the polling
+				 *       interval is reached, and the return value is used as the seek time.
+				 *       Using a custom function here allows you to synchronize the sequence to
+				 *       anything you want (for instance, locking it to the current value of a UI
+				 *       element, such as a slider, or to another Concert.Sequence object.)
+				 *   html audio or video DOM object: locks the sequence to the currentTime property
+				 *       of the media element. This allows the sequence to remain synchronized to
+				 *       the media even when it is paused, scrubbed, or the user skips around.</pre>
+				 * @param {Object} [parameters] An object with property values setting options for how to run the sequence.
+				 * See the [run]{@link Concert.Sequence#run} method for information on allowable properties and values in this object.
 				 */
 				function __follow(syncSource, parameters)
 				{
@@ -1856,12 +1900,12 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Gets the current position along a sequence's timeline.
 				 * @name getCurrentTime
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @returns {number} ADDCODE
+				 * @returns {number} The sequence's current timeline position.
 				 */
 				function __getCurrentTime()
 				{
@@ -1872,12 +1916,12 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Gets the end time of a sequence's timeline. This end time of a sequence is considered to be the last end time of any transformation within that sequence.
 				 * @name getEndTime
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @returns {number} ADDCODE
+				 * @returns {number} The end time of the sequence's timeline.
 				 */
 				function __getEndTime()
 				{
@@ -1891,12 +1935,12 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Returns a unique integer identifying this sequence.
 				 * @name getID
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @returns {number} ADDCODE
+				 * @returns {number} The sequence ID.
 				 */
 				function __getID()
 				{
@@ -1907,12 +1951,12 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Gets the start time of a sequences timeline. The start time of a sequence is considered to be the first start time of any transformation within that sequence.
 				 * @name getStartTime
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @returns {number} ADDCODE
+				 * @returns {number} The start time of the sequence's timeline.
 				 */
 				function __getStartTime()
 				{
@@ -1962,12 +2006,12 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Gets a value indicating whether the sequence is currently running or not.
 				 * @name isRunning
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @returns {boolean} ADDCODE
+				 * @returns {boolean} <code>true</code> if the sequence is currently running, <code>false</code>otherwise.
 				 */
 				function __isRunning()
 				{
@@ -1978,12 +2022,15 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Changes the target objects for all the transformations in a sequence. This could be useful if a sequence is being defined before its targets are created.
+				 * For instance, if it will be used to animate DOM elements that don't yet exist at the time the sequence is being created, a sequence can be created with
+				 * placeholder targets (such as strings or integers), and then the real targets substituted in later with this method.
+				 * (If you wish to apply the same sequence to multiple sets of targets, or to more than one set of targets simultaneously, you may wish to see the [clone]{@link Concert.Sequence#clone} method.)
 				 * @name retarget
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {function} targetLookupFunction ADDCODE
+				 * @param {function} targetLookupFunction A function that, when passed a transformation target from the sequence as currently defined, returns the new object to be targeted.
 				 */
 				function __retarget(targetLookupFunction)
 				{
@@ -1999,12 +2046,115 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Runs the sequence, with the options defined in the <code>parameters</code> object.
+				 * For many purposes, one of the other run methods ([begin]{@link Concert.Sequence#begin}, [follow]{@link Concert.Sequence#follow}, or [syncTo]{@link Concert.Sequence#syncTo})
+				 * may be easier, because they assume certain default options that are correct in most usage scenarios, but this method is the general-purpose way to run a sequence
+				 * with any set of behavioral options, and is in fact used behind the scenes by those other methods. Except for <code>generateValues</code>, <code>initialSeek</code>, and
+				 * <code>timeOffset</code> (the last of which is automatically re-calculated if null), options specified in the <code>parameters</code> object are remembered and will be retained
+				 * as the default values. This means for restarting stopped sequences, it is not always necessary to explicitly re-state all the options, and it also means that this method can be
+				 * called on an already-running sequence to change run-time options on the fly.
 				 * @name run
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {Object} parameters ADDCODE
+				 * @param {Object} [parameters] An object with property values setting options for how to run the sequence. Defined as follows below. Any or all of the below options may be specified:<pre><code>
+				 * parameters =
+				 * {
+				 *   // --------
+				 *   // Function; Defines how the sequence behaves when the sequence end time is
+				 *   // reached and exceeded.(Can also be set using the [setAfter]{@link Concert.Sequence#setAfter} method.)
+				 *   // Takes one of the functions defined in the [Concert.Repeating]{@link Concert.Repeating} namespace, or a
+				 *   // custom function. For instance, a value of Concert.Repeating.Loop(2) will cause
+				 *   // the sequence to loop back to the beginning twice (thus running a total of three
+				 *   // times) before ceasing. See [Concert.Repeating]{@link Concert.Repeating} for information on the pre-defined
+				 *   // values, or see [setAfter]{@link Concert.Sequence#setAfter} for more information on using a custom function.
+				 *   <strong>after</strong>: VALUE, // Initial default: Concert.Repeating.None
+				 *
+				 *   // --------
+				 *   // Boolean; Whether or not to automatically call stop() upon hitting the end. (Note
+				 *   // that "the end" means after all looping, bouncing, etc. is taken into account.)
+				 *   <strong>autoStopAtEnd</strong>: VALUE, // Initial default: true
+				 *
+				 *   // --------
+				 *   // Function; Defines how the sequence behaves when the calculated current time
+				 *   // is at or less than the sequence start time. (Can also be set using the
+				 *   // [setBefore]{@link Concert.Sequence#setBefore} method.) Takes one of the functions defined in the [Concert.Repeating]{@link Concert.Repeating}
+				 *   // namespace, or a custom function. For instance, a value of
+				 *   // Concert.Repeating.Loop(2) will cause the sequence to loop back to the end twice
+				 *   // (thus running a total of three times) before ceasing. See [Concert.Repeating]{@link Concert.Repeating} for
+				 *   // information on the pre-defined values, or see [setBefore]{@link Concert.Sequence#setBefore} for more information on
+				 *   // using a custom function.
+				 *   <strong>before</strong>: VALUE, // Initial default: Concert.Repeating.None
+				 *
+				 *   // --------
+				 *   // If the sequence has any transformations whose start and end values are dynamic
+				 *   // rather than fixed (see [addTransformations]{@link Concert.Sequence#addTransformations} for details), the actual values
+				 *   // to use will have to be calculated at some point in order to run the sequence.
+				 *   // This can be accomplished by calling [generateValues]{@link Concert.Sequence#generateValues} manually, or it will happen
+				 *   // automatically just before run-time if this parameter is set to true.
+				 *   <strong>generateValues</strong>: VALUE, // Default value: true
+				 *
+				 *   // --------
+				 *   // Numeric; If specified, sequence will seek to this time before commencing
+				 *   // the run.
+				 *   <strong>initialSeek</strong>: VALUE, // Default: null
+				 *
+				 *   // --------
+				 *   // Function; Callback function invoked just after automatically stopping at the
+				 *   end of the sequence (only will be called if autoStopAtEnd is true).
+				 *   <strong>onAutoStop</strong>: VALUE, // Initial default: null
+				 *
+				 *   // --------
+				 *   // Numeric; How far apart (in milliseconds) to calculate and seek to a new timeline
+				 *   // position. Set to any value > 0 for manual control, or set to 0 (or anything < 1)
+				 *   // to let Concert determine this automatically. (It does this by using
+				 *   // requestAnimationFrame() for if the browser supports  it, or a fixed interval of
+				 *   // 16 ms otherwise.
+				 *   <strong>pollingInterval</strong>: VALUE, // Initial default: 0
+				 *
+				 *   // --------
+				 *   // Numeric; Run speed multiplier (0.5 = half-speed, 2 = double-speed, ...)
+				 *   <strong>speed</strong>: VALUE, // Initial default: 1
+				 *
+				 *   // --------
+				 *   // Variable type ; Sets a synchronization source for this sequence. Can take any
+				 *   // of the following different types of values:
+				 *   //   null: locks sequence to the system clock.
+				 *   //   function object: the passed-in function is called every time the polling
+				 *   //       interval is reached, and the return value is used as the seek time.
+				 *   //       Using a custom function here allows you to synchronize the sequence to
+				 *   //       anything you want (for instance, locking it to the current value of a UI
+				 *   //       element, such as a slider, or to another Concert.Sequence object.)
+				 *   //   html audio or video DOM object: locks the sequence to the currentTime property
+				 *   //       of the media element. This allows the sequence to remain synchronized to
+				 *   //       the media even when it is paused, scrubbed, or the user skips around.
+				 *   <strong>synchronizeTo</strong>: VALUE, // Initial default: null
+				 *
+				 *   // --------
+				 *   // Numeric; An offset value that is added to the current time before seeking every
+				 *   // time the polling interval comes around. This is useful if you want your sequence
+				 *   // to run fixed amount ahead of, or behind, your synchronization source. If null,
+				 *   // this value is automatically calculated assuming that you want the current
+				 *   // sequence time (or the sequence start time if no calls to seek() have yet been
+				 *   // made) to match up with the current return value of the synchronization source.
+				 *   // For instance, you may have a sequence that runs, locked to the system clock,
+				 *   // from time 0 to time 10000 (i.e., for 10 seconds). But the raw value coming from
+				 *   // the system clock is never between 0 and 10000; it is the number of milliseconds
+				 *   // since January 1, 1970 00:00:00 UTC, which is a very high number. The timeOffset
+				 *   // value is therefore added in order to translate the raw starting clock value to
+				 *   // the start time of the sequence. But because this automatic translation may not
+				 *   // always be the desired behavior, it can be explicitly set here.
+				 *   <strong>timeOffset</strong>: VALUE, // Default value: null
+				 *
+				 *   // --------
+				 *   // Boolean; Whether or not to optimize based on the assumption that none of the
+				 *   // object properties being modified by this sequence are also being touched by
+				 *   // anything else. See [seek]{@link Concert.Sequence#seek} method for details. (Note that regardless of the value
+				 *   // specified here, the seek method can be called manually at any point with its
+				 *   //  useSoleControlOptimization parameter set to either true or false.)
+				 *   <strong>useSoleControlOptimization</strong>: VALUE, // Initial default: true
+				 * }
+				 * </code></pre>
 				 */
 				function __run(parameters)
 				{
@@ -2055,13 +2205,22 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Seeks to the specified point along the sequence timeline. If the <code>time</code> value is less than the sequence's start time or greater than the sequence's end time,
+				 * the resulting behavior will be defined by the sequence's "before" or "after" repeating behavior settings, as controlled by the [setBefore]{@link Concert.Sequence#setBefore} and
+				 * [setAfter]{@link Concert.Sequence#setAfter} methods or by the options passed into the [run]{@link Concert.Sequence#run}, [begin]{@link Concert.Sequence#begin},
+				 * [follow]{@link Concert.Sequence#follow}, or [syncTo]{@link Concert.Sequence#syncTo} methods. The default behavior, if none has explicitly been specified, is
+				 * [Concert.Repeating.None]{@link Concert.Repeating}, which seeks to the sequence start time for any <code>time</code> value less than or equal to the sequence's
+				 * start time, and to the end time for any <code>time</code> value greater than or equal to the sequence's end time. The <code>useSoleControlOptimization</code> option,
+				 * when set to true, enhances run-time performance, but should only be used if nothing other than the Concert sequence will be modifying any target object properties that are modified
+				 * by transformations in the sequence. Essentially it skips updating target object properties any time a newly calculated value is the same as the last one applied, which speeds up
+				 * seek times especially when doing relatively slow things such as DOM updates, but which will not work if the target object property's value has been changed by something else
+				 * since the last time the sequence object touched it.
 				 * @name seek
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {number} time ADDCODE
-				 * @param {boolean} [useSoleControlOptimization] ADDCODE
+				 * @param {number} time The intended seek point.
+				 * @param {boolean} [useSoleControlOptimization] Whether or not the sequence can optimize by assuming sole control over the target objects.
 				 */
 				function __seek(time, useSoleControlOptimization)
 				{
@@ -2127,12 +2286,89 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Sets the behavior of the sequence when asked to seek after its end time. For instance, it may halt, loop, or bounce.
+				 * @name setAfter
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @param {function} newAfter One of the functions defined in [Concert.Repeating]{@link Concert.Repeating}, or a custom function.
+				 * For any sequence where this is not explicitly set, the "after" behavior defaults to <code>Concert.Repeating.None</code>.
+				 * Any function passed in here should have a signature of the form <code>function (sequenceStart, sequenceEnd, unadjustedTime)</code> and must return
+				 * an object of the form <code>{ adjustedTime: XXX, hitFinalBoundary: YYY }</code>, where <code>XXX</code> is the actual time to use in the seek, and
+				 * <code>YYY</code> is a boolean value indicating whether this seek will put the sequence at one of its final boundary points. For instance, a looping
+				 * behavior function could take an <code>unadjustedTime</code> value past the end of the sequence and map it to a resulting value somewhere between the
+				 * sequence start and end times, and if it does not loop infinitely, a high enough input would result in hitting the final boundary beyond which looping
+				 * does not continue. The <code>hitFinalBoundary</code> property value is what is used to determine whether to automatically call the
+				 * [stop]{@link Concert.Sequence#stop} method if running with <code>autoStopAtEnd</code> set to <code>true</code>.
+				 */
+				function __setAfter(newAfter)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					thisProtected.after = newAfter;
+				} // end __setAfter()
+
+
+				/**
+				 * Sets the behavior of the sequence when asked to seek before its start time. For instance, it may halt, loop, or bounce.
+				 * @name setBefore
+				 * @memberof Concert.Sequence#
+				 * @public
+				 * @method
+				 * @param {Object} newBefore One of the functions defined in [Concert.Repeating]{@link Concert.Repeating}, or a custom function.
+				 * For any sequence where this is not explicitly set, the "after" behavior defaults to <code>Concert.Repeating.None</code>.
+				 * Any function passed in here should have a signature of the form <code>function (sequenceStart, sequenceEnd, unadjustedTime)</code> and must return
+				 * an object of the form <code>{ adjustedTime: XXX, hitFinalBoundary: YYY }</code>, where <code>XXX</code> is the actual time to use in the seek, and
+				 * <code>YYY</code> is a boolean value indicating whether this seek will put the sequence at one of its final boundary points. For instance, a looping
+				 * behavior function could take an <code>unadjustedTime</code> value past the end of the sequence and map it to a resulting value somewhere between the
+				 * sequence start and end times, and if it does not loop infinitely, a high enough input would result in hitting the final boundary beyond which looping
+				 * does not continue. The <code>hitFinalBoundary</code> property value is what is used to determine whether to automatically call the
+				 * [stop]{@link Concert.Sequence#stop} method if running with <code>autoStopAtEnd</code> set to <code>true</code>.
+				 */
+				function __setBefore(newBefore)
+				{
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+
+					thisProtected.before = newBefore;
+				} // end __setBefore()
+
+
+				/**
+				 * When adding transformations to a sequence, several properties have default values and can therefore be left unspecified in the objects passed into the
+				 * [addTransformations]{@link Concert.Sequence#addTransformations} method. This can be very helpful in avoiding repetition if most or all of the transformations
+				 * have the same values for these properties. This method sets those default values for new transformations added to the sequence.
 				 * @name setDefaults
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {Object} newDefaults ADDCODE
+				 * @param {Object} newDefaults An object with property values setting default options for new transformations. Defined as follows.
+				 * Any or all of the below options may be specified.<pre><code>
+				 * newDefaults =
+				 * {
+				 *   // --------
+				 *   // Function; One of the [Concert.Applicators]{@link Concert.Applicators} functions, or a custom function.
+				 *   // See [Concert.Applicators]{@link Concert.Applicators} and [addTransformations]{@link Concert.Sequence#addTransformations} for more information about the
+				 *   // meaning of this property and its allowable values.
+				 *   <strong>applicator</strong>: VALUE, // Initial default value: Concert.Applicators.Property
+				 *
+				 *   // --------
+				 *   // Function; One of the [Concert.Calculators]{@link Concert.Calculators} functions, or a custom function.
+				 *   // See [Concert.Calculators]{@link Concert.Calculators} and [addTransformations]{@link Concert.Sequence#addTransformations} for more information about the
+				 *   // meaning of this property and its allowable values.
+				 *   <strong>calculator</strong>: VALUE, // Initial default value: Concert.Calculators.Linear
+				 *
+				 *   // --------
+				 *   // Function; One of the [Concert.EasingFunctions]{@link Concert.EasingFunctions} functions, or a custom function.
+				 *   // See [Concert.EasingFunctions]{@link Concert.EasingFunctions} and [addTransformations]{@link Concert.Sequence#addTransformations} for more information about
+				 *   // the meaning of this property and its allowable values.
+				 *   <strong>easing</strong>: VALUE, // Initial default value: Concert.EasingFunctions.ConstantRate
+				 *
+				 *   // --------
+				 *   // String; The unit, if there is one, is appended to the end of a calculated value
+				 *   // before it is applied. Common values would include "px", "%", "em", and so on.
+				 *   <strong>unit</strong>: VALUE, // Initial default value: null (no unit at all)
+				 * }
+				 * </code></pre>
 				 */
 				function __setDefaults(newDefaults)
 				{
@@ -2149,7 +2385,11 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Stops a currently running sequence. Calling this function, whether explicitly or by setting <code>autoStopAtEnd</code> to <code>true</code>,
+				 * is recommended when you wish the sequence to stop running or synchronizing, because otherwise the timers which continually update the sequence will continue to run.
+				 * This may be the desired behavior if the sequence is being synchronized to a value which may continue to change, but in many cases it would be a waste of processor
+				 * cycles to continue running a completed sequence. (Note that <code>autoStopAtEnd</code> is automatically enabled if the sequence is run using the
+				 * [begin]{@link Concert.Sequence#begin} method.)
 				 * @name stop
 				 * @memberof Concert.Sequence#
 				 * @public
@@ -2169,13 +2409,28 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Runs a transformation locked to the specified synchronization source and matching its position. This differs from the [follow]{@link Concert.Sequence#follow} method
+				 * in that [follow]{@link Concert.Sequence#follow} causes the sequence to run exactly in time with the synchronization source and in the same direction, but starting at the current
+				 * timeline position, whereas with <code>syncTo</code> the sequence will first jump to a timeline position matching the current value of the synchronization source and then do the same.
+				 * This is really just a shortcut method provided for a common usage scenario; it is exactly the same as calling the [run]{@link Concert.Sequence#run} method with the parameters
+				 * <code>{ synchronizeTo: syncSource, initialSeek: null, timeOffset: 0, autoStopAtEnd: false }</code>. Note that these parameter values can still be overridden,
+				 * or any of the other parameters accepted by the [run]{@link Concert.Sequence#run} method can be specified in the <code>parameters</code> argument passed into this method.
 				 * @name syncTo
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {function} syncSource ADDCODE
-				 * @param {Object} parameters ADDCODE
+				 * @param {Varies} syncSource A synchronization source. Can take any of the following different types of values:<pre>
+				 *   null: locks sequence to the system clock.
+				 *   function object: the passed-in function is called every time the polling
+				 *       interval is reached, and the return value is used as the seek time.
+				 *       Using a custom function here allows you to synchronize the sequence to
+				 *       anything you want (for instance, locking it to the current value of a UI
+				 *       element, such as a slider, or to another Concert.Sequence object.)
+				 *   html audio or video DOM object: locks the sequence to the currentTime property
+				 *       of the media element. This allows the sequence to remain synchronized to
+				 *       the media even when it is paused, scrubbed, or the user skips around.</pre>
+				 * @param {Object} [parameters] An object with property values setting options for how to run the sequence.
+				 * See the [run]{@link Concert.Sequence#run} method for information on allowable properties and values in this object.
 				 */
 				function __syncTo(syncSource, parameters)
 				{
