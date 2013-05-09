@@ -1741,11 +1741,14 @@ var Concert = (function ()
 				 *     }
 				 *   ]);
 				 * 
-				 * // ...some time later, having creating DOM elements with id values
-				 * // of "UpperElement1" and "LowerElement1"...
+				 * //...some time later, having creating DOM elements with id values
+				 * // like "UpperElement1", "LowerElement1", "UpperElement2", ...
 				 * var newSequence1 = originalSequence.clone(
 				 *     function (originalTarget)
 				 *     { return document.getElementById(originalTarget + "1"); });
+				 * var newSequence2 = originalSequence.clone(
+				 *     function (originalTarget)
+				 *     { return document.getElementById(originalTarget + "2"); });
 				 */
 				function __clone(targetLookupFunction, matchRunningStatus, doInitialSeek)
 				{
@@ -1882,7 +1885,14 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Calls the value generation functions attached to transformations that have value generators instead of fixed start and end values.<br>
+				 * <em>It may be useful at times to define transformations whose start and end values are not fixed at the time the transformations are first defined,
+				 * but which instead are calculated dynamically at some later time prior to running the sequence. This is accomplished by specifying functions instead
+				 * of start and end values, as explained in the documentation for the [addTransformations]{@link Concert.Sequence#addTransformations} method.
+				 * Those functions (for all such transformations in a sequence) are then called, and their return values stored as the start and end values of their
+				 * respective transformations, either at the time the sequence is run by specifying the appropriate option when calling the [run]{@link Concert.Sequence#run},
+				 * [begin]{@link Concert.Sequence#begin}, [follow]{@link Concert.Sequence#follow}, or [syncTo]{@link Concert.Sequence#syncTo} methods, or at any time by
+				 * calling <code>generateValues</code>.</em>
 				 * @name generateValues
 				 * @memberof Concert.Sequence#
 				 * @public
@@ -1975,8 +1985,17 @@ var Concert = (function ()
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {requestCallback} completionCallback ADDCODE
-				 * @param {boolean} isAsynchronous ADDCODE
+				 * @param {function} completionCallback This function will be executed upon completion of indexing. It is especially useful if the <code>isAsynchronous</code>
+				 * parameter is set to <code>true</code>. The function specified here should have a signature of the form <code>someCallBackFunction(sequenceObject)</code>.
+				 * That is, the function will be called with a single argument, which will be the sequence object whose indexing has completed. (For purposes of handling this
+				 * callback when there are multiple sequences being manipulated, it may also be helpful to remember that every [Sequence]{@link Concert.Sequence} object has a
+				 * unique  integer ID which can be retrieved using the [getID]{@link Concert.Sequence#getID} method.)
+				 * @param {boolean} isAsynchronous If <code>true</code>, the indexing process will not be run all at once, but will instead be broken into
+				 * smaller chunks of work and scheduled using calls to <code>window.setTimeout</code>. This is useful for very large sequences, to help reduce
+				 * or eliminate any noticable pause in browser responsiveness while indexing is taking place.<br>
+				 * <em>For the current version, the indexer makes a best effort to keep each processing chunk under 100 ms. Future versions may allow the
+				 * programmer to adjust this value, and may also be able to incorporate web workers as a way of pushing most of the work into a completely separate,
+				 * concurrent thread.
 				 */
 				function __index(completionCallback, isAsynchronous)
 				{
