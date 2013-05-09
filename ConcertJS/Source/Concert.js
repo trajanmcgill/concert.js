@@ -1980,7 +1980,18 @@ var Concert = (function ()
 
 
 				/**
-				 * ADDCODE
+				 * Indexes a sequence. This function is run automatically (if necessary) any time a sequence is run or the [seek]{@link Concert.Sequence#seek] method is called.
+				 * However, for very large sequences (large enough that indexing would cause a noticable lag), it may be desirable to manually control when indexing takes place
+				 * (that is, to pre-index the sequence), so that seeking or running will begin instantly. Once indexed, a sequence (or any sequences cloned from it) will not need
+				 * to be indexed again unless new transformations are added to it.<br><br>
+				 * <strong>Explanation of Indexing:</strong> ConcertJS sequences can consist of very large numbers of transformations applied to numerous target objects,
+				 * with the ability to seek extremely quickly to any point in the sequence. This is what makes it useful for synchronizing to other things (such as audio or video)
+				 * and for other situations that require arbitrary seeking, running at different speeds or in either direction, or other uses that don't conform to a simple,
+				 * run-once-forward-only-at-normal-speed scenario. What makes this possible is an internal data structure that optimizes for quickly finding the correct value
+				 * to apply to every target feature of every one of the objects being animated, at any point along the timeline. This internal structure involves a set of pre-built indexes
+				 * of timeline segments. Much like indexes on database tables, this vastly speeds up run-time lookup performance by doing some processing ahead of time to analyze and organize the data.
+				 * Every sequence needs to be indexed once (or again after any new transformations are added). Running or seeking to any point in an un-indexed sequence will cause indexing to take place
+				 * automatically, or indexing can be run manually with this method. In many cases, the automatic indexing will run fast enough that manually running the indexer is not necessary.
 				 * @name index
 				 * @memberof Concert.Sequence#
 				 * @public
