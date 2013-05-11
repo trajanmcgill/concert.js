@@ -1502,12 +1502,126 @@ var Concert = (function ()
 				// -- Sequence Public Method Definitions
 
 				/**
-				 * Adds a set of transformations (i.e., changes applied to objects over time) to the sequence.
+				 * Adds a set of transformations (i.e., changes applied to objects over time) to the sequence.<br>
+				 * <p class="ExplanationParagraph"><strong>Terminology:</strong></p>
+				 * <p class="ExplanationParagraph">-A <em>transformation</em> is a single change applied over time to a single feature of a single object. Its properties include which object to modify and what feature of it will be altered, a start time and starting value, and end time and ending value. For instance, a transformation may represent changing the "width" style of a DIV element from "100px" at time 1000 to "200px" at time 2000.</p>
+				 * <p class="ExplanationParagraph">-A <em>sequence</em> is a collection of transformations that are to be applied together as a group.</p>
+				 * <p class="ExplanationParagraph">-A <em>target object</em> is anything that will be modified by a transformation (e.g., a DOM element or a JavaScript object).</p>
+				 * <p class="ExplanationParagraph">-A <em>target feature</em> is the aspect of the target object that will be modified (e.g., for a DOM element this might be "width").</p>
+				 * <p class="ExplanationParagraph">-A <em>unit</em> is an optional (initially defaults to <code>null</code>) string appended to a calculated value when applying it to a target feature
+				 * (e.g., for a DOM style property this might be "px").</p>
+				 * <p class="ExplanationParagraph">-A <em>calculator</em> is a function that looks at the start and end values of a target feature and calculates a current value to apply
+				 * based on the current distance along the timeline. Ordinarily this is set to one of the pre-defined calculator functions in the [Concert.Calculators]{@link Concert.Calculators} namespace
+				 * (initially defaulting to <code>Concert.Calculators.Linear</code>), but can also be a custom function, as explained further below.</p>
+				 * <p class="ExplanationParagraph">-An <em>applicator</em> is a function that takes the values computed by the calculator function and applies them to the target feature.
+				 * For instance, different applicators would be used for setting JavaScript object properties, DOM element styles, or SVG element attributes.
+				 * Ordinarily this is set to one of the pre-defined applicator functions in the [Concert.Applicators]{@link Concert.Applicators} namespace
+				 * (initially defaulting to <code>Concert.Applicators.Property</code>), but can also be a custom function, as explained further below.</p>
+				 * <p class="ExplanationParagraph">-An <em>easing</em> is a function which modifies the rate at which a transformation moves from beginning to end.
+				 * For instance, it may progress steadily from the start time to the end time, or it may accelerate and decelerate to make motion appear smoother.
+				 * Ordinarily this is set to one of the pre-defined easing functions in the [Concert.EasingFunctions]{@link Concert.EasingFunctions} namespace
+				 * (initially defaulting to <code>Concert.EasingFunctions.ConstantRate</code>) but can also be a custom function, as explained further below.</p>
+				 * <p class="ExplanationParagraph">Note: The easing function could easily be confused with the calculator function, because many animation libraries combine these two concepts.
+				 * Here, however, they can be set independently. Essentially, a calculator function, given a start value, an end value, and the current time (in the form of a fractional distance
+				 * between the start time and end time of the transformation), calculates a current value to apply. The easing function is what computes the current time that will be passed into
+				 * the calculator function, allowing the rate at which a transformation proceeds to change over time. The reason for separating these becomes apparent when we consider that different
+				 * types of calculation are necessary for different types of features. A function calculating an animated movement from one RGB color value to another uses a different algorithm than
+				 * one calculating the animation of a simple, numeric value, for instance, or a complex calculator function that takes multiple inputs and calculates rotational movement.
+				 * Because ConcertJS allows anything at all to be animated, it supports the ability to choose any method of calculating values, and then (regardless of which one is used)
+				 * specifying any easing function to alter the rate at which the animation takes place. Easing functions are specified at the level of the transformation (not the full sequence),
+				 * so a single sequence can contain different transformations using a different easing functions.</p>
 				 * @name addTransformations
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {Object} transformationSet ADDCODE
+				 * @param {Object} transformationSet An object or array describing a set of changes which will be applied at specified times to specified target objects.
+				 * Terminology-wise, a target object is anything that will be modified by the sequence (e.g., a DOM element or a JavaScript object).
+				 * The parameter is either a single object whose properties define a set of transformations, or an array of such objects.
+				 * Certain of the properties (as indicated below) are optional, and each sequence maintains its own settings for what default values will be applied to transformations
+				 * when the optional properties are not defined. (Note: these defaults are applied at the time the transformations are added, not at run-time, so changing the defaults
+				 * for a sequence will never alter transformations which have already been added to that sequence.)<br><br>
+				 * The expected layout of the object passed into this method is defined as follows (also see examples below):<pre>
+				 * <strong>transformationSet</strong> = <em>TransformationObject</em>
+				 * OR
+				 * <strong>transformationSet</strong> = [<em>TransformationObject<sub>1</sub></em>, <em>TransformationObject<sub>2</sub></em>, ...]
+				 * 
+				 * <strong><em>TransformationObject</em></strong> =
+				 *   {
+				 *       target: <em>TargetObjectDefinition</em>,
+				 *       feature: <em>FeatureDefinition</em>,
+				 *       [unit: <em>UnitDefinition</em>,] // If absent, uses sequence's default value
+				 *       [applicator: <em>ApplicatorFunction</em>,] // If absent, uses sequence's default value
+				 *       [calculator: <em>CalculatorFunction</em>,] // If absent, uses sequence's default value
+				 *       [easing: <em>EasingFunction</em>,] // If absent, uses sequence's default value
+				 *
+				 *       keyframes: <em>KeyframesDefinition</em>
+				 *       OR
+				 *       segments: <em>SegmentsDefinition</em>
+				 *   };
+				 * 
+				 * <strong><em>TargetObjectDefinition</em></strong> = The object to be modified by this transformation.
+				 * Often this will be a DOM object, but it can be any object at all.
+				 *
+				 * <strong><em>FeatureDefinition</em></strong> = The feature of the target object which will be modified.
+				 * In most cases, this will be a string (for example, when animating a DOM style,
+				 * this might be "width").
+				 *
+				 * <strong><em>UnitDefinition</em></strong> = A string to be appended to calculated values before they are
+				 * applied to the target. (For example, when animating a DOM style, this might be "px".)
+				 * Use <em>null</em> if nothing should be appended to the calculated values for this transformation.
+				 *
+				 * <strong><em>ApplicatorFunction</em></strong> = Function used to apply the calculated current value to the feature.
+				 * Because different types of features (e.g., DOM element styles as contrasted to plain
+				 * JavaScript object properties) are applied in different ways, different applicator
+				 * functions are needed. This can be set to one of the functions defined in the
+				 * [Concert.Applicators]{@link Concert.Applicators} namespace, or to any function with the signature:
+				 *   <em>function applicatorFunction(target, feature, value, unit)</em>
+				 * See below examples for a sample of a custom applicator.
+				 *
+				 * <strong><em>CalculatorFunction</em></strong> = Function used to calculate a current value to apply to the target
+				 * feature. This can be set to one of the functions defined in the [Concert.Calculators]{@link Concert.Calculators}
+				 * namespace, or to any function returning an approprate value for this transformation's
+				 * target feature and having the signature:
+				 *   <em>function calculatorFunction(distanceFraction, startValue, endValue, additionalProperties)</em>
+				 * See below examples for a sample of a custom calculator.
+				 *
+				 * <strong><em>EasingFunction</em></strong> = Function used to compute the current time (specified as a fractional
+				 * proportion of the distance traversed, from 0 to 1, between the start time and end time of
+				 * the transformation). This can be set to one of the functions defined in
+				 * the [Concert.EasingFunctions]{@link Concert.EasingFunctions} namespace, or to any function returning a value from 0 to 1
+				 * and having the signature:
+				 *   <em>function easingFunction(startTime, endTime, currentTime)</em>
+				 * See below examples for a sample of a custom easing function.
+				 *
+				 * <strong><em>KeyframesDefinition</em></strong> =
+				 *   {
+				 *       times: <em>TimesArray</em>,
+				 *
+				 *       [values: <em>ValuesArray</em>,]
+				 *       OR
+				 *       [valueGenerators: <em>ValueGeneratorsArray</em>]
+				 *   };
+				 *
+				 * <strong><em>SegmentsDefinition</em></strong> = 
+				 *   {
+				 *       [unit: <em>UnitDefinition</em>,] // If absent, falls back to the unit defined at the
+				 *       // <em>TransformationObject</em> level; if also absent there, to the sequence's default value
+				 *
+				 *       // WORKING HERE
+				 *       // (also, elsewhere need to revise descriptions to allow for properties that can be arrays instead of individual values (like values, features, others?)
+				 *   };
+				 *
+				 * <strong><em>TimesArray</em></strong> = ADDCODE
+				 *
+				 * <strong><em>ValuesArray</em></strong> = ADDCODE
+				 *
+				 * <strong><em>ValueGeneratorsArray</em></strong> = ADDCODE
+				 *
+				 *</pre>
+				 * @example <caption>first example</caption>
+				 * example stuff.
+				 * @example <caption>second example</caption>
+				 * example stuff.
 				 */
 				function __addTransformations(transformationSet)
 				{
@@ -1980,7 +2094,7 @@ var Concert = (function ()
 
 
 				/**
-				 * Indexes a sequence. This function is run automatically (if necessary) any time a sequence is run or the [seek]{@link Concert.Sequence#seek] method is called.
+				 * Indexes a sequence. This function is run automatically (if necessary) any time a sequence is run or the [seek]{@link Concert.Sequence#seek} method is called.
 				 * However, for very large sequences (large enough that indexing would cause a noticable lag), it may be desirable to manually control when indexing takes place
 				 * (that is, to pre-index the sequence), so that seeking or running will begin instantly. Once indexed, a sequence (or any sequences cloned from it) will not need
 				 * to be indexed again unless new transformations are added to it.<br><br>
