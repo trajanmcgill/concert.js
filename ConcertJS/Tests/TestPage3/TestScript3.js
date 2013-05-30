@@ -126,7 +126,6 @@ function init3()
 		{
 			target: document.getElementById("d1"),
 			feature: ["left", "top"],
-			unit: ["px", "px"],
 			keyframes: { times: [0, 1000], values: [[0, 0], [100, 200]] }
 		},
 		{
