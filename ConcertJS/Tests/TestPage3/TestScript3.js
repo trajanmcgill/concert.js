@@ -131,7 +131,7 @@ function init3()
 		{
 			target: document.getElementById("d2"),
 			feature: "width",
-			segments: [{ t1: 0, t2: 1000, v1: 50, v2: 100 }]
+			segments: [{ t0: 0, t1: 1000, v0: 50, v1: 100 }]
 		},
 	  ]);	/*
 	sequence.addTransformations(
