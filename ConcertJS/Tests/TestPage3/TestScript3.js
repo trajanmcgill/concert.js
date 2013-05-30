@@ -120,8 +120,21 @@ function init3()
 	$testArea.append($d1).append($d2);
 
 	sequence = new Concert.Sequence();
-	sequence.setDefaults({ applicator: Concert.Applicators.Style });
-	
+	sequence.setDefaults({ applicator: Concert.Applicators.Style, calculator: Concert.Calculators.Linear, easing: Concert.EasingFunctions.ConstantRate, unit: "px" });
+	sequence.addTransformations(
+	  [
+		{
+			target: document.getElementById("d1"),
+			feature: ["left", "top"],
+			unit: ["px", "px"],
+			keyframes: { times: [0, 1000], values: [[0, 0], [100, 200]] }
+		},
+		{
+			target: document.getElementById("d2"),
+			feature: "width",
+			segments: [{ t1: 0, t2: 1000, v1: 50, v2: 100 }]
+		},
+	  ]);	/*
 	sequence.addTransformations(
 		[
 			{
@@ -147,7 +160,7 @@ function init3()
 					}
 			}
 		]);
-	
+	*/
 	sequence.index(function () { showText("finished indexing."); }, true);
 }
 
@@ -219,7 +232,7 @@ function beginClick()
 	sequence.begin(
 		{
 			onAutoStop: function () { jQuery("#StatusLabel").text("Auto-stopped."); },
-			useSoleControlOptimization: false
+			useSoleControlOptimization: true
 		});
 	/*
 	setTimeout(

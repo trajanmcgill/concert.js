@@ -621,7 +621,7 @@ var Concert = (function ()
 					this.lastAppliedValueContainer =
 						{
 							value: (_Concert.Util.isArray(this.feature) ? new Array(this.feature.length) : null),
-							unit: null
+							unit: (_Concert.Util.isArray(this.unit) ? new Array(this.unit.length) : null)
 						};
 
 					// Methods
@@ -669,6 +669,7 @@ var Concert = (function ()
 									else
 										lastAppliedValueContainer.unit = currentIndividualUnit;
 								}
+								break;
 							}
 						}
 					}
@@ -705,7 +706,7 @@ var Concert = (function ()
 					newTransformation.lastAppliedValueContainer =
 						{
 							value: (_Concert.Util.isArray(this.feature) ? new Array(this.feature.length) : null),
-							unit: null
+							unit: (_Concert.Util.isArray(this.unit) ? new Array(this.unit.length) : null)
 						};
 					newTransformation.lastFrameID = null;
 					newTransformation.lastCalculatedValue = null;
@@ -741,7 +742,7 @@ var Concert = (function ()
 					this.lastAppliedValueContainer =
 						{
 							value: (_Concert.Util.isArray(this.feature) ? new Array(this.feature.length) : null),
-							unit: null
+							unit: (_Concert.Util.isArray(this.unit) ? new Array(this.unit.length) : null)
 						};
 				} // end _retarget()
 
@@ -1100,6 +1101,7 @@ var Concert = (function ()
 					thisProtected.before = _Concert.Repeating.None;
 					thisProtected.autoStopAtEnd = true;
 					thisProtected.onAutoStop = null;
+					thisProtected.stretchStartTimeToZero = true;
 					thisProtected.soleControlOptimizationDuringRun = true;
 
 					// Protected methods
@@ -1525,18 +1527,18 @@ var Concert = (function ()
 				 * Here, however, they can be set independently. Essentially, a calculator function, given a start value, an end value, and the current time (in the form of a fractional distance
 				 * between the start time and end time of the transformation), calculates a current value to apply. The easing function is what computes the current time that will be passed into
 				 * the calculator function, allowing the rate at which a transformation proceeds to change over time. The reason for separating these becomes apparent when we consider that different
-				 * types of calculation are necessary for different types of features. A function calculating an animated movement from one RGB color value to another uses a different algorithm than
+				 * types of calculation are necessary for different types of features. A function calculating an animated transition from one RGB color value to another uses a different algorithm than
 				 * one calculating the animation of a simple, numeric value, for instance, or a complex calculator function that takes multiple inputs and calculates rotational movement.
 				 * Because ConcertJS allows anything at all to be animated, it supports the ability to choose any method of calculating values, and then (regardless of which one is used)
-				 * specifying any easing function to alter the rate at which the animation takes place. Easing functions are specified at the level of the transformation (not the full sequence),
-				 * so a single sequence can contain different transformations using a different easing functions.</p>
+				 * specifying any easing function to alter the rate at which the animation takes place. Easing functions are specified at the level of the transformation (not the full sequence,
+				 * although it is possible to set a default easing function for a sequence), so a single sequence can contain different transformations using a different easing functions.</p>
 				 * @name addTransformations
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
 				 * @param {Object} transformationSet An object or array describing a set of changes which will be applied at specified times to specified target objects.
-				 * Terminology-wise, a target object is anything that will be modified by the sequence (e.g., a DOM element or a JavaScript object).
-				 * The parameter is either a single object whose properties define a set of transformations, or an array of such objects.
+				 * (A target object being anything that will be modified by the sequence, such as a DOM element or a JavaScript object.)
+				 * The <code>transformationSet</code> parameter is either a single object whose properties define a set of transformations, or an array of such objects.
 				 * Certain of the properties (as indicated below) are optional, and each sequence maintains its own settings for what default values will be applied to transformations
 				 * when the optional properties are not defined. (Note: these defaults are applied at the time the transformations are added, not at run-time, so changing the defaults
 				 * for a sequence will never alter transformations which have already been added to that sequence.)<br><br>
@@ -1556,25 +1558,32 @@ var Concert = (function ()
 				 *
 				 *       keyframes: <em>KeyframesDefinition</em>
 				 *       OR
-				 *       segments: <em>SegmentsDefinition</em>
+				 *       segments: <em>SegmentDefinition</em> OR [<em>SegmentDefinition<sub>1</sub></em>, <em>SegmentDefinition<sub>2</sub></em>, ...]
 				 *   };
 				 * 
 				 * <strong><em>TargetObjectDefinition</em></strong> = The object to be modified by this transformation.
-				 * Often this will be a DOM object, but it can be any object at all.
+				 * Often this will be a DOM object, but it can be anything at all.
 				 *
-				 * <strong><em>FeatureDefinition</em></strong> = The feature of the target object which will be modified.
-				 * In most cases, this will be a string (for example, when animating a DOM style,
-				 * this might be "width").
+				 * <strong><em>FeatureDefinition</em></strong> = The feature of the target object which will be modified, OR an array of
+				 * such features. In most cases, this will be a string (for example, when animating a DOM style,
+				 * this might be "width") or an array of strings. Arrays are allowed as a shorthand method of
+				 * defining multiple features, values, and units together in a more compact notation. The first
+				 * feature in the array will be matched with the first unit and the first value in those arrays,
+				 * and so on. See below samples for an example of using arrays in this way.
 				 *
-				 * <strong><em>UnitDefinition</em></strong> = A string to be appended to calculated values before they are
-				 * applied to the target. (For example, when animating a DOM style, this might be "px".)
+				 * <strong><em>UnitDefinition</em></strong> = A string to be appended to calculated values before they are applied
+				 * to the target (for example, when animating a DOM style, this might be "px"), OR an array of
+				 * such strings. Arrays are allowed as a shorthand method of defining multiple features, values,
+				 * and units together in a more compact notation. The first unit in the array will be matched with
+				 * the first feature and the first value in those arrays, and so on. See below samples for an
+				 * example of using arrays in this way.
 				 * Use <em>null</em> if nothing should be appended to the calculated values for this transformation.
 				 *
 				 * <strong><em>ApplicatorFunction</em></strong> = Function used to apply the calculated current value to the feature.
 				 * Because different types of features (e.g., DOM element styles as contrasted to plain
-				 * JavaScript object properties) are applied in different ways, different applicator
-				 * functions are needed. This can be set to one of the functions defined in the
-				 * [Concert.Applicators]{@link Concert.Applicators} namespace, or to any function with the signature:
+				 * JavaScript object properties) are applied in different ways, different applicator functions
+				 * are needed. This can be set to one of the functions defined in the [Concert.Applicators]{@link Concert.Applicators}
+				 * namespace, or to any function with the signature:
 				 *   <em>function applicatorFunction(target, feature, value, unit)</em>
 				 * See below examples for a sample of a custom applicator.
 				 *
@@ -1585,43 +1594,132 @@ var Concert = (function ()
 				 *   <em>function calculatorFunction(distanceFraction, startValue, endValue, additionalProperties)</em>
 				 * See below examples for a sample of a custom calculator.
 				 *
-				 * <strong><em>EasingFunction</em></strong> = Function used to compute the current time (specified as a fractional
-				 * proportion of the distance traversed, from 0 to 1, between the start time and end time of
-				 * the transformation). This can be set to one of the functions defined in
-				 * the [Concert.EasingFunctions]{@link Concert.EasingFunctions} namespace, or to any function returning a value from 0 to 1
-				 * and having the signature:
+				 * <strong><em>EasingFunction</em></strong> = Function used to compute the current time (as a fractional proportion of the
+				 * distance traversed, from 0 to 1, between the start time and end time of the transformation).
+				 * This can be set to one of the functions defined in the [Concert.EasingFunctions]{@link Concert.EasingFunctions} namespace,
+				 * or to any function returning a value from 0 to 1 and having the signature:
 				 *   <em>function easingFunction(startTime, endTime, currentTime)</em>
 				 * See below examples for a sample of a custom easing function.
 				 *
 				 * <strong><em>KeyframesDefinition</em></strong> =
 				 *   {
-				 *       times: <em>TimesArray</em>,
+				 *       times: <em>KeyframeTimesArray</em>,
 				 *
-				 *       [values: <em>ValuesArray</em>,]
+				 *       [values: <em>KeyframeValuesArray</em>,]
 				 *       OR
 				 *       [valueGenerators: <em>ValueGeneratorsArray</em>]
 				 *   };
 				 *
-				 * <strong><em>SegmentsDefinition</em></strong> = 
+				 * <strong><em>SegmentDefinition</em></strong> = 
 				 *   {
-				 *       [unit: <em>UnitDefinition</em>,] // If absent, falls back to the unit defined at the
-				 *       // <em>TransformationObject</em> level; if also absent there, to the sequence's default value
+				 *       t1: <em>TimeDefinition</em>, // Start time of this transformation
+				 *       t2: <em>TimeDefinition</em>, // End time of this transformation
 				 *
-				 *       // WORKING HERE
-				 *       // (also, elsewhere need to revise descriptions to allow for properties that can be arrays instead of individual values (like values, features, others?)
+				 *       v1: <em>ValueDefinition</em>, // Value applied at the start time
+				 *       v2: <em>ValueDefinition</em>, // Value applied at the end time
+				 *       OR
+				 *       v1Generator: <em>ValueGenerator</em>, // Function to calculate v1
+				 *       v2Generator: <em>ValueGenerator</em>, // Function to calculate v2
+				 *
+				 *       [calculator: <em>CalculatorFunction</em>,] // If absent, falls back to the calculator defined at the
+				 *       // <em>TransformationObject</em> level; if also absent there, to the sequence's default calculator.
+				 *
+				 *       [easing: <em>EasingFunction</em>,] // If absent, falls back to the easing function defined at the
+				 *       // <em>TransformationObject</em> level; if also absent there, to the sequence's default easing.
+				 *
+				 *       [unit: <em>UnitDefinition</em>,] // If absent, falls back to the unit defined at the
+				 *       // <em>TransformationObject</em> level; if also absent there, to the sequence's default unit.
 				 *   };
 				 *
-				 * <strong><em>TimesArray</em></strong> = ADDCODE
+				 * <strong><em>KeyframeTimesArray</em></strong> = An array of the form [<em>TimeDefinition<sub>1</sub></em>, <em>TimeDefinition<sub>2</sub></em>, ...].
+				 * This defines the timeline points used as keyframes for this transformation series, to be matched
+				 * up with the values in the corresponding <em>KeyframeValuesArray</em>.
 				 *
-				 * <strong><em>ValuesArray</em></strong> = ADDCODE
+				 * <strong><em>KeyframeValuesArray</em></strong> = An array of the form [<em>ValueDefinition<sub>1</sub></em>, <em>ValueDefinition<sub>2</sub></em>, ...].
+				 * This defines the values applied at each keyframe point, as matched up with the keyframe points
+				 * defined in the corresponding <em>KeyframeTimesArray</em>.
 				 *
-				 * <strong><em>ValueGeneratorsArray</em></strong> = ADDCODE
+				 * <strong><em>ValueGeneratorsArray</em></strong> = An array of the form [<em>ValueGenerator<sub>1</sub></em>, <em>ValueGenerator<sub>2</sub></em>, ...].
+				 * This defines the functions that calculate values applied at each keyframe point, as matched up
+				 * with the keyframe points defined in the corresponding <em>KeyframeTimesArray</em>.
+				 *
+				 * <strong><em>TimeDefinition</em></strong> = A number indicating a point along the sequence timeline. When synchronizing to
+				 * a media object or running by the system clock, this should ordinarily be specified as a number
+				 * of milliseconds (1/1000's of a second). Otherwise, there is no restriction; it simply indicates
+				 * a numeric point on the overall timeline, with no particular unit implied. For instance, a
+				 * sequence could be synchronized to the value of a slider or other user control, in which case
+				 * this number would just be anything from the minimum to the maximum values of that control.
+				 *
+				 * <strong><em>ValueDefinition</em></strong> = A value to be applied to the target object feature, or an array of such values.
+				 * This value can be of any type, although it needs to be one appropriate to the target feature,
+				 * calculator, and applicator being used. If a unit is specified, the value will be treated as a
+				 * string and the unit will be appended to it before application. Arrays are allowed as a
+				 * shorthand method of defining multiple features, values, and units together in a more compact
+				 * notation. The first value in the array will be matched with the first unit and the first
+				 * feature in those arrays, and so on. See below samples for an example of using arrays in
+				 * this way.
+				 *
+				 * <strong><em>ValueGenerator</em></strong> = A function which returns a valid <em>ValueDefinition</em> and has the signature:
+				 *   <em>function generatorFunction(sequence)</em>
+				 * This is a mechanism that allows specifying functions that will calculate start and end values
+				 * for a transformation, instead of using fixed values determined at the time the transformation
+				 * is initially specified. This can be helpful if the same transformation will be run more than
+				 * once with different start and end values, such as a motion that might be repeated in more
+				 * than one place on the screen at different times, or if the transformation is being added to
+				 * the sequence before the actual start and end values are yet known. This is not to be confused
+				 * with a Calculator function. A Calculator takes a start and end value along with the current
+				 * time and calculates the current value. This function, by contrast, is called prior to running
+				 * the sequence and determines what the start and end values are that the Calculator will look at
+				 * during run-time of the sequence. All of the value generator functions for an entire sequence
+				 * are called at once, either manually by calling the sequence's [generateValues]{@link Concert.Sequence#generateValues} method, or at the
+				 * time the sequence is run, by specifying <code>true</code> for the <code>generateValues</code> option when calling the
+				 * [run]{@link Concert.Sequence#run}, [begin]{@link Concert.Sequence#begin}, [follow]{@link Concert.Sequence#follow}, or [syncTo]{@link Concert.Sequence#syncTo} methods.
+				 * The generator function will be passed a reference to the sequence object containing the
+				 * transformation whose values are currently being generated.
 				 *
 				 *</pre>
-				 * @example <caption>first example</caption>
-				 * example stuff.
-				 * @example <caption>second example</caption>
-				 * example stuff.
+				 * @example <caption>Below: Single target object and feature, using keyframes, not relying on defaults. This would move a DOM object with id "someObject"
+				 * by changing its "left" style value from "0px" to "60px" over the timeline period from time 1000 to 2000.</caption>
+				 * sequence.addTransformations({
+				 *     target: document.getElementById("someObject"),
+				 *     feature: "left",
+				 *     unit: "px",
+				 *     applicator: Concert.Applicators.Style,
+				 *     calculator: Concert.Calculators.Linear,
+				 *     easing: Concert.EasingFunctions.ConstantRate,
+				 *     keyframes: { times: [1000, 2000], values: [0, 60] }
+				 *   });
+				 *     
+				 * @example <caption>Below: Two target objects, one with keyframes and the other using segments, setting defaults to avoid having to
+				 * define every option every time. This example also demonstrates using arrays for the target features, and values. (An array could
+				 * also have been specified for the "unit" property, but that isn't necessary if the same unit is being used for all the features as
+				 * it is here.) This code would move the DOM object with id "someObject1" from position left:0, top:0 to left:100, top:200 from time
+				 * 0 to 1000; and increase the width of the object with id "someObject2" from 50 to 100 over the same time.</caption>
+				 * sequence.setDefaults(
+				 *   {
+				 *     applicator: Concert.Applicators.Style,
+				 *     calculator: Concert.Calculators.Linear,
+				 *     easing: Concert.EasingFunctions.ConstantRate,
+				 *     unit: "px"
+				 *   });
+				 *
+				 * sequence.addTransformations(
+				 *   [
+				 *     {
+				 *       target: document.getElementById("someObject1"),
+				 *       feature: ["left", "top"],
+				 *       keyframes: { times: [0, 1000], values: [[0, 0], [100, 200]] }
+				 *     },
+				 *
+				 *     {
+				 *       target: document.getElementById("someObject2"),
+				 *       feature: "width",
+				 *       segments: [ { t1: 0, t2: 1000, v1: 50, v2: 100 } ]
+				 *     },
+				 *   ]);
+				 *     
+				 * 
+				 * ADDCODE (WORKING HERE)
 				 */
 				function __addTransformations(transformationSet)
 				{
@@ -1629,7 +1727,7 @@ var Concert = (function ()
 
 					var i, j, k, numTransformationGroups, curTransformationGroup, curGroupTarget, curGroupTargets, numCurGroupTargets, singleTargetVersion,
 						curGroupFeatures, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
-						numSegments, curSegment, propertyName, newTransformationProperties, newTransformation, singleFeatureSequence, curFeatureSequences = [],
+						numSegments, curSegment, propertyName, newTransformationProperties, newTransformation, singleFeatureSequence, curFeatureSequences,
 						existingTargetSequences = thisProtected.targetSequences, curTargetSequence = null, defaults = thisProtected.defaults, numKeyFrames, times,
 						values, valueGenerators, curKeyFrameTime, curKeyFrameValue, curKeyFrameValueGenerator, lastKeyFrameTime, lastKeyFrameValue, lastKeyFrameValueGenerator,
 						createSegment, allTransformations = thisProtected.allTransformations, dynamicValueTransformations = thisProtected.dynamicValueTransformations;
@@ -1688,6 +1786,7 @@ var Concert = (function ()
 						if (typeof curGroupEasing === "undefined")
 							curGroupEasing = defaults.easing;
 
+						curFeatureSequences = new Array(curGroupFeatures.length);
 						for (j = 0; j < curGroupFeatures.length; j++)
 						{
 							singleFeatureSequence = curTargetSequence.findFeatureSequenceByFeature(curGroupFeatures[j]);
@@ -1951,6 +2050,7 @@ var Concert = (function ()
 							before: thisProtected.before,
 							autoStopAtEnd: thisProtected.autoStopAtEnd,
 							onAutoStop: thisProtected.onAutoStop,
+							stretchStartTimeToZero: thisProtected.stretchStartTimeToZero,
 							soleControlOptimizationDuringRun: newSoleControlOptimizationDuringRun
 						};
 
@@ -2089,7 +2189,7 @@ var Concert = (function ()
 					if (!(thisProtected.indexed))
 						thisPublic.index(null, false);
 
-					return thisProtected.sequenceStartTime;
+					return (thisProtected.stretchStartTimeToZero ? Math.min(thisProtected.sequenceStartTime, 0) : thisProtected.sequenceStartTime);
 				} // end __getStartTime()
 
 
@@ -2261,7 +2361,16 @@ var Concert = (function ()
 				 *   <strong>speed</strong>: VALUE, // Initial default: 1
 				 *
 				 *   // --------
-				 *   // Variable type ; Sets a synchronization source for this sequence. Can take any
+				 *   // Boolean; Indicates whether to treat the sequence start time as 0 even if the
+				 *   // first transformation in the sequence starts at a time greater than 0. This
+				 *   // prevents a sequence whose first animations begin some time into the timeline
+				 *   // from auto-stopping or triggering its <em>before</em> behavior when it is run from
+				 *   // time 0. To define the beginning of the sequence timeline as the beginning of
+				 *   // the first transformation in the timeline no matter what, set to <em>false</em>.
+				 *   <strong>stretchStartTimeToZero</strong>: VALUE // Initial default: true
+				 *
+				 *   // --------
+				 *   // Variable type; Sets a synchronization source for this sequence. Can take any
 				 *   // of the following different types of values:
 				 *   //   null: locks sequence to the system clock.
 				 *   //   function object: the passed-in function is called every time the polling
@@ -2325,6 +2434,7 @@ var Concert = (function ()
 					thisProtected.before = _getParamValue(parameters, "before", thisProtected.before);
 					thisProtected.autoStopAtEnd = _getParamValue(parameters, "autoStopAtEnd", thisProtected.autoStopAtEnd);
 					thisProtected.onAutoStop = _getParamValue(parameters, "onAutoStop", thisProtected.onAutoStop);
+					thisProtected.stretchStartTimeToZero = _getParamValue(parameters, "stretchStartTimeToZero", thisProtected.stretchStartTimeToZero);
 					thisProtected.soleControlOptimizationDuringRun = soleControlOptimizationDuringRun = _getParamValue(parameters, "useSoleControlOptimization", thisProtected.soleControlOptimizationDuringRun);
 
 					thisProtected.pollingInterval = pollingInterval = _getParamValue(parameters, "pollingInterval", thisProtected.pollingInterval);
@@ -2340,7 +2450,7 @@ var Concert = (function ()
 					thisProtected.initialSyncSourcePoint = initialSyncSourcePoint = synchronizer();
 					timeOffset = _getParamValue(parameters, "timeOffset", null);
 					if (timeOffset === null)
-						timeOffset = (thisProtected.unadjustedTime !== null) ? (thisProtected.unadjustedTime - initialSyncSourcePoint) : (thisProtected.sequenceStartTime - initialSyncSourcePoint);
+						timeOffset = (thisProtected.unadjustedTime !== null) ? (thisProtected.unadjustedTime - initialSyncSourcePoint) : (thisPublic.getStartTime() - initialSyncSourcePoint);
 					thisProtected.timeOffset = timeOffset;
 
 					thisProtected.running = true;
@@ -2379,7 +2489,7 @@ var Concert = (function ()
 					if (!(thisProtected.indexed))
 						thisPublic.index(null, false);
 
-					sequenceStart = thisProtected.sequenceStartTime;
+					sequenceStart = thisPublic.getStartTime();
 					sequenceEnd = thisProtected.sequenceEndTime;
 
 					frameID = thisProtected.nextFrameID++;
