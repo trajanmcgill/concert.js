@@ -114,52 +114,48 @@ function init2()
 
 function init3()
 {
-	var $d1 = $("<div id=\"d1\">1</div>").css({ position: "absolute", left: "100px", top: "100px", width: "50px", height: "50px", backgroundColor: "#ff0000" });
-	var $d2 = $("<div id=\"d2\">2</div>").css({ position: "absolute", left: "200px", top: "100px", width: "50px", height: "50px", backgroundColor: "#00ff00" });
+	var $d1 = $("<div id=\"OuterBox\">1</div>").css({ position: "absolute", left: "100px", top: "100px", width: "200px", height: "200px", backgroundColor: "#ff0000" });
+	var $d2 = $("<div id=\"LeftInnerBox\">2</div>").css({ position: "absolute", left: "100px", top: "100px", width: "100px", height: "200px", backgroundColor: "#00ff00" }).addClass("InnerBox");
+	var $d3 = $("<div id=\"RightInnerBox\">3</div>").css({ position: "absolute", left: "200px", top: "100px", width: "100px", height: "200px", backgroundColor: "#0000ff" }).addClass("InnerBox");
 	var $testArea = $("#TestArea");
-	$testArea.append($d1).append($d2);
+	$testArea.append($d1).append($d2).append($d3);
 
 	sequence = new Concert.Sequence();
-	sequence.setDefaults({ applicator: Concert.Applicators.Style, calculator: Concert.Calculators.Linear, easing: Concert.EasingFunctions.ConstantRate, unit: "px" });
+
+	function customApplicator(target, feature, value, unit)
+	{
+		target.each(function () { $(this).css(feature, value + unit); });
+	}
+
+	function customCalculator(distanceFraction, startValue, endValue, additionalProperties)
+	{
+		return (distanceFraction * (endValue - startValue) * $("#OuterBox").innerWidth());
+	}
+
+	function customEasing(startTime, endTime, currentTime)
+	{
+		var fractionComplete = (currentTime - startTime) / (endTime - startTime);
+		if (fractionComplete < 2 / 3)
+			return (fractionComplete / 2);
+		else
+			return (1 / 3 + 2 * (fractionComplete - 2 / 3));
+	}
+
 	sequence.addTransformations(
-	  [
 		{
-			target: document.getElementById("d1"),
-			feature: ["left", "top"],
-			keyframes: { times: [0, 1000], values: [[0, 0], [100, 200]] }
-		},
-		{
-			target: document.getElementById("d2"),
+			target: $(".InnerBox"),
 			feature: "width",
-			segments: [{ t0: 0, t1: 1000, v0: 50, v1: 100 }]
-		},
-	  ]);	/*
-	sequence.addTransformations(
-		[
-			{
-				target: $d1.get(0),
-				feature: "left",
-				unit: "px",
-				easing: Concert.EasingFunctions.ConstantRate,
-				keyframes:
-					{
-						times: [4000, 5000],
-						values: [200, 300]
-					}
-			},
-			{
-				target: $d1.get(0),
-				feature: ["top", "left"],
-				unit: "px",
-				easing: Concert.EasingFunctions.ConstantRate,
-				keyframes:
-					{
-						times: [0, 1000, 2000],
-						values: [[100, 100], [100, 200], [200, 200]]
-					}
-			}
-		]);
-	*/
+			applicator: customApplicator,
+			calculator: customCalculator,
+			easing: customEasing,
+			unit: "px",
+			keyframes:
+				{
+					times: [0, 1000],
+					values: [0, 0.5]
+				}
+		});
+	
 	sequence.index(function () { showText("finished indexing."); }, true);
 }
 
