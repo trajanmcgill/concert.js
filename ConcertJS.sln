@@ -66,24 +66,26 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "requestAnimationFrame", "ht
 		DefaultWebSiteLanguage = "Visual C#"
 	EndProjectSection
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "forum.concertjs.com", "forum.concertjs.com\", "{D898AE72-FBE0-4524-9880-AD1C2E089F4B}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "forum.concertjs.com", "http://localhost:58057", "{EDF88AB0-7F49-416E-9647-1DA5CA1DC98A}"
 	ProjectSection(WebsiteProperties) = preProject
+		UseIISExpress = "true"
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
-		Debug.AspNetCompiler.VirtualPath = "/forum.concertjs.com"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_58057"
 		Debug.AspNetCompiler.PhysicalPath = "forum.concertjs.com\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\forum.concertjs.com\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_58057\"
 		Debug.AspNetCompiler.Updateable = "true"
 		Debug.AspNetCompiler.ForceOverwrite = "true"
 		Debug.AspNetCompiler.FixedNames = "false"
 		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/forum.concertjs.com"
+		Release.AspNetCompiler.VirtualPath = "/localhost_58057"
 		Release.AspNetCompiler.PhysicalPath = "forum.concertjs.com\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\forum.concertjs.com\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_58057\"
 		Release.AspNetCompiler.Updateable = "true"
 		Release.AspNetCompiler.ForceOverwrite = "true"
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "57976"
+		SlnRelativePath = "forum.concertjs.com\"
+		DefaultWebSiteLanguage = "Visual C#"
 	EndProjectSection
 EndProject
 Global
@@ -97,8 +99,8 @@ Global
 		{CFF757D7-A1C4-48F0-B19E-5530FF6E8F5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A84D6AE-F548-469C-BD0E-3398088DA99D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9A84D6AE-F548-469C-BD0E-3398088DA99D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D898AE72-FBE0-4524-9880-AD1C2E089F4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D898AE72-FBE0-4524-9880-AD1C2E089F4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDF88AB0-7F49-416E-9647-1DA5CA1DC98A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDF88AB0-7F49-416E-9647-1DA5CA1DC98A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
