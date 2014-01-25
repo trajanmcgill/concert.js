@@ -93,6 +93,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A42850B2-1051-443C-A66F-9D16F993BB2C}"
 	ProjectSection(SolutionItems) = preProject
 		Gruntfile.js = Gruntfile.js
+		jsdoc.bat = jsdoc.bat
 		package.json = package.json
 	EndProjectSection
 EndProject
