@@ -24,21 +24,21 @@ module.exports = function(grunt)
 					noarg: true, noempty: true, nonew: true, quotmark: "double", smarttabs: true, strict: true, trailing: true, undef: true, unused: true, validthis: true
 				},
 
-				ConcertJS: { src: ["ConcertJS/Source/Concert.js"] }
+				Concert_js: { src: ["Concert.js/Source/Concert.js"] }
 			}, // end jshint task definitions
 
 
 			clean:
 			{
-				ConcertJS: ["ConcertJS/Build/**/*"]
+				Concert_js: ["Concert.js/Build/**/*"]
 			}, // end clean task definitions
 
 
 			copy:
 			{
-				ConcertJS:
+				Concert_js:
 				{
-					files: [{ src: ["ConcertJS/Source/Concert.js"], dest: "ConcertJS/Build/Concert.js" }],
+					files: [{ src: ["Concert.js/Source/Concert.js"], dest: "Concert.js/Build/Concert.js" }],
 					options: { process: function (content, srcpath) { return (grunt.config.process(LicenseBanner) + content); } }
 				}
 			}, // end copy task defitions
@@ -46,11 +46,11 @@ module.exports = function(grunt)
 
 			buildReferenceDocs:
 			{
-				ConcertJS:
+				Concert_js:
 				{
-					sourceFile: "ConcertJS/Source/Concert.js",
-					destination: "ConcertJS/Build/Reference",
-					template: "ConcertJS/DocTemplates/ConcertJS"
+					sourceFile: "Concert.js/Source/Concert.js",
+					destination: "Concert.js/Build/Reference",
+					template: "Concert.js/DocTemplates/ConcertJS"
 				}
 			},
 
@@ -58,8 +58,8 @@ module.exports = function(grunt)
 			{
 				options: { sequences: false, verbose: true, warnings: true },
 
-				ConcertJS: { options: { banner: LicenseBanner }, src: ["ConcertJS/Source/Concert.js"], dest: "ConcertJS/Build/Concert.min.js" },
-				ConcertJS_DeUglify: { options: { beautify: true }, src: ["ConcertJS/Build/Concert.min.js"], dest: "ConcertJS/Build/Concert.min.max.js" }
+				Concert_js: { options: { banner: LicenseBanner }, src: ["Concert.js/Source/Concert.js"], dest: "Concert.js/Build/Concert.min.js" },
+				Concert_js_DeUglify: { options: { beautify: true }, src: ["Concert.js/Build/Concert.min.js"], dest: "Concert.js/Build/Concert.min.max.js" }
 			} // end uglify task definitions
 		});
 	
