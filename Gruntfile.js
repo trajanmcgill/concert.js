@@ -43,7 +43,7 @@ module.exports = function(grunt)
 
 				ConcertJS:
 				{
-					files: [{ src: ["ConcertJS/Source/Concert.js"], dest: "ConcertJS/Build/Concert.full.js" }],
+					files: [{ src: ["ConcertJS/Source/Concert.js"], dest: "ConcertJS/Build/Concert.js" }],
 					options: { process: function (content, srcpath) { return (grunt.config.process(LicenseBanner) + content); } }
 				}
 			}, // end copy task defitions
