@@ -36,11 +36,6 @@ module.exports = function(grunt)
 
 			copy:
 			{
-				requestAnimationFrame:
-				{
-					files: [{ expand: true, cwd: "ConcertJS/Components/requestAnimationFrame/", src: "*.js", dest: "ConcertJS/Build/" }]
-				},
-
 				ConcertJS:
 				{
 					files: [{ src: ["ConcertJS/Source/Concert.js"], dest: "ConcertJS/Build/Concert.js" }],
@@ -105,7 +100,7 @@ module.exports = function(grunt)
 
 	grunt.registerTask("lint_all", ["jshint:ConcertJS"]);
 	grunt.registerTask("clean_all", ["clean:ConcertJS"]);
-	grunt.registerTask("build_ConcertJS", ["copy:requestAnimationFrame", "copy:ConcertJS", "uglify:ConcertJS"]);
+	grunt.registerTask("build_ConcertJS", ["copy:ConcertJS", "uglify:ConcertJS"]);
 	grunt.registerTask("build_reference", ["buildReferenceDocs:ConcertJS"]);
 	grunt.registerTask("build_all", ["build_ConcertJS", "build_reference"]);
 	grunt.registerTask("rebuild_all", ["clean_all", "build_all"]);
