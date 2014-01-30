@@ -50,7 +50,7 @@ module.exports = function(grunt)
 				{
 					sourceFile: "Concert.js/Source/Concert.js",
 					destination: "Concert.js/Build/Reference",
-					template: "Concert.js/DocTemplates/ConcertJS"
+					template: "Concert.js/DocTemplates/Concert.js"
 				}
 			},
 
@@ -98,11 +98,11 @@ module.exports = function(grunt)
 				});
 		}); // end call to grunt.registerMultiTask("buildReferenceDocs"...)
 
-	grunt.registerTask("lint_all", ["jshint:ConcertJS"]);
-	grunt.registerTask("clean_all", ["clean:ConcertJS"]);
-	grunt.registerTask("build_ConcertJS", ["copy:ConcertJS", "uglify:ConcertJS"]);
-	grunt.registerTask("build_reference", ["buildReferenceDocs:ConcertJS"]);
-	grunt.registerTask("build_all", ["build_ConcertJS", "build_reference"]);
+	grunt.registerTask("lint_all", ["jshint:Concert_js"]);
+	grunt.registerTask("clean_all", ["clean:Concert_js"]);
+	grunt.registerTask("build_Concert_js", ["copy:Concert_js", "uglify:Concert_js"]);
+	grunt.registerTask("build_reference", ["buildReferenceDocs:Concert_js"]);
+	grunt.registerTask("build_all", ["build_Concert_js", "build_reference"]);
 	grunt.registerTask("rebuild_all", ["clean_all", "build_all"]);
 	grunt.registerTask("default", ["lint_all", "rebuild_all"]);
 };

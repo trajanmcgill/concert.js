@@ -1,4 +1,4 @@
 syntax: glob
 *.suo
 *.csproj.user
-ConcertJS/Build/*
+Concert.js/Build/*
