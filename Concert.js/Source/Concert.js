@@ -61,6 +61,12 @@ var Concert = (function ()
 				}, // end arraysShallowlyEqual()
 
 
+				coalesce: function (item1, item2)
+				{
+					return (typeof item1 !== "undefined" && item1 !== null) ? item1 : item2;
+				}, // end coalesce()
+
+
 				isArray: function (testVar)
 				{
 					return ((typeof testVar === "object") && (Object.prototype.toString.call(testVar) === "[object Array]"));
@@ -228,11 +234,11 @@ var Concert = (function ()
 					}, // end Color Calculator function
 
 				Discrete:
-					function (distanceFraction, startValue, endValue, additionalProperties)
+					function (distanceFraction, startValue, endValue, userProperties)
 					{
-						var i, curReturnValue, returnValue, valueLength, roundFactor, doRounding = (typeof additionalProperties.round !== "undefined");
+						var i, curReturnValue, returnValue, valueLength, roundFactor, doRounding = (typeof userProperties.round !== "undefined");
 						if (doRounding)
-							roundFactor = additionalProperties.round;
+							roundFactor = userProperties.round;
 
 						if (_Concert.Util.isArray(startValue))
 						{
@@ -253,11 +259,11 @@ var Concert = (function ()
 					}, // end Discrete Calculator function
 
 				Linear:
-					function (distanceFraction, startValue, endValue, additionalProperties)
+					function (distanceFraction, startValue, endValue, userProperties)
 					{
-						var i, valueLength, curStartValue, curCalcValue, returnValue, roundFactor, doRounding = (typeof additionalProperties.round !== "undefined");
+						var i, valueLength, curStartValue, curCalcValue, returnValue, roundFactor, doRounding = (typeof userProperties.round !== "undefined");
 						if (doRounding)
-							roundFactor = additionalProperties.round;
+							roundFactor = userProperties.round;
 
 						if (_Concert.Util.isArray(startValue))
 						{
@@ -279,15 +285,15 @@ var Concert = (function ()
 					}, // end Linear Calculator function
 
 				Rotational:
-					function (distanceFraction, startValue, endValue, additionalProperties)
+					function (distanceFraction, startValue, endValue, userProperties)
 					{
-						var roundFactor, doRounding = (typeof additionalProperties.round !== "undefined");
+						var roundFactor, doRounding = (typeof userProperties.round !== "undefined");
 						if (doRounding)
-							roundFactor = additionalProperties.round;
-						var centerX = additionalProperties.center[0];
-						var centerY = additionalProperties.center[1];
-						var offsetX = additionalProperties.offset[0];
-						var offsetY = additionalProperties.offset[1];
+							roundFactor = userProperties.round;
+						var centerX = userProperties.center[0];
+						var centerY = userProperties.center[1];
+						var offsetX = userProperties.offset[0];
+						var offsetY = userProperties.offset[1];
 						var startRadius = startValue[0], endRadius = endValue[0];
 						var startAngle = startValue[1], endAngle = endValue[1];
 						var newRadius = startRadius + distanceFraction * (endRadius - startRadius);
@@ -596,27 +602,9 @@ var Concert = (function ()
 					this.transformationID = nextTransformationID++;
 
 					// Initialize data members
-					this.additionalProperties = {};
-					for (propertyName in properties)
-					{
-						if (propertyName === "target"
-						    || propertyName === "feature"
-						    || propertyName === "applicator"
-						    || propertyName === "calculator"
-						    || propertyName === "t0"
-						    || propertyName === "t1"
-						    || propertyName === "v0"
-						    || propertyName === "v1"
-							|| propertyName === "v0Generator"
-							|| propertyName === "v1Generator"
-						    || propertyName === "unit"
-						    || propertyName === "easing")
-						{
-							this[propertyName] = properties[propertyName];
-						}
-						else if (properties.hasOwnProperty(propertyName))
-							this.additionalProperties[propertyName] = properties[propertyName];
-					}
+					this.userProperties = {};
+					for (propertyName in properties) if (properties.hasOwnProperty(propertyName))
+						this[propertyName] = properties[propertyName];
 					this.lastFrameID = null;
 					this.lastCalculatedValue = null;
 					this.lastAppliedValueContainer =
@@ -692,10 +680,10 @@ var Concert = (function ()
 
 				function __clone(newTarget)
 				{
-					var newTransformation, propertyName, additionalProperties = this.additionalProperties, newAdditionalProperties,
+					var newTransformation, propertyName, userProperties = this.userProperties, newUserProperties,
 						propertiesNotToCopy =
 						{
-							transformationID: true, additionalProperties: true, target: true, lastAppliedValueContainer: true, lastFrameID: true, lastCalculatedValue: true,
+							transformationID: true, userProperties: true, target: true, lastAppliedValueContainer: true, lastFrameID: true, lastCalculatedValue: true,
 							clone: true, generateValues: true, hasDynamicValues: true, retarget: true, seek: true
 						};
 
@@ -712,9 +700,9 @@ var Concert = (function ()
 					newTransformation.lastFrameID = null;
 					newTransformation.lastCalculatedValue = null;
 
-					newAdditionalProperties = newTransformation.additionalProperties;
-					for (propertyName in additionalProperties) if (additionalProperties.hasOwnProperty(propertyName))
-						newAdditionalProperties[propertyName] = additionalProperties[propertyName];
+					newUserProperties = newTransformation.userProperties;
+					for (propertyName in userProperties) if (userProperties.hasOwnProperty(propertyName))
+						newUserProperties[propertyName] = userProperties[propertyName];
 
 					return newTransformation;
 				} // end __clone()
@@ -753,7 +741,7 @@ var Concert = (function ()
 					var newValue =
 						(frameID === this.lastFrameID)
 						? this.lastCalculatedValue
-						: this.calculator(this.easing(this.t0, this.t1, time), this.v0, this.v1, this.additionalProperties);
+						: this.calculator(this.easing(this.t0, this.t1, time), this.v0, this.v1, this.userProperties);
 
 					_applyValue(this.applicator, this.target, this.feature, seekFeature,
 					            { value: newValue, unit: this.unit },
@@ -1544,11 +1532,11 @@ var Concert = (function ()
 				 * when the optional properties are not defined. (Note: these defaults are applied at the time the transformations are added, not at run-time, so changing the defaults
 				 * for a sequence will never alter transformations which have already been added to that sequence.)<br><br>
 				 * The expected layout of the object passed into this method is defined as follows (also see examples below):<pre>
-				 * <strong>transformationSet</strong> = <em>TransformationObject</em>
+				 * <strong>transformationSet</strong> = <em>TransformationsObject</em>
 				 * OR
-				 * <strong>transformationSet</strong> = [<em>TransformationObject<sub>1</sub></em>, <em>TransformationObject<sub>2</sub></em>, ...]
+				 * <strong>transformationSet</strong> = [<em>TransformationsObject<sub>1</sub></em>, <em>TransformationsObject<sub>2</sub></em>, ...]
 				 * 
-				 * <strong><em>TransformationObject</em></strong> =
+				 * <strong><em>TransformationsObject</em></strong> =
 				 *   {
 				 *       target: <em>TargetObjectDefinition</em>,
 				 *       AND/OR
@@ -1565,7 +1553,7 @@ var Concert = (function ()
 				 *       segments: <em>SegmentDefinition</em> OR [<em>SegmentDefinition<sub>1</sub></em>, <em>SegmentDefinition<sub>2</sub></em>, ...]
 				 *   };
 				 * 
-				 * <strong><em>TargetObjectDefinition</em></strong> = The object to be modified by this transformation.
+				 * <strong><em>TargetObjectDefinition</em></strong> = The object to be modified by these transformations.
 				 * Often this will be a DOM object, but it can be anything at all. Multiple targets can
 				 * be specified, by using the <code>targets</code> (plural) property, as a shorthand method of
 				 * duplicating the transformation definitions to target all the included target objects.
@@ -1630,15 +1618,15 @@ var Concert = (function ()
 				 *       v1Generator: <em>ValueGenerator</em>, // Function to calculate v1
 				 *
 				 *       [calculator: <em>CalculatorFunction</em>,] // If absent, falls back to the calculator
-				 *       // defined at the <em>TransformationObject</em> level; if also absent there, to the
+				 *       // defined at the <em>TransformationsObject</em> level; if also absent there, to the
 				 *       // sequence's default calculator.
 				 *
 				 *       [easing: <em>EasingFunction</em>,] // If absent, falls back to the easing function
-				 *       // defined at the <em>TransformationObject</em> level; if also absent there, to the
+				 *       // defined at the <em>TransformationsObject</em> level; if also absent there, to the
 				 *       // sequence's default easing.
 				 *
 				 *       [unit: <em>UnitDefinition</em>,] // If absent, falls back to the unit defined at the
-				 *       // <em>TransformationObject</em> level; if also absent there, to the sequence's
+				 *       // <em>TransformationsObject</em> level; if also absent there, to the sequence's
 				 *       // default unit.
 				 *   };
 				 *
@@ -1861,7 +1849,7 @@ var Concert = (function ()
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					var i, j, k, numTransformationGroups, curTransformationGroup, curGroupTarget, curGroupTargets, numCurGroupTargets, singleTargetVersion,
-						curGroupFeatures, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
+						curGroupFeatures, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupUserProperties, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
 						numSegments, curSegment, propertyName, newTransformationProperties, newTransformation, singleFeatureSequence, curFeatureSequences,
 						existingTargetSequences = thisProtected.targetSequences, curTargetSequence = null, defaults = thisProtected.defaults, numKeyFrames, times,
 						values, valueGenerators, curKeyFrameTime, curKeyFrameValue, curKeyFrameValueGenerator, lastKeyFrameTime, lastKeyFrameValue, lastKeyFrameValueGenerator,
@@ -1880,7 +1868,6 @@ var Concert = (function ()
 						curTransformationGroup = transformationSet[i];
 
 						curGroupTarget = curTransformationGroup.target;
-
 						curGroupTargets = curTransformationGroup.targets;
 						if (_Concert.Util.isArray(curGroupTargets))
 						{
@@ -1908,18 +1895,11 @@ var Concert = (function ()
 						}
 
 						curGroupFeatures = _Concert.Util.isArray(curTransformationGroup.feature) ? curTransformationGroup.feature : [curTransformationGroup.feature];
-						curGroupApplicator = curTransformationGroup.applicator;
-						if (typeof curGroupApplicator === "undefined")
-							curGroupApplicator = defaults.applicator;
-						curGroupUnit = curTransformationGroup.unit;
-						if (typeof curGroupUnit === "undefined")
-							curGroupUnit = defaults.unit;
-						curGroupCalculator = curTransformationGroup.calculator;
-						if (typeof curGroupCalculator === "undefined")
-							curGroupCalculator = defaults.calculator;
-						curGroupEasing = curTransformationGroup.easing;
-						if (typeof curGroupEasing === "undefined")
-							curGroupEasing = defaults.easing;
+						curGroupApplicator = _Concert.Util.coalesce(curTransformationGroup.applicator, defaults.applicator);
+						curGroupUnit = _Concert.Util.coalesce(curTransformationGroup.unit, defaults.unit);
+						curGroupCalculator = _Concert.Util.coalesce(curTransformationGroup.calculator, defaults.calculator);
+						curGroupEasing = _Concert.Util.coalesce(curTransformationGroup.easing, defaults.easing);
+						curGroupUserProperties = _Concert.Util.coalesce(curTransformationGroup.userProperties, defaults.userProperties);
 
 						curFeatureSequences = new Array(curGroupFeatures.length);
 						for (j = 0; j < curGroupFeatures.length; j++)
@@ -1980,7 +1960,8 @@ var Concert = (function ()
 											v0: lastKeyFrameValue,
 											v1: curKeyFrameValue,
 											v0Generator: lastKeyFrameValueGenerator,
-											v1Generator: curKeyFrameValueGenerator
+											v1Generator: curKeyFrameValueGenerator,
+											userProperties: curGroupUserProperties
 										};
 									newTransformation = new _Concert.Transformation(newTransformationProperties);
 									allTransformations.push(newTransformation);
@@ -2019,6 +2000,8 @@ var Concert = (function ()
 									newTransformationProperties.calculator = curGroupCalculator;
 								if (typeof newTransformationProperties.easing === "undefined")
 									newTransformationProperties.easing = curGroupEasing;
+								if (typeof newTransformationProperties.userProperties === "undefined")
+									newTransformationProperties.userProperties = curGroupUserProperties;
 
 								newTransformation = new _Concert.Transformation(newTransformationProperties);
 								allTransformations.push(newTransformation);
@@ -2390,7 +2373,7 @@ var Concert = (function ()
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @returns {boolean} <code>true</code> if the sequence is currently running, <code>false</code>otherwise.
+				 * @returns {boolean} <code>true</code> if the sequence is currently running, <code>false</code> otherwise.
 				 */
 				function __isRunning()
 				{
