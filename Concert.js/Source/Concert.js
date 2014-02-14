@@ -61,10 +61,10 @@ var Concert = (function ()
 				}, // end arraysShallowlyEqual()
 
 
-				coalesce: function (item1, item2)
+				coalesceUndefined: function (item1, item2)
 				{
-					return (typeof item1 !== "undefined" && item1 !== null) ? item1 : item2;
-				}, // end coalesce()
+					return (typeof item1 !== "undefined") ? item1 : item2;
+				}, // end coalesceUndefined()
 
 
 				isArray: function (testVar)
@@ -602,9 +602,9 @@ var Concert = (function ()
 					this.transformationID = nextTransformationID++;
 
 					// Initialize data members
-					this.userProperties = {};
 					for (propertyName in properties) if (properties.hasOwnProperty(propertyName))
 						this[propertyName] = properties[propertyName];
+					this.userProperties = _Concert.Util.coalesceUndefined(this.userProperties, {});
 					this.lastFrameID = null;
 					this.lastCalculatedValue = null;
 					this.lastAppliedValueContainer =
@@ -1895,11 +1895,11 @@ var Concert = (function ()
 						}
 
 						curGroupFeatures = _Concert.Util.isArray(curTransformationGroup.feature) ? curTransformationGroup.feature : [curTransformationGroup.feature];
-						curGroupApplicator = _Concert.Util.coalesce(curTransformationGroup.applicator, defaults.applicator);
-						curGroupUnit = _Concert.Util.coalesce(curTransformationGroup.unit, defaults.unit);
-						curGroupCalculator = _Concert.Util.coalesce(curTransformationGroup.calculator, defaults.calculator);
-						curGroupEasing = _Concert.Util.coalesce(curTransformationGroup.easing, defaults.easing);
-						curGroupUserProperties = _Concert.Util.coalesce(curTransformationGroup.userProperties, defaults.userProperties);
+						curGroupApplicator = _Concert.Util.coalesceUndefined(curTransformationGroup.applicator, defaults.applicator);
+						curGroupUnit = _Concert.Util.coalesceUndefined(curTransformationGroup.unit, defaults.unit);
+						curGroupCalculator = _Concert.Util.coalesceUndefined(curTransformationGroup.calculator, defaults.calculator);
+						curGroupEasing = _Concert.Util.coalesceUndefined(curTransformationGroup.easing, defaults.easing);
+						curGroupUserProperties = _Concert.Util.coalesceUndefined(curTransformationGroup.userProperties, defaults.userProperties);
 
 						curFeatureSequences = new Array(curGroupFeatures.length);
 						for (j = 0; j < curGroupFeatures.length; j++)
