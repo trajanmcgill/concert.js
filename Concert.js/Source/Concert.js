@@ -44,6 +44,24 @@ var Concert = (function ()
 		// Some utility functions for use throughout.
 		Util:
 			{
+				applyUserPropertyCalculations: function(originalValue, userProperties)
+				{
+					var multiplicationFactor = userProperties.multiply, doMultiply = (typeof multiplicationFactor !== "undefined"),
+						moduloFactor = userProperties.modulo, doModulo = (typeof moduloFactor !== "undefined"),
+						roundFactor = userProperties.round, doRound = (typeof roundFactor !== "undefined"),
+						returnValue = originalValue;
+
+					if (doMultiply)
+						returnValue *= multiplicationFactor;
+					if (doModulo)
+						returnValue %= moduloFactor;
+					if (doRound)
+						returnValue = roundFactor * Math.round(returnValue / roundFactor);
+
+					return returnValue;
+				}, // end applyUserPropertyCalculations()
+
+
 				arraysShallowlyEqual: function (array1, array2)
 				{
 					var i, arrayLength = array1.length;
@@ -82,13 +100,7 @@ var Concert = (function ()
 
 					for (propertyName in newProtectedData) if (newProtectedData.hasOwnProperty(propertyName))
 						protectedContext[propertyName] = newProtectedData[propertyName];
-				}, // end loadObjectData()
-
-
-				round: function (input, roundFactor)
-				{
-					return (roundFactor * Math.round(input / roundFactor));
-				} // end round()
+				} // end loadObjectData()
 			}, // end Util singleton definition
 
 
@@ -177,7 +189,7 @@ var Concert = (function ()
 									{
 										curVal1 = parseInt(curVal1, 10);
 										tempVal = curVal1 + distanceFraction * (parseInt(color2Pieces[i], 10) - curVal1);
-										calculatedValues.push((i < 7) ? _Concert.Util.round(tempVal, 1) : tempVal);
+										calculatedValues.push((i < 7) ? Math.round(tempVal) : tempVal);
 									}
 								}
 
@@ -213,7 +225,7 @@ var Concert = (function ()
 								for (i = 0; i < 3; i++)
 								{
 									curVal1 = hexColorToDecimal(hexColors1[i]);
-									tempVal = _Concert.Util.round(curVal1 + distanceFraction * (hexColorToDecimal(hexColors2[i]) - curVal1), 1);
+									tempVal = Math.round(curVal1 + distanceFraction * (hexColorToDecimal(hexColors2[i]) - curVal1));
 									interpolatedValueStr += ((tempVal < 16) ? "0" : "") + tempVal.toString(16);
 								}
 							} // end if/else on (rgbFunctionMatch || hslFunctionMatch)
@@ -236,24 +248,16 @@ var Concert = (function ()
 				Discrete:
 					function (distanceFraction, startValue, endValue, userProperties)
 					{
-						var i, curReturnValue, returnValue, valueLength, roundFactor, doRounding = (typeof userProperties.round !== "undefined");
-						if (doRounding)
-							roundFactor = userProperties.round;
+						var i, returnValue, valueLength;
 
 						if (_Concert.Util.isArray(startValue))
 						{
 							returnValue = [];
 							for (i = 0, valueLength = startValue.length; i < valueLength; i++)
-							{
-								curReturnValue = ((distanceFraction < 1) ? startValue[i] : endValue[i]);
-								returnValue.push(doRounding ? _Concert.Util.round(curReturnValue, roundFactor) : curReturnValue);
-							}
+								returnValue.push(_Concert.Util.applyUserPropertyCalculations(((distanceFraction < 1) ? startValue[i] : endValue[i]), userProperties));
 						}
 						else
-						{
-							curReturnValue = ((distanceFraction < 1) ? startValue : endValue);
-							returnValue = doRounding ? _Concert.Util.round(curReturnValue, roundFactor) : curReturnValue;
-						}
+							returnValue = _Concert.Util.applyUserPropertyCalculations(((distanceFraction < 1) ? startValue : endValue), userProperties);
 
 						return returnValue;
 					}, // end Discrete Calculator function
@@ -261,9 +265,7 @@ var Concert = (function ()
 				Linear:
 					function (distanceFraction, startValue, endValue, userProperties)
 					{
-						var i, valueLength, curStartValue, curCalcValue, returnValue, roundFactor, doRounding = (typeof userProperties.round !== "undefined");
-						if (doRounding)
-							roundFactor = userProperties.round;
+						var i, valueLength, curStartValue, returnValue;
 
 						if (_Concert.Util.isArray(startValue))
 						{
@@ -271,15 +273,11 @@ var Concert = (function ()
 							for (i = 0, valueLength = startValue.length; i < valueLength; i++)
 							{
 								curStartValue = startValue[i];
-								curCalcValue = curStartValue + distanceFraction * (endValue[i] - curStartValue);
-								returnValue.push(doRounding ? _Concert.Util.round(curCalcValue, roundFactor) : curCalcValue);
+								returnValue.push(_Concert.Util.applyUserPropertyCalculations(curStartValue + distanceFraction * (endValue[i] - curStartValue), userProperties));
 							}
 						}
 						else
-						{
-							curCalcValue = startValue + distanceFraction * (endValue - startValue);
-							returnValue = doRounding ? _Concert.Util.round(curCalcValue, roundFactor) : curCalcValue;
-						}
+							returnValue = _Concert.Util.applyUserPropertyCalculations(startValue + distanceFraction * (endValue - startValue), userProperties);
 
 						return returnValue;
 					}, // end Linear Calculator function
@@ -287,25 +285,15 @@ var Concert = (function ()
 				Rotational:
 					function (distanceFraction, startValue, endValue, userProperties)
 					{
-						var roundFactor, doRounding = (typeof userProperties.round !== "undefined");
-						if (doRounding)
-							roundFactor = userProperties.round;
-						var centerX = userProperties.center[0];
-						var centerY = userProperties.center[1];
-						var offsetX = userProperties.offset[0];
-						var offsetY = userProperties.offset[1];
-						var startRadius = startValue[0], endRadius = endValue[0];
-						var startAngle = startValue[1], endAngle = endValue[1];
-						var newRadius = startRadius + distanceFraction * (endRadius - startRadius);
-						var newAngle = startAngle + distanceFraction * (endAngle - startAngle);
-						var resultX = centerX + newRadius * Math.cos(newAngle) + offsetX;
-						var resultY = centerY + newRadius * Math.sin(newAngle) + offsetY;
-						if (doRounding)
-						{
-							resultX = _Concert.Util.round(resultX, roundFactor);
-							resultY = _Concert.Util.round(resultY, roundFactor);
-						}
-						return [resultX, resultY];
+						var centerX = userProperties.center[0], centerY = userProperties.center[1],
+							offsetX = userProperties.offset[0], offsetY = userProperties.offset[1],
+							startRadius = startValue[0], endRadius = endValue[0],
+							startAngle = startValue[1], endAngle = endValue[1],
+							newRadius = startRadius + distanceFraction * (endRadius - startRadius),
+							newAngle = startAngle + distanceFraction * (endAngle - startAngle),
+							resultX = centerX + newRadius * Math.cos(newAngle) + offsetX,
+							resultY = centerY + newRadius * Math.sin(newAngle) + offsetY;
+						return [_Concert.Util.applyUserPropertyCalculations(resultX, userProperties), _Concert.Util.applyUserPropertyCalculations(resultY, userProperties)];
 					} // end Rotational Calculator function
 			}, // end Calculator singleton / namespace definition
 
