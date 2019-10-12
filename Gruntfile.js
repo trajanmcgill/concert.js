@@ -28,6 +28,20 @@ module.exports = function(grunt)
 			}, // end jshint task definitions
 
 
+			jsdoc:
+			{
+				Concert_js:
+				{
+					src: ["src/Concert.js"],
+					options:
+					{
+						destination: "dist/Reference",
+						template: "docTemplates/Concert.js"
+					}
+				}
+			},
+
+
 			clean:
 			{
 				Concert_js: ["dist/**/*"]
@@ -43,22 +57,11 @@ module.exports = function(grunt)
 				}
 			}, // end copy task defitions
 
-
-			buildReferenceDocs:
-			{
-				Concert_js:
-				{
-					sourceFile: "src/Concert.js",
-					destination: "dist/Reference",
-					template: "docTemplates/Concert.js"
-				}
-			},
-
 			uglify:
 			{
 				options: { sequences: false, verbose: true, warnings: true },
 
-				Concert_js: { options: { banner: LicenseBanner }, src: ["src/Concert.js"], dest: "dist/Concert.min.js" },
+				Concert_js: { options: { banner: LicenseBanner, screwIE8: false }, src: ["src/Concert.js"], dest: "dist/Concert.min.js" },
 				Concert_js_DeUglify: { options: { beautify: true }, src: ["src/Concert.min.js"], dest: "dist/Concert.min.max.js" }
 			} // end uglify task definitions
 		});
@@ -70,38 +73,12 @@ module.exports = function(grunt)
 	grunt.loadNpmTasks("grunt-contrib-cssmin");
 	grunt.loadNpmTasks("grunt-contrib-jshint");
 	grunt.loadNpmTasks("grunt-contrib-uglify");
+	grunt.loadNpmTasks("grunt-jsdoc");
 	
-	// Define tasks
-	grunt.registerMultiTask(
-		"buildReferenceDocs",
-		"Run jsdoc to create documentation files",
-		function ()
-		{
-			var sourceFile = this.data.sourceFile, destination = this.data.destination, template = this.data.template;
-			grunt.log.write("Running jsdoc\r\n    file:" + sourceFile + "\r\n    template:" + template + "\r\n    output path:" + destination + "\r\n");
-			var done = this.async();
-			grunt.util.spawn(
-				{
-					cmd: "jsdoc.bat",
-					args: ["--template", template, "--destination", destination, sourceFile],
-					opts: { stdio: "pipe" }
-				},
-				function (error, result, code)
-				{
-					if (error !== null || (result.stderr && result.stderr !== ""))
-					{
-						grunt.fail.warn("Error encountered attempting to run jsdoc: " + result.stderr);
-						done(false);
-					}
-					else
-						done();
-				});
-		}); // end call to grunt.registerMultiTask("buildReferenceDocs"...)
-
 	grunt.registerTask("lint_all", ["jshint:Concert_js"]);
 	grunt.registerTask("clean_all", ["clean:Concert_js"]);
 	grunt.registerTask("build_Concert_js", ["copy:Concert_js", "uglify:Concert_js"]);
-	grunt.registerTask("build_reference", ["buildReferenceDocs:Concert_js"]);
+	grunt.registerTask("build_reference", ["jsdoc:Concert_js"]);
 	grunt.registerTask("build_all", ["build_Concert_js", "build_reference"]);
 	grunt.registerTask("rebuild_all", ["clean_all", "build_all"]);
 	grunt.registerTask("default", ["lint_all", "rebuild_all"]);
