@@ -24,13 +24,13 @@ module.exports = function(grunt)
 					noarg: true, noempty: true, nonew: true, quotmark: "double", smarttabs: true, strict: true, trailing: true, undef: true, unused: true, validthis: true
 				},
 
-				Concert_js: { src: ["Concert.js/Source/Concert.js"] }
+				Concert_js: { src: ["src/Concert.js"] }
 			}, // end jshint task definitions
 
 
 			clean:
 			{
-				Concert_js: ["Concert.js/Build/**/*"]
+				Concert_js: ["dist/**/*"]
 			}, // end clean task definitions
 
 
@@ -38,7 +38,7 @@ module.exports = function(grunt)
 			{
 				Concert_js:
 				{
-					files: [{ src: ["Concert.js/Source/Concert.js"], dest: "Concert.js/Build/Concert.js" }],
+					files: [{ src: ["src/Concert.js"], dest: "dist/Concert.js" }],
 					options: { process: function (content, srcpath) { return (grunt.config.process(LicenseBanner) + content); } }
 				}
 			}, // end copy task defitions
@@ -48,9 +48,9 @@ module.exports = function(grunt)
 			{
 				Concert_js:
 				{
-					sourceFile: "Concert.js/Source/Concert.js",
-					destination: "Concert.js/Build/Reference",
-					template: "Concert.js/DocTemplates/Concert.js"
+					sourceFile: "src/Concert.js",
+					destination: "dist/Reference",
+					template: "docTemplates/Concert.js"
 				}
 			},
 
@@ -58,8 +58,8 @@ module.exports = function(grunt)
 			{
 				options: { sequences: false, verbose: true, warnings: true },
 
-				Concert_js: { options: { banner: LicenseBanner }, src: ["Concert.js/Source/Concert.js"], dest: "Concert.js/Build/Concert.min.js" },
-				Concert_js_DeUglify: { options: { beautify: true }, src: ["Concert.js/Build/Concert.min.js"], dest: "Concert.js/Build/Concert.min.max.js" }
+				Concert_js: { options: { banner: LicenseBanner }, src: ["src/Concert.js"], dest: "dist/Concert.min.js" },
+				Concert_js_DeUglify: { options: { beautify: true }, src: ["src/Concert.min.js"], dest: "dist/Concert.min.max.js" }
 			} // end uglify task definitions
 		});
 	
