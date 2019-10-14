@@ -5,9 +5,9 @@
 ## Table of Contents
 ***
 - [Introduction](#introduction)
-- [Using Concert.js](#using-concert.js)
+- [Using Concert.js](#using-concertjs)
 - [License](#license)
-- [Contributing to Concert.js](#contributing-to-concert.js)
+- [Contributing to Concert.js](#contributing-to-concertjs)
 - [Authors](#authors)
 - [Version History](#version-history)
 
