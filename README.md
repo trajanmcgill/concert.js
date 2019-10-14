@@ -68,11 +68,11 @@ Concert.js is available for use under the [MIT License](LICENSE). Copyright belo
 	    ```
 	    node node_modules/grunt-cli/bin/grunt
 	    ```
-	This will kick off a [Grunt](https://gruntjs.com/) script that will:
-	1. Run the code-linting tool [JSHint](https://jshint.com/) against the source.
-	2. Clean out the `dist` folder.
-	3. Copy the full source and a minified version (created with [UglifyJS](https://github.com/mishoo/UglifyJS2)) to the `dist` folder.
-	4. Run [jsdoc](https://jsdoc.app/) on the source code, generating a set of reference documentation pages for all the classes, methods, and other elements in the source. Output is deposited in `dist/Reference`.
+	    This will kick off a [Grunt](https://gruntjs.com/) script that will:
+	    1. Run the code-linting tool [JSHint](https://jshint.com/) against the source.
+	    2. Clean out the `dist` folder.
+	    3. Copy the full source and a minified version (created with [UglifyJS](https://github.com/mishoo/UglifyJS2)) to the `dist` folder.
+	    4. Run [jsdoc](https://jsdoc.app/) on the source code, generating a set of reference documentation pages for all the classes, methods, and other elements in the source. Output is deposited in `dist/Reference`.
 
 ## Authors
 ***
