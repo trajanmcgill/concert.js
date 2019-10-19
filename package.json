@@ -1,23 +1,27 @@
 {
 	"name": "concert.js",
-	"version": "1.0.0-alpha.1",
 	"description": "Easy synchronized animation with JavaScript.",
+	"author": "Trajan McGill <code@trajanmcgill.com>",
+	"license": "MIT",
+	"version": "1.0.0-alpha.1",
 	"main": "src/Concert.js",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/trajanmcgill/concert.js.git"
 	},
+	"bugs": {
+		"url": "https://github.com/trajanmcgill/concert.js/issues"
+	},
+	"homepage": "http://www.concertjs.com/",
 	"keywords": [
 		"javascript",
 		"animation",
 		"synchronization"
 	],
-	"author": "Trajan McGill <code@trajanmcgill.com>",
-	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/trajanmcgill/concert.js/issues"
-	},
-	"homepage": "http://www.concertjs.com/",
+	"files": [
+		"dist/**/*.js",
+		"src/Concert.js"
+	],
 	"devDependencies": {
 		"grunt": "^1.0.4",
 		"grunt-cli": "^1.3.2",
@@ -26,5 +30,8 @@
 		"grunt-contrib-jshint": "^2.1.0",
 		"grunt-contrib-uglify": "^4.0.1",
 		"grunt-jsdoc": "~2.4.0"
+	},
+	"scripts": {
+		"prepare": "grunt"
 	}
 }
