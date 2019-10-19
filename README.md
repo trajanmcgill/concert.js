@@ -29,10 +29,22 @@ ADD
 - Prerequisites
     - Browser Compatibility: ADD
 - Setup
-    - Download latest assets from [releases page](https://github.com/trajanmcgill/concert.js/releases) and unzip.
-    - Add `Concert.min.js` as a script to your web page (or the full `Concert.js` if you want to use an un-minified version, e.g. for development and debugging).
+    - **If you want to add it to your project using npm:**
+
+		From within your project directory, run:
+		```
+		npm install concert.js --save-dev
+		```
+		(Or without the `--save-dev` if you want the concert.js package installed as a regular dependency instead of a dev dependency of your project.)
+	- **If you just want to download the thing and go:**
+        - Download needed files from [releases page](https://github.com/trajanmcgill/concert.js/releases).
+		    - `Concert.js` - The only file you really need, human-readable version.
+			- `Concert.min.js` - The only file you really need, minified version.
+			- `Reference.zip` - Reference documentation for Concert.js, in HTML form.
+			- Or you can click on either of the "Source Code" links to grab all the files in the project in either .zip or .tar.gz form.
 - Basic Usage
-    - Concert.js is very simple and intuitive. See this [introductory tutorial](http://www.concertjs.com/tutorial.html) for the basics of putting it into action.
+    - Add `Concert.min.js` as a script to your web page (or the full `Concert.js` if you want to use an un-minified version, e.g. for development and debugging).
+    - Animate! Concert.js is very simple and intuitive. See this [introductory tutorial](http://www.concertjs.com/tutorial.html) for the basics of putting it into action.
 - Reference Documentation
     - For a full description of all the elements of the Concert.js library, see the [reference page](http://www.concertjs.com/Components/Concert.js/1.0.0/Reference/index.html).
 
@@ -51,11 +63,11 @@ Concert.js is available for use under the [MIT License](LICENSE). Copyright belo
 		```
 		git clone https://github.com/trajanmcgill/concert.js.git
 		```
-	2. Next, get the linting, build, and reference documentation generator tools and run them. Move inside the newly created project directory and run:
+	2. Next, to get all the dependencies (the linting, build, and reference documentation generator tools) and run an initial build process, move inside the newly created project directory and run:
 		```
 		npm install
 		```
-- Working folders and files
+- Working folders and files:
 	- `design` directory has some design notes files.
 	- `dist` directory is created by the build process, and contains all the distributable files, including both the Concert.js library and the auto-generated documentation web pages.
 	- `docTemplates` contains template files for jsdoc to use when auto-generating reference documentation from the comments in the source code.
