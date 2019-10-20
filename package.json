@@ -19,7 +19,7 @@
 		"synchronization"
 	],
 	"files": [
-		"dist/**/*.js",
+		"dist/*.js",
 		"src/Concert.js"
 	],
 	"devDependencies": {
