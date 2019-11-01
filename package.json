@@ -3,8 +3,8 @@
 	"description": "Easy synchronized animation with JavaScript.",
 	"author": "Trajan McGill <code@trajanmcgill.com>",
 	"license": "MIT",
-	"version": "1.0.0-alpha.3",
-	"main": "src/Concert.js",
+	"version": "1.0.0-alpha.4",
+	"browser": "src/Concert.js",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/trajanmcgill/concert.js.git"
@@ -33,5 +33,8 @@
 	},
 	"scripts": {
 		"prepare": "grunt"
-	}
+	},
+	"custom_CopyrightNotice": "Copyright 2014-2019 Trajan McGill",
+	"custom_LicenseDescription": "Released under the MIT license.",
+	"custom_LicenseURL": "https://raw.githubusercontent.com/trajanmcgill/concert.js/master/LICENSE"
 }
