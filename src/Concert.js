@@ -1544,7 +1544,7 @@ var Concert = (function ()
 				 *   {
 				 *       target: <em>TargetObjectDefinition</em>,
 				 *       AND/OR
-				 *       targets: [<em>TargetObjectDefinition<sub>1</sub></em>, <em>TargetObjectDefinition<sub>2</sub></em>, ...]
+				 *       targets: [<em>TargetObjectDefinition<sub>1</sub></em>, <em>TargetObjectDefinition<sub>2</sub></em>, ...],
 				 *
 				 *       feature: <em>FeatureDefinition</em>,
 				 *       [unit: <em>UnitDefinition</em>,] // If absent, uses sequence's default value
@@ -1605,7 +1605,7 @@ var Concert = (function ()
 				 *   {
 				 *       times: <em>KeyframeTimesArray</em>,
 				 *
-				 *       [values: <em>KeyframeValuesArray</em>,]
+				 *       [values: <em>KeyframeValuesArray</em>]
 				 *       OR
 				 *       [valueGenerators: <em>ValueGeneratorsArray</em>]
 				 *   };
@@ -1808,9 +1808,9 @@ var Concert = (function ()
 				 * to manipulate the width of a DOM object. The code shows a custom applicator function that could be used if we wanted to
 				 * use a jQuery object containing multiple elements as a target object. <strong>Note that Concert.js does NOT depend in any
 				 * way on jQuery; this example merely shows
-				 * using the two libraries in conjunction.</strong> The custom calculator function also makes use of jQuery, and shows how
-				 * a custom calculator could be used to generate truly dynamic values- in this case, it keeps the calculated value locked
-				 * to the width of a particular DOM element. The custom easing function shown here causes the animation to proceed at
+				 * using the two libraries in conjunction.</strong> The custom calculator function below also makes use of jQuery, and shows how
+				 * a custom calculator could be used to generate truly dynamic values- in this case, it generates the calculated value based on
+				 * the width at that moment of a particular DOM element. The custom easing function shown here causes the animation to proceed at
 				 * half-speed for two thirds of the time, then double-speed for the final third of the time.
 				 * </caption>
 				 * function customApplicator(target, feature, value, unit)
@@ -2076,7 +2076,7 @@ var Concert = (function ()
 				 *     }
 				 *   ]);
 				 * 
-				 * //...some time later, having creating DOM elements with id values
+				 * //...some time later, having created DOM elements with id values
 				 * // like "UpperElement1", "LowerElement1", "UpperElement2", ...
 				 * var newSequence1 = originalSequence.clone(
 				 *     function (originalTarget)
@@ -2472,8 +2472,8 @@ var Concert = (function ()
 				 *   <strong>onAutoStop</strong>: VALUE, // Initial default: null
 				 *
 				 *   // --------
-				 *   // Numeric; How far apart (in milliseconds) to calculate and seek to a new
-				 *   // timeline position. Set to any value > 0 for manual control, or set to 0
+				 *   // Numeric; How often (in milliseconds) to calculate and seek to a new timeline
+				 *   // position when running. Set to any value > 0 for manual control, or set to 0
 				 *   // (or anything < 1) to let Concert determine this automatically. (It does
 				 *   // this by using requestAnimationFrame() for if the browser supports  it,
 				 *   // or a fixed interval of 16 ms otherwise.
@@ -2591,9 +2591,9 @@ var Concert = (function ()
 				 * [Concert.Repeating.None]{@link Concert.Repeating}, which seeks to the sequence start time for any <code>time</code> value less than or equal to the sequence's
 				 * start time, and to the end time for any <code>time</code> value greater than or equal to the sequence's end time. The <code>useSoleControlOptimization</code> option,
 				 * when set to true, enhances run-time performance, but should only be used if nothing other than the Concert sequence will be modifying any target object properties that are modified
-				 * by transformations in the sequence. Essentially it skips updating target object properties any time a newly calculated value is the same as the last one applied, which speeds up
-				 * seek times especially when doing relatively slow things such as DOM updates, but which will not work if the target object property's value has been changed by something else
-				 * since the last time the sequence object touched it.
+				 * by transformations in the sequence. Essentially it skips updating target object properties any time a newly calculated value is the same as the last one applied. This speeds up
+				 * seek times, especially when doing relatively slow things such as DOM updates. However, if a target object property's value has been changed by something else since the last time
+				 * the sequence object touched it, this optimization can result in that value not being updated by the seek() function.
 				 * @name seek
 				 * @memberof Concert.Sequence#
 				 * @public
