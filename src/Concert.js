@@ -2020,7 +2020,7 @@ var Concert = (function ()
 
 
 				/**
-				 * Runs a transformation starting from the beginning, locked to the system clock and automatically stopping upon reaching the end.
+				 * Runs the sequence starting from the beginning, locked to the system clock and automatically stopping upon reaching the end.
 				 * This is really just a shortcut method provided for a common usage scenario; it is exactly the same as calling the [run]{@link Concert.Sequence#run} method with the parameters
 				 * <code>{ synchronizeTo: null, initialSeek: 0, timeOffset: null, autoStopAtEnd: true }</code>. Note that these parameter values can still be overridden, or any of the other parameters
 				 * accepted by the [run]{@link Concert.Sequence#run} method can be specified in the <code>parameters</code> argument passed into this method.
