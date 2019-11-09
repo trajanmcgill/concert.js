@@ -35,7 +35,7 @@ module.exports = function(grunt)
 					src: ["src/Concert.js"],
 					options:
 					{
-						destination: "dist/Reference",
+						destination: "dist/Reference/",
 						template: "docTemplates/Concert.js"
 					}
 				}
