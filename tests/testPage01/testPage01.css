@@ -1,0 +1,37 @@
+﻿body
+{
+	color: #d7ba7d;
+	background-color: #1e1e1e;
+	font-family: Calibri, "Lucida Grande", sans-serif;
+}
+
+button
+{
+	color: #fff;
+	background-color: #3276b1;
+	border: 1px solid #285e8e;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+#MovingDiv
+{
+	display: block;
+	position: absolute;
+	left: 405px;
+	top: 275px;
+	width: 50px;
+	height: 50px;
+	background-color: orange;
+}
+
+#CenterDiv
+{
+	display: block;
+	position: absolute;
+	left: 395px;
+	top: 295px;
+	width: 10px;
+	height: 10px;
+	background-color: green;
+}
