@@ -36,7 +36,7 @@ module.exports = function(grunt)
 					options:
 					{
 						destination: "dist/Reference/",
-						template: "docTemplates/Concert.js"
+						template: "docTemplates/default"
 					}
 				}
 			},
