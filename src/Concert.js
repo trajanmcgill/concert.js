@@ -1558,53 +1558,85 @@ var Concert = (function ()
 				 *       segments: <em>SegmentDefinition</em> OR [<em>SegmentDefinition<sub>1</sub></em>, <em>SegmentDefinition<sub>2</sub></em>, ...]
 				 *   };
 				 * 
-				 * <strong><em>TargetObjectDefinition</em></strong> = The object to be modified by these transformations.
+				 * </pre>
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>TargetObjectDefinition</em></strong>
+				 * 	= The object to be modified by these transformations.
+				 * </code>
 				 * Often this will be a DOM object, but it can be anything at all. Multiple targets can
 				 * be specified, by using the <code>targets</code> (plural) property, as a shorthand method of
 				 * duplicating the transformation definitions to target all the included target objects.
-				 *
-				 * <strong><em>FeatureDefinition</em></strong> = The feature of the target object which will be modified, OR an
-				 * array of such features. In most cases, this will be a string (for example, when
+				 * </p>
+				 * 
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>FeatureDefinition</em></strong>
+				 * 	= The feature of the target object which will be modified, OR an array of such features.
+				 * </code>
+				 * In most cases, this will be a string (for example, when
 				 * animating a DOM style, this might be "width") or an array of strings. Arrays are
 				 * allowed as a shorthand method of defining multiple features, values, and units
 				 * together in a more compact notation. The first feature in the array will be
 				 * matched with the first unit and the first value in those arrays, and so on. See
 				 * below samples for an example of using arrays in this way.
+				 * </p>
 				 *
-				 * <strong><em>UnitDefinition</em></strong> = A string to be appended to calculated values before they are applied
-				 * to the target (for example, when animating a DOM style, this might be "px"), OR an
-				 * array of such strings. Arrays are allowed as a shorthand method of defining multiple
-				 * features, values, and units together in a more compact notation. The first unit in
-				 * the array will be matched with the first feature and the first value in those arrays,
-				 * and so on. See below samples for an example of using arrays in this way. Use <em>null</em>
-				 * if nothing should be appended to the calculated values for this transformation.
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>UnitDefinition</em></strong>
+				 * 	= A string to be appended to calculated values before they are applied to the target
+				 * 	(for example, when animating a DOM style, this might be "px"),
+				 * 	OR an array of such strings.
+				 * </code>
+				 * Arrays are allowed as a shorthand method of defining multiple features, values, and units together
+				 * in a more compact notation. The first unit in the array will be matched with the first feature
+				 * and the first value in those arrays, and so on. See below samples for an example of using arrays in this way.
+				 * Use <em>null</em> if nothing should be appended to the calculated values for this transformation.
+				 * </p>
 				 *
-				 * <strong><em>ApplicatorFunction</em></strong> = Function used to apply the calculated current value to the
-				 * feature. Because different types of features (e.g., DOM element styles as contrasted
-				 * to plain JavaScript object properties) are applied in different ways, different
-				 * applicator functions are needed. This can be set to one of the functions defined in
-				 * the [Concert.Applicators]{@link Concert.Applicators} namespace, or to any function with the signature:
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>ApplicatorFunction</em></strong>
+				 * 	= Function used to apply the calculated current value to the feature.
+				 * </code>
+				 * Because different types of features (e.g., DOM element styles as contrasted to plain JavaScript object properties)
+				 * are applied in different ways, different applicator functions are needed. This can be set to one of the functions
+				 * defined in the [Concert.Applicators]{@link Concert.Applicators} namespace, or to any function with the signature:
 				 *   <em>function applicatorFunction(target, feature, value, unit)</em>
 				 * See below examples for a sample of a custom applicator.
+				 * </p>
 				 *
-				 * <strong><em>CalculatorFunction</em></strong> = Function used to calculate a current value to apply to the target
-				 * feature. This can be set to one of the functions defined in the [Concert.Calculators]{@link Concert.Calculators}
-				 * namespace, or to any function returning an approprate value for this transformation's
-				 * target feature and having the signature:
-				 *   <em>function calculatorFunction(distanceFraction, startValue, endValue, addlProperties)</em>
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>CalculatorFunction</em></strong>
+				 * 	= Function used to calculate a current value to apply to the target feature.
+				 * </code>
+				 * This can be set to one of the functions defined in the [Concert.Calculators]{@link Concert.Calculators} namespace,
+				 * or to any function returning an approprate value for this transformation's target feature and having the signature:
+				 *   <code><em>function calculatorFunction(distanceFraction, startValue, endValue, addlProperties)</em></code>
 				 * See below examples for a sample of a custom calculator.
+				 * </p>
 				 *
-				 * <strong><em>EasingFunction</em></strong> = Function used to compute the current time (as a fractional
-				 * proportion of the distance traversed, from 0 to 1, between the start time and
-				 * end time of the transformation). This can be set to one of the functions defined
-				 * in the [Concert.EasingFunctions]{@link Concert.EasingFunctions} namespace, or to
-				 * any function returning a value from 0 to 1 and having the signature:
-				 *   <em>function easingFunction(startTime, endTime, currentTime)</em>
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>EasingFunction</em></strong>
+				 * 	= Function used to compute the current time (as a fractional proportion of the distance traversed,
+				 * 	from 0 to 1, between the start time and end time of the transformation).
+				 * </code>
+				 * This can be set to one of the functions defined in the [Concert.EasingFunctions]{@link Concert.EasingFunctions} namespace,
+				 * or to any function returning a value from 0 to 1 and having the signature:
+				 *   <code><em>function easingFunction(startTime, endTime, currentTime)</em></code>
 				 * See below examples for a sample of a custom easing function.
-				 *
-				 * <strong><em>UserPropertiesObject</em></strong> = Object used to apply additional, optional, special properties
-				 * to each of transformations being added. Several such properties can be specified. Takes the form:
-				 *     {
+				 * </p>
+				 * 
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>UserPropertiesObject</em></strong>
+				 * 	= Object used to apply additional, optional, special properties to each of transformations being added.
+				 * </code>
+				 * Several such properties can be specified. Takes the form:
+				 * <pre>    {
 				 *         [multiply: <em>multiplicationFactorValue</em>,]
 				 *         [modulo: <em>moduloFactorValue</em>,]
 				 *         [roundFactor: <em>roundFactorValue</em>,]
@@ -1612,35 +1644,53 @@ var Concert = (function ()
 				 *         [offset: <em>offsetArray</em>,]
 				 *         [customUserProperty<sub>1</sub>: customUserValue<sub>1</sub>,...]
 				 *         [userProperty<sub>2</sub>: userValue<sub>2</sub>]...
-				 *     }
-				 *     The first three options are modifiers to the animation calculation engine, applied
-				 *     in the following ways and in the following order:
-				 *         <strong><em>multiplicationFactorValue</em></strong>: While animating the target object,
-				 *         the value being applied to the target feature is multiplied by this number.
-				 *         <strong><em>moduloFactorValue</em></strong>: While animating the target object,
-				 *         the value being applied to the target feature is divided by this number, and
-				 *         the remainder is actually what is applied.
-				 *         <strong><em>roundFactorValue</em></strong>: While animating the target property,
-				 *         the value being applied is rounded to the nearest multiple of this number.
-				 *     The next two options are required when the <code>Rotational</code> calculator (see [Concert.Calculators]{@link Concert.Calculators})
-				 *     is being used (i.e., when this transformation is animating rotational motion):
-				 *         <strong><em>centerCoordinateArray</em></strong>: An array of the form <code>[left, top]</code>, defining a
-				 *         center point around which the rotational calculations will take place.
-				 *         <strong><em>offsetArray</em></strong>: An array of the form <code>[horizontalOffset, verticalOffset]</code>,
-				 *         defining a fixed offset to be added to the pair of values returned by the <code>Rotational</code> calculator.
-				 *     Any other (custom) properties included in this object are attached to the Transformation object, and are passed
-				 *     into calculator functions-- setting custom properties and values in this way could therefore be useful if using
-				 *     a custom calculator function.
-				 *
-				 * <strong><em>KeyframesDefinition</em></strong> =
-				 *   {
+				 *     }</pre>
+				 * The first three options are modifiers to the animation calculation engine, applied
+				 * in the following ways and in the following order:
+				 * <ul>
+				 * 	<li>
+				 * 		<code><strong><em>multiplicationFactorValue</em></strong></code>: While animating the target object,
+				 * 		the value being applied to the target feature is multiplied by this number.
+				 * 	</li>
+				 * 	<li>
+				 *		<code><strong><em>moduloFactorValue</em></strong></code>: While animating the target object,
+				 *		the value being applied to the target feature is divided by this number, and
+				 *		the remainder is actually what is applied.
+				 *	</li>
+				 *	<li>
+				 *		<code><strong><em>roundFactorValue</em></strong></code>: While animating the target property,
+				 *		the value being applied is rounded to the nearest multiple of this number.
+				 *	</li>
+				 *	<li>
+				 *		The next two options are required when the <code>Rotational</code> calculator (see [Concert.Calculators]{@link Concert.Calculators})
+				 *		is being used (i.e., when this transformation is animating rotational motion):
+				 * 		<ul>
+				 * 			<li>
+				 *				<code><strong><em>centerCoordinateArray</em></strong></code>: An array of the form <code>[left, top]</code>,
+				 *				 defining a center point around which the rotational calculations will take place.
+				 *			</li>
+				 * 			<li>
+				 *				<code><strong><em>offsetArray</em></strong></code>: An array of the form <code>[horizontalOffset, verticalOffset]</code>,
+				 *				defining a fixed offset to be added to the pair of values returned by the <code>Rotational</code> calculator.
+				 * 			</li>
+				 * 		</ul>
+				 * 	<li>
+				 * 		Any other (custom) properties included in this object are attached to the Transformation object, and are passed
+				 * 		into calculator functions-- setting custom properties and values in this way could therefore be useful if using
+				 * 		a custom calculator function.
+				 * 	</li>
+				 * </ul>
+				 * </p>
+				 * 
+				 * <pre><strong><em>KeyframesDefinition</em></strong> =
+				 * 	 {
 				 *       times: <em>KeyframeTimesArray</em>,
 				 *
 				 *       [values: <em>KeyframeValuesArray</em>]
 				 *       OR
 				 *       [valueGenerators: <em>ValueGeneratorsArray</em>]
 				 *   };
-				 *
+				 * 
 				 * <strong><em>SegmentDefinition</em></strong> = 
 				 *   {
 				 *       t0: <em>TimeDefinition</em>, // Start time of this transformation
@@ -1663,65 +1713,92 @@ var Concert = (function ()
 				 *       [unit: <em>UnitDefinition</em>,] // If absent, falls back to the unit defined at the
 				 *       // <em>TransformationsObject</em> level; if also absent there, to the sequence's
 				 *       // default unit.
-				 *   };
+				 *   };</pre>
 				 *
-				 * <strong><em>KeyframeTimesArray</em></strong> = An array of the form [<em>TimeDefinition<sub>1</sub></em>, <em>TimeDefinition<sub>2</sub></em>, ...].
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>KeyframeTimesArray</em></strong>
+				 * 	= An array of the form [<em>TimeDefinition<sub>1</sub></em>, <em>TimeDefinition<sub>2</sub></em>, ...].
+				 * </code>
 				 * This defines the timeline points used as keyframes for this transformation series,
-				 * to be matched up with the values in the corresponding <em>KeyframeValuesArray</em>. A null
+				 * to be matched up with the values in the corresponding <code><em>KeyframeValuesArray</em></code>. A null
 				 * element has the effect of breaking the keyframe string into two segments. For example,
-				 * the array [0, 100, 1000, 2000] defines a constant flow of transition with four
-				 * keyframes. The array [0, 100, null, 1000, 2000], on the other hand, defines a flow
+				 * the array <code>[0, 100, 1000, 2000]</code> defines a constant flow of transition with four
+				 * keyframes. The array <code>[0, 100, null, 1000, 2000]</code>, on the other hand, defines a flow
 				 * that is broken in two pieces: one animated segment with keyframes at time 0 and 100,
 				 * then no further animation at all until until time 1000, followed by another period
 				 * of animation between the keyframes at times 1000 and 2000.
+				 * </p>
 				 *
-				 * <strong><em>KeyframeValuesArray</em></strong> = An array of the form [<em>ValueDefinition<sub>1</sub></em>, <em>ValueDefinition<sub>2</sub></em>, ...].
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>KeyframeValuesArray</em></strong>
+				 * 	= An array of the form [<em>ValueDefinition<sub>1</sub></em>, <em>ValueDefinition<sub>2</sub></em>, ...].
+				 * </code>
 				 * This defines the values applied at each keyframe point, as matched up with the keyframe
 				 * points defined in the corresponding <em>KeyframeTimesArray</em>. Note that null values
 				 * appearing in this array work exactly the same way (and should match up with) null
 				 * values in the <em>KeyframeTimesArray</em>. Both arrays must have the same number of elements.
+				 * </p>
 				 *
-				 * <strong><em>ValueGeneratorsArray</em></strong> = An array of the form [<em>ValueGenerator<sub>1</sub></em>, <em>ValueGenerator<sub>2</sub></em>, ...].
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>ValueGeneratorsArray</em></strong>
+				 * 	= An array of the form [<em>ValueGenerator<sub>1</sub></em>, <em>ValueGenerator<sub>2</sub></em>, ...].
+				 * </code>
 				 * This defines the functions that calculate values applied at each keyframe point, as
 				 * matched up with the keyframe points defined in the corresponding <em>KeyframeTimesArray</em>.
+				 * </p>
 				 *
-				 * <strong><em>TimeDefinition</em></strong> = A number indicating a point along the sequence timeline. When
-				 * synchronizing to a media object or running by the system clock, this should ordinarily
-				 * be specified as a number of milliseconds (1/1000's of a second). Otherwise, there is no
-				 * restriction; it simply indicates a numeric point on the overall timeline, with no
-				 * particular unit implied. For instance, a sequence could be synchronized to the value
-				 * of a slider or other user control, in which case this number would just be anything
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>TimeDefinition</em></strong>
+				 * 	= A number indicating a point along the sequence timeline.
+				 * </code>
+				 * When synchronizing to a media object or running by the system clock, this should ordinarily be specified
+				 * as a number of milliseconds (1/1000's of a second). Otherwise, there is no restriction; it simply indicates
+				 * a numeric point on the overall timeline, with no particular unit implied. For instance, a sequence could be
+				 * synchronized to the value of a slider or other user control, in which case this number would just be anything
 				 * from the minimum to the maximum values of that control.
+				 * </p>
 				 *
-				 * <strong><em>ValueDefinition</em></strong> = A value to be applied to the target object feature, or an array of
-				 * such values. This value can be of any type, although it needs to be one appropriate to
-				 * the target feature, calculator, and applicator being used. If a unit is specified, the
-				 * value will be treated as a string and the unit will be appended to it before
-				 * application. Arrays are allowed as a shorthand method of defining multiple features,
-				 * values, and units together in a more compact notation. The first value in the array
-				 * will be matched with the first unit and the first feature in those arrays, and so on.
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>ValueDefinition</em></strong>
+				 * 	= A value to be applied to the target object feature, or an array of such values.
+				 * </code>
+				 * This value can be of any type, although it needs to be one appropriate to the target feature, calculator,
+				 * and applicator being used. If a unit is specified, the value will be treated as a string and the unit
+				 * will be appended to it before application. Arrays are allowed as a shorthand method of defining multiple
+				 * features, values, and units together in a more compact notation. The first value in the array will be
+				 * matched with the first unit and the first feature in those arrays, and so on.
 				 * See below samples for an example of using arrays in this way.
+				 * </p>
 				 *
-				 * <strong><em>ValueGenerator</em></strong> = A function which returns a valid <em>ValueDefinition</em> and has the signature:
-				 *   <em>function generatorFunction(sequence)</em>
-				 * This is a mechanism that allows specifying functions that will calculate start and end
-				 * values for a transformation, instead of using fixed values determined at the time the
-				 * transformation is initially specified. This can be helpful if the same transformation
-				 * will be run more than once with different start and end values, such as a motion that
-				 * might be repeated in more than one place on the screen at different times, or if the
-				 * transformation is being added to the sequence before the actual start and end values
-				 * are yet known. This is not to be confused with a Calculator function. A Calculator
-				 * takes a start and end value along with the current time and calculates the current
-				 * value. This function, by contrast, is called prior to running the sequence and
-				 * determines what the start and end values are that the Calculator will look at during
-				 * run-time of the sequence. All of the value generator functions for an entire sequence
-				 * are called at once, either manually by calling the sequence's [generateValues]{@link Concert.Sequence#generateValues} method,
-				 * or at the time the sequence is run, by specifying <code>true</code> for the <code>generateValues</code> option
-				 * when calling the [run]{@link Concert.Sequence#run}, [begin]{@link Concert.Sequence#begin}, [follow]{@link Concert.Sequence#follow}, or [syncTo]{@link Concert.Sequence#syncTo} methods.
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>ValueGenerator</em></strong>
+				 * 	= A function which returns a valid <em>ValueDefinition</em> and has the signature:
+				 *  <em>function generatorFunction(sequence)</em>
+				 * </code>
+				 * This is a mechanism that allows specifying functions that will calculate start and end values for
+				 * a transformation, instead of using fixed values determined at the time the transformation is initially
+				 * specified. This can be helpful if the same transformation will be run more than once with different
+				 * start and end values, such as a motion that might be repeated in more than one place on the screen
+				 * at different times, or if the transformation is being added to the sequence before the actual start
+				 * and end values are yet known. This is not to be confused with a Calculator function. A Calculator
+				 * takes a start and end value along with the current time and calculates the current value.
+				 * This function, by contrast, is called prior to running the sequence and determines what the start
+				 * and end values are that the Calculator will look at during run-time of the sequence. All of the
+				 * value generator functions for an entire sequence are called at once, either manually by calling
+				 * the sequence's [generateValues]{@link Concert.Sequence#generateValues} method, or at the time
+				 * the sequence is run, by specifying <code>true</code> for the <code>generateValues</code> option when
+				 * calling the [run]{@link Concert.Sequence#run}, [begin]{@link Concert.Sequence#begin},
+				 * [follow]{@link Concert.Sequence#follow}, or [syncTo]{@link Concert.Sequence#syncTo} methods.
 				 * The generator function will be passed a reference to the sequence object containing the
 				 * transformation whose values are currently being generated.
+				 * </p>
 				 *
-				 *</pre>
 				 * @example <caption>Example 1 Below: Single target object and feature, using keyframes, not relying on defaults. This would move a DOM object with id "someObject"
 				 * by changing its "left" style value from "0px" to "60px" over the timeline period from time 1000 to 2000.</caption>
 				 * sequence.addTransformations({
@@ -1809,8 +1886,8 @@ var Concert = (function ()
 				 * // ... sometime later:
 				 * sequence.generateValues();
 				 * 
-				 * @example <caption>Example 3b Below: Shown here is the relevant portion of the last example modified to use keyframes notation instead of
-				 * segments notation.</caption>
+				 * @example <caption>Example 3b Below: Shown here is the relevant portion of the last example modified to use keyframes notation
+				 * instead of segments notation.</caption>
 				 * sequence.addTransformations(
 				 *   {
 				 *     target: document.getElementById("PhotonTorpedoBox"),
@@ -2230,16 +2307,25 @@ var Concert = (function ()
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {Varies} syncSource A synchronization source. Can take any of the following different types of values:<pre>
-				 *   null: locks sequence to the system clock.
-				 *   function object: the passed-in function is called every time the polling
+				 * @param {Varies} syncSource A synchronization source. Can take any of the following different types of values:
+				 * <ul>
+				 * 	<li>
+				 * 		<code>null</code>: locks sequence to the system clock.
+				 * 	</li>
+				 * 	<li>
+				 * 		<code><em>function object</em></code>: the passed-in function is called every time the polling
 				 *       interval is reached, and the return value is used as the seek time.
-				 *       Using a custom function here allows you to synchronize the sequence to
-				 *       anything you want (for instance, locking it to the current value of a UI
-				 *       element, such as a slider, or to another Concert.Sequence object.)
-				 *   html audio or video DOM object: locks the sequence to the currentTime property
-				 *       of the media element. This allows the sequence to remain synchronized to
-				 *       the media even when it is paused, scrubbed, or the user skips around.</pre>
+				 *       Using a custom function here allows you to synchronize the sequence to anything you want
+				 * 		(for instance, locking it to the current value of a UI element, such as a slider,
+				 *  	or to another Concert.Sequence object.)
+				 * 	</li>
+				 * 	<li>
+				 * 		<code><em>html audio or video DOM object</em></code>:
+				 *  	locks the sequence to the currentTime property of the media element.
+				 *  	This allows the sequence to remain synchronized to the media even when it is paused, scrubbed,
+				 *  	or the user skips around.
+				 * 	</li>
+				 * </ul>
 				 * @param {Object} [parameters] An object with property values setting options for how to run the sequence.
 				 * See the [run]{@link Concert.Sequence#run} method for information on allowable properties and values in this object.
 				 */
@@ -2454,116 +2540,170 @@ var Concert = (function ()
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {Object} [parameters] An object with property values setting options for how to run the sequence. Defined as follows below. Any or all of the below options may be specified:<pre><code>
-				 * parameters =
+				 * @param {Object} [parameters] An object with property values setting options for how to run the sequence.
+				 * Defined as follows below. Any or all of the below options may be specified:
+				 * <pre><code><em>parameters =
 				 * {
-				 *   // --------
-				 *   // Function; Defines how the sequence behaves when the sequence end time is
-				 *   // reached and exceeded.(Can also be set using the [setAfter]{@link Concert.Sequence#setAfter} method.)
-				 *   // Takes one of the functions defined in the [Concert.Repeating]{@link Concert.Repeating} namespace, or a
-				 *   // custom function. For instance, a value of Concert.Repeating.Loop(2) will cause
-				 *   // the sequence to loop back to the beginning twice (thus running a total of three
-				 *   // times) before ceasing. See [Concert.Repeating]{@link Concert.Repeating} for information on the pre-defined
-				 *   // values, or see [setAfter]{@link Concert.Sequence#setAfter} for more information on using a custom function.
-				 *   <strong>after</strong>: VALUE, // Initial default: Concert.Repeating.None
+				 *   <strong>after</strong>: <em>VALUE</em>, // Initial default: Concert.Repeating.None
+				 *   <strong>autoStopAtEnd</strong>: <em>VALUE</em>, // Initial default: true
+				 *   <strong>before</strong>: <em>VALUE</em>, // Initial default: Concert.Repeating.None
+				 *   <strong>generateValues</strong>: <em>VALUE</em>, // Default value: true
+				 *   <strong>initialSeek</strong>: <em>VALUE</em>, // Default: null
+				 *   <strong>onAutoStop</strong>: <em>VALUE</em>, // Initial default: null
+				 *   <strong>pollingInterval</strong>: <em>VALUE</em>, // Initial default: 0
+				 *   <strong>speed</strong>: <em>VALUE</em>, // Initial default: 1
+				 *   <strong>stretchStartTimeToZero</strong>: <em>VALUE</em>, // Initial default: true
+				 *   <strong>synchronizeTo</strong>: <em>VALUE</em>, // Initial default: null
+				 *   <strong>timeOffset</strong>: <em>VALUE</em>, // Default value: null
+				 *   <strong>useSoleControlOptimization</strong>: <em>VALUE</em> // Initial default: true
+				 * }</em></code></pre>
+				 * 
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>after</em></strong>
+				 *  = Function which defines how the sequence behaves when the sequence end time is reached and exceeded.
+				 * </code>
+				 * (Can also be set using the [setAfter]{@link Concert.Sequence#setAfter} method.)
+				 * Takes one of the functions defined in the [Concert.Repeating]{@link Concert.Repeating} namespace, or a custom function.
+				 * For instance, a value of Concert.Repeating.Loop(2) will cause the sequence to loop back to the beginning twice
+				 * (thus running a total of three times) before ceasing. See [Concert.Repeating]{@link Concert.Repeating} for information
+				 * on the pre-defined values, or see [setAfter]{@link Concert.Sequence#setAfter} for more information on using a custom function.
+				 * </p>
 				 *
-				 *   // --------
-				 *   // Boolean; Whether or not to automatically call stop() upon hitting the end.
-				 *   // (Note that "the end" means after all looping, bouncing, etc. is taken into
-				 *   // account.)
-				 *   <strong>autoStopAtEnd</strong>: VALUE, // Initial default: true
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>autoStopAtEnd</em></strong>
+				 * 	= Boolean value indicating whether or not to automatically call stop() upon hitting the end.
+				 * </code>
+				 * (Note that "the end" means after all looping, bouncing, etc. is taken into account.)
+				 * </p>
 				 *
-				 *   // --------
-				 *   // Function; Defines how the sequence behaves when the calculated current time
-				 *   // is at or less than the sequence start time. (Can also be set using the
-				 *   // [setBefore]{@link Concert.Sequence#setBefore} method.) Takes one of the functions defined in the [Concert.Repeating]{@link Concert.Repeating}
-				 *   // namespace, or a custom function. For instance, a value of
-				 *   // Concert.Repeating.Loop(2) will cause the sequence to loop back to the end twice
-				 *   // (thus running a total of three times) before ceasing. See [Concert.Repeating]{@link Concert.Repeating} for
-				 *   // information on the pre-defined values, or see [setBefore]{@link Concert.Sequence#setBefore} for more information on
-				 *   // using a custom function.
-				 *   <strong>before</strong>: VALUE, // Initial default: Concert.Repeating.None
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>before</em></strong>
+				 * 	= Function which defines how the sequence behaves when the calculated current time is at or less than the sequence start time.
+				 * </code>
+				 * (Can also be set using the [setBefore]{@link Concert.Sequence#setBefore} method.)
+				 * Takes one of the functions defined in the [Concert.Repeating]{@link Concert.Repeating} namespace, or a custom function.
+				 * For instance, a value of Concert.Repeating.Loop(2) will cause the sequence to loop back to the end twice
+				 * (thus running a total of three times) before ceasing. See [Concert.Repeating]{@link Concert.Repeating} for information
+				 * on the pre-defined values, or see [setBefore]{@link Concert.Sequence#setBefore} for more information on using a custom function.
+				 * </p>
 				 *
-				 *   // --------
-				 *   // If the sequence has any transformations whose start and end values are dynamic
-				 *   // rather than fixed (see [addTransformations]{@link Concert.Sequence#addTransformations} for details), the actual values
-				 *   // to use will have to be calculated at some point in order to run the sequence.
-				 *   // This can be accomplished by calling [generateValues]{@link Concert.Sequence#generateValues} manually, or it will happen
-				 *   // automatically just before run-time if this parameter is set to true.
-				 *   <strong>generateValues</strong>: VALUE, // Default value: true
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>generateValues</em></strong>
+				 * 	= Boolean value.
+				 * </code>
+				 * If the sequence has any transformations whose start and end values are dynamic rather than fixed
+				 * (see [addTransformations]{@link Concert.Sequence#addTransformations} for details), the actual values
+				 * to use will have to be calculated at some point in order to run the sequence.
+				 * This can be accomplished by calling [generateValues]{@link Concert.Sequence#generateValues} manually,
+				 * or it will happen automatically just before run-time if this parameter is set to true.
+				 * </p>
 				 *
-				 *   // --------
-				 *   // Numeric; If specified, sequence will seek to this time before commencing
-				 *   // the run.
-				 *   <strong>initialSeek</strong>: VALUE, // Default: null
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>initialSeek</em></strong>
+				 * 	= Numeric value indicating an initial seek point along the timeline.
+				 * </code>
+				 * If specified and non-null, sequence will seek to this time before commencing the run.
+				 * </p>
 				 *
-				 *   // --------
-				 *   // Function; Callback function invoked just after automatically stopping at the
-				 *   end of the sequence (only will be called if autoStopAtEnd is true).
-				 *   <strong>onAutoStop</strong>: VALUE, // Initial default: null
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>onAutoStop</em></strong>
+				 * 	= Function called upon reaching the end of the sequence.
+				 * </code>
+				 * This specifies a callback function to be invoked just after automatically stopping at the
+				 * end of the sequence. It only will be called if autoStopAtEnd is true.
+				 * </p>
 				 *
-				 *   // --------
-				 *   // Numeric; How often (in milliseconds) to calculate and seek to a new timeline
-				 *   // position when running. Set to any value > 0 for manual control, or set to 0
-				 *   // (or anything < 1) to let Concert determine this automatically. (It does
-				 *   // this by using requestAnimationFrame() for if the browser supports  it,
-				 *   // or a fixed interval of 16 ms otherwise.
-				 *   <strong>pollingInterval</strong>: VALUE, // Initial default: 0
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>pollingInterval</em></strong>
+				 * 	= Numeric value indicating the time in between animation updates.
+				 * </code>
+				 * In other words, how often (in milliseconds) to calculate and seek to a new timeline position when running.
+				 * Set to any value > 0 for manual control, or set to 0 (or anything < 1) to let Concert determine this automatically.
+				 * (It does this by using requestAnimationFrame() if the browser supports  it, or a fixed interval of 16 ms otherwise.)
+				 * </p>
 				 *
-				 *   // --------
-				 *   // Numeric; Run speed multiplier (0.5 = half-speed, 2 = double-speed, ...)
-				 *   <strong>speed</strong>: VALUE, // Initial default: 1
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>speed</em></strong>
+				 * 	= Numeric value indicating a run speed multiplier.
+				 * </code>
+				 * (0.5 = half-speed, 2 = double-speed, etc.)
+				 * </p>
 				 *
-				 *   // --------
-				 *   // Boolean; Indicates whether to treat the sequence start time as 0 even if the
-				 *   // first transformation in the sequence starts at a time greater than 0. This
-				 *   // prevents a sequence whose first animations begin some time into the timeline
-				 *   // from auto-stopping or triggering its <em>before</em> behavior when it is run from
-				 *   // time 0. To define the beginning of the sequence timeline as the beginning of
-				 *   // the first transformation in the timeline no matter what, set to <em>false</em>.
-				 *   <strong>stretchStartTimeToZero</strong>: VALUE // Initial default: true
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>stretchStartTimeToZero</em></strong>
+				 * 	= Boolean value indicating whether to treat the sequence start time as 0 even if the first transformation
+				 * 	in the sequence starts at a time greater than 0.
+				 * </code>
+				 * This prevents a sequence whose first animations begin some time into the timeline from auto-stopping
+				 * or triggering its <em>before</em> behavior when it is run from time 0. To define the beginning of
+				 * the sequence timeline as the beginning of the first transformation in the timeline no matter what, set to <em>false</em>.
+				 * </p>
 				 *
-				 *   // --------
-				 *   // Variable type; Sets a synchronization source for this sequence. Can take any
-				 *   // of the following different types of values:
-				 *   //   null: locks sequence to the system clock.
-				 *   //   function object: the passed-in function is called every time the polling
-				 *   //       interval is reached, and the return value is used as the seek time.
-				 *   //       Using a custom function here allows you to synchronize the sequence to
-				 *   //       anything you want (for instance, locking it to the current value of a UI
-				 *   //       element, such as a slider, or to another Concert.Sequence object.)
-				 *   //   html audio or video DOM object: locks the sequence to the currentTime
-				 *   //       property of the media element. This allows the sequence to remain
-				 *   //       synchronized to the media even when it is paused, scrubbed, or the
-				 *   //       user skips around.
-				 *   <strong>synchronizeTo</strong>: VALUE, // Initial default: null
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>synchronizeTo</em></strong>
+				 *  = a variable type which sets a synchronization source for this sequence.
+				 * </code>
+				 * Can take any of the following different types of values:
+				 * <ul>
+				 * 	<li>
+				 * 		<code>null</code>: locks sequence to the system clock.
+				 * 	</li>
+				 * 	<li>
+				 * 		<code><em>function object</em></code>:
+				 * 		the passed-in function is called every time the polling interval is reached, and the return value is used as the seek time.
+				 * 		Using a custom function here allows you to synchronize the sequence to anything you want
+				 * 		(for instance, locking it to the current value of a UI element, such as a slider, or to another Concert.Sequence object.)
+				 * 	</li>
+				 * 	<li>
+				 * 		<code><em>html audio or video DOM object</em></code>:
+				 * 		locks the sequence to the currentTime property of the media element.
+				 * 		This allows the sequence to remain synchronized to the media even when it is paused, scrubbed,
+				 * 		or the user skips around.
+				 * 	</li>
+				 * </ul>
+				 * </p>
 				 *
-				 *   // --------
-				 *   // Numeric; An offset value that is added to the current time before seeking
-				 *   // every time the polling interval comes around. This is useful if you want
-				 *   // your sequence to run fixed amount ahead of, or behind, your synchronization
-				 *   // source. If null, this value is automatically calculated assuming that you
-				 *   // want the current sequence time (or the sequence start time if no calls to
-				 *   // seek() have yet been made) to match up with the current return value of the
-				 *   // synchronization source. For instance, you may have a sequence that runs,
-				 *   // locked to the system clock, from time 0 to time 10000 (i.e., for 10 seconds).
-				 *   // But the raw value coming from the system clock is never between 0 and 10000;
-				 *   // it is the number of milliseconds since January 1, 1970 00:00:00 UTC, which
-				 *   // is a very high number. The timeOffset value is therefore added in order to
-				 *   // translate the raw starting clock value to the start time of the sequence.
-				 *   // But because this automatic translation may not always be the desired
-				 *   // behavior, it can be explicitly set here.
-				 *   <strong>timeOffset</strong>: VALUE, // Default value: null
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>timeOffset</em></strong>
+				 * 	= Numeric value indicating an offset added to the current time before seeking.
+				 * </code>
+				 * This is useful if you want your sequence to run fixed amount ahead of, or behind, your synchronization source.
+				 * If null, this value is automatically calculated assuming that you want the current sequence time
+				 * (or the sequence start time if no calls to seek() have yet been made) to match up with the current return value
+				 * of the synchronization source. For instance, you may have a sequence that runs, locked to the system clock,
+				 * from time 0 to time 10000 (i.e., for 10 seconds). But the raw value coming from the system clock is never between 0 and 10000;
+				 * it is the number of milliseconds since January 1, 1970 00:00:00 UTC, which is a very high number.
+				 * The timeOffset value is therefore added in order to translate the raw starting clock value to the start time of the sequence.
+				 * But because this automatic translation may not always be the desired behavior, it can be explicitly set here.
+				 * </p>
 				 *
-				 *   // --------
-				 *   // Boolean; Whether or not to optimize based on the assumption that none of the
-				 *   // object properties being modified by this sequence are also being touched by
-				 *   // anything else. See [seek]{@link Concert.Sequence#seek} method for details. (Note that regardless of the value
-				 *   // specified here, the seek method can be called manually at any point with its
-				 *   //  useSoleControlOptimization parameter set to either true or false.)
-				 *   <strong>useSoleControlOptimization</strong>: VALUE, // Initial default: true
-				 * }
-				 * </code></pre>
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>useSoleControlOptimization</em></strong>
+				 * 	= Boolean value indicating whether the sequence can optimize assuming it is the only thing controlling
+				 * 	all the object properties it is modifying.
+				 * </code>
+				 * If your sequence is animating a property whose values could also be modified by anything else, this should be
+				 * set to <code>false</code>. When <code>true</code>, the sequence will assume that every value it has set has remained set.
+				 * If, for instance, two successive animation frames both would set the <code>left</code> property of a <code>DIV</code> object
+				 * to "200px", the sequence won't bother setting the value again during second frame, assuming it is still set from the first frame.
+				 * This speeds up seek times and thus improves overall performance. But if something else has modified the value in the meantime,
+				 * failing to set the value on the second frame could result in unexpected behavior.
+				 * See the [seek]{@link Concert.Sequence#seek} method for details.
+				 * (Note that regardless of the value specified here, the seek method can be called manually at any point with its
+				 * useSoleControlOptimization parameter set to either true or false.)
+				 * </p>
 				 */
 				function __run(parameters)
 				{
@@ -2752,35 +2892,55 @@ var Concert = (function ()
 				 * @public
 				 * @method
 				 * @param {Object} newDefaults An object with property values setting default options for new transformations. Defined as follows.
-				 * Any or all of the below options may be specified.<pre><code>
-				 * newDefaults =
+				 * Any or all of the below options may be specified.
+				 * <pre><code><em>newDefaults =
 				 * {
-				 *   // --------
-				 *   // Function; One of the [Concert.Applicators]{@link Concert.Applicators} functions, or a custom function.
-				 *   // See [Concert.Applicators]{@link Concert.Applicators} and [addTransformations]{@link Concert.Sequence#addTransformations} for more information about the
-				 *   // meaning of this property and its allowable values.
 				 *   <strong>applicator</strong>: VALUE, // Initial default value: Concert.Applicators.Property
-				 *
-				 *   // --------
-				 *   // Function; One of the [Concert.Calculators]{@link Concert.Calculators} functions, or a custom function.
-				 *   // See [Concert.Calculators]{@link Concert.Calculators} and [addTransformations]{@link Concert.Sequence#addTransformations} for more information about the
-				 *   // meaning of this property and its allowable values.
 				 *   <strong>calculator</strong>: VALUE, // Initial default value: Concert.Calculators.Linear
-				 *
-				 *   // --------
-				 *   // Function; One of the [Concert.EasingFunctions]{@link Concert.EasingFunctions} functions, or a custom function.
-				 *   // See [Concert.EasingFunctions]{@link Concert.EasingFunctions} and [addTransformations]{@link Concert.Sequence#addTransformations} for more information about
-				 *   // the meaning of this property and its allowable values.
 				 *   <strong>easing</strong>: VALUE, // Initial default value: Concert.EasingFunctions.ConstantRate
-				 *
-				 *   // --------
-				 *   // String; The unit, if there is one, is appended to the end of a calculated value
-				 *   // before it is applied. Common values would include "px", "%", "em", and so on.
 				 *   <strong>unit</strong>: VALUE, // Initial default value: null (no unit at all)
-				 * }
-				 * </code></pre>
+				 * }</em></code></pre>
+				 * 
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>applicator</em></strong>
+				 * 	= Function used to apply calculated target feature values to the target feature.
+				 * </code>
+				 * One of the [Concert.Applicators]{@link Concert.Applicators} functions, or a custom function.
+				 * See [Concert.Applicators]{@link Concert.Applicators} and [addTransformations]{@link Concert.Sequence#addTransformations}
+				 * for more information about the meaning of this property and its allowable values.
+				 * </p>
+				 *
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>calculator</em></strong>
+				 * 	= Function used to calculate values applied to the target feature during the animation.
+				 * </code>
+				 * One of the [Concert.Calculators]{@link Concert.Calculators} functions, or a custom function.
+				 * See [Concert.Calculators]{@link Concert.Calculators} and [addTransformations]{@link Concert.Sequence#addTransformations}
+				 * for more information about the meaning of this property and its allowable values.
+				 * </p>
+				 *
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>easing</em></strong>
+				 * 	= Function used to specify a rate curve for the animation.
+				 * </code>
+				 * One of the [Concert.EasingFunctions]{@link Concert.EasingFunctions} functions, or a custom function.
+				 * See [Concert.EasingFunctions]{@link Concert.EasingFunctions} and [addTransformations]{@link Concert.Sequence#addTransformations}
+				 * for more information about the meaning of this property and its allowable values.
+				 * </p>
+				 *
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>unit</em></strong>
+				 * 	= String indicating the unit to be appended to the end of a calculated value before it is applied,
+				 * 	or null if there is none.
+				 * </code>
+				 * Common values would include "px", "%", "em", and so on.
+				 * </p>
 				 */
-				function __setDefaults(newDefaults)
+			  function __setDefaults(newDefaults)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
@@ -2829,16 +2989,22 @@ var Concert = (function ()
 				 * @memberof Concert.Sequence#
 				 * @public
 				 * @method
-				 * @param {Varies} syncSource A synchronization source. Can take any of the following different types of values:<pre>
-				 *   null: locks sequence to the system clock.
-				 *   function object: the passed-in function is called every time the polling
-				 *       interval is reached, and the return value is used as the seek time.
-				 *       Using a custom function here allows you to synchronize the sequence to
-				 *       anything you want (for instance, locking it to the current value of a UI
-				 *       element, such as a slider, or to another Concert.Sequence object.)
-				 *   html audio or video DOM object: locks the sequence to the currentTime property
-				 *       of the media element. This allows the sequence to remain synchronized to
-				 *       the media even when it is paused, scrubbed, or the user skips around.</pre>
+				 * @param {Varies} syncSource A synchronization source. Can take any of the following different types of values:
+				 * <ul>
+				 * 	<li>
+				 * 		<code>null</code>: locks sequence to the system clock.
+				 * 	</li>
+				 * 	<li>
+				 * 		<code><em>function object</em></code>: the passed-in function is called every time the polling interval is reached,
+				 * 		and the return value is used as the seek time. Using a custom function here allows you to synchronize the sequence
+				 * 		to anything you want (for instance, locking it to the current value of a UI element, such as a slider,
+				 * 		or to another Concert.Sequence object.)
+				 * 	</li>
+				 * 	<li>
+				 * 		<code><em>html audio or video DOM object</em></code>: locks the sequence to the currentTime property of the media element.
+				 * 		This allows the sequence to remain synchronized to the media even when it is paused, scrubbed, or the user skips around.
+				 * 	</li>
+				 * </ul>
 				 * @param {Object} [parameters] An object with property values setting options for how to run the sequence.
 				 * See the [run]{@link Concert.Sequence#run} method for information on allowable properties and values in this object.
 				 */
