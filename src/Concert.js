@@ -15,6 +15,7 @@ var Concert = (function ()
 	// user can revert to it with revertNameSpace() if there is a collision.
 	var previousNameSpaceValue = Concert;
 
+	var getNowTime = Date.now;
 
 	var BaseObject = (function(){var b;function C(){var c=this;c.thisPublic=this;var d={thisPublic:c};c.___accessProtectedMembers=function(){b = d;};}function g(){this.___accessProtectedMembers();return b;}function B(){}C.extend=function(h){var c=h(g, this);B.prototype=this.prototype;c.prototype=new B();c.prototype.constructor=c;c.extend=this.extend;return c;};return C;})();
 
@@ -1407,7 +1408,7 @@ var Concert = (function ()
 							curBreakpointValue, distinctValStr, nextBreakpointValue, targetSequences;
 
 						if (isAsynchronous)
-							startTime = (new Date()).getTime();
+							startTime = getNowTime();
 
 						if (step === 2 && !isAsynchronous && !_Concert.Util.isArray(inputData))
 						{
@@ -1461,7 +1462,7 @@ var Concert = (function ()
 							indexingComplete = thisProtected.advanceIndexingToNextStep();
 						else
 						{
-							endTime = (new Date()).getTime();
+							endTime = getNowTime();
 							indexingProcessData.startingIndex = curIndex;
 							if ((endTime - startTime) < _Concert.Definitions.IterationRoundTimeHalfBound)
 								indexingProcessData.iterationsPerRound *= 2;
@@ -2738,7 +2739,7 @@ var Concert = (function ()
 
 					synchronizeTo = _getParamValue(parameters, "synchronizeTo", thisProtected.synchronizeTo);
 					if (synchronizeTo === null)
-						synchronizer = function () { return (new Date()).getTime(); };
+						synchronizer = function () { return getNowTime(); };
 					else
 						synchronizer = ((typeof synchronizeTo) === "function") ? synchronizeTo : function () { return 1000 * synchronizeTo.currentTime; };
 					thisProtected.synchronizer = synchronizer;
@@ -2750,8 +2751,8 @@ var Concert = (function ()
 					thisProtected.timeOffset = timeOffset;
 
 					thisProtected.running = true;
-					thisProtected.poller.run(function () { thisPublic.seek(initialSyncSourcePoint + speed * (synchronizer() - initialSyncSourcePoint) + timeOffset, soleControlOptimizationDuringRun); });
-				} // end __run()
+          thisProtected.poller.run(function () { thisPublic.seek(initialSyncSourcePoint + speed * (synchronizer() - initialSyncSourcePoint) + timeOffset, soleControlOptimizationDuringRun); });
+        } // end __run()
 
 
 				/**
@@ -2940,7 +2941,7 @@ var Concert = (function ()
 				 * Common values would include "px", "%", "em", and so on.
 				 * </p>
 				 */
-			  function __setDefaults(newDefaults)
+        function __setDefaults(newDefaults)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
