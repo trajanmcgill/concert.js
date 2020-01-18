@@ -1959,8 +1959,9 @@ var Concert = (function ()
 				 */
 				function __addTransformations(transformationSet)
 				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic); // Get ahold of this object's basic properties
 
+					// Initialize all the variables needed for this function
 					var i, j, k, numTransformationGroups, curTransformationGroup, curGroupTarget, curGroupTargets, numCurGroupTargets, singleTargetVersion,
 						curGroupFeatures, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupUserProperties, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
 						numSegments, curSegment, propertyName, newTransformationProperties, newTransformation, singleFeatureSequence, curFeatureSequences,
@@ -1968,25 +1969,39 @@ var Concert = (function ()
 						values, valueGenerators, curKeyFrameTime, curKeyFrameValue, curKeyFrameValueGenerator, lastKeyFrameTime, lastKeyFrameValue, lastKeyFrameValueGenerator,
 						createSegment, allTransformations = thisProtected.allTransformations, dynamicValueTransformations = thisProtected.dynamicValueTransformations;
 
+					// If an asynchronous indexing is in progress when new transformations are added to the sequence,
+					// the index will be wrong when completed. So cancel the indexing process if one is in progress.
 					if (thisProtected.indexingInProgress)
 						thisProtected.resetIndexing();
 					else
 						thisProtected.indexed = false;
 
+					// If only one transformation group was passed in, convert it to a one-item array so the rest of the function
+					// works identically regardless of whether an array or single object was passed in.
 					if (!(_Concert.Util.isArray(transformationSet)))
 						transformationSet = [transformationSet];
 
+					// Iterate through the transformation groups, adding each of them to the sequence
 					for (i = 0, numTransformationGroups = transformationSet.length; i < numTransformationGroups; i++)
 					{
+						// Grab the transformation group being added on this iteration of the loop.
 						curTransformationGroup = transformationSet[i];
 
+						// Get the target or targets of this transformation group.
 						curGroupTarget = curTransformationGroup.target;
 						curGroupTargets = curTransformationGroup.targets;
 						if (_Concert.Util.isArray(curGroupTargets))
 						{
+							// There is an array of targets, all getting the same transformations applied.
+							// This is a shorthand method of applying the same transformations to multiple things.
+
+							// If there is also a single target specified, build an array containing that plus the existing array.
 							if ((typeof curGroupTarget !== "undefined") && (curGroupTarget !== null))
 								curGroupTargets = [curGroupTarget].concat(curGroupTargets);
 
+							// Deal with the array of targets by simply iterating over each one, building an object
+							// just like the current transformation group except with only a single target,
+							// and then recursively calling this same function on just the single-target version.
 							for (j = 0, numCurGroupTargets = curGroupTargets.length; j < numCurGroupTargets; j++)
 							{
 								singleTargetVersion = {};
@@ -1997,9 +2012,14 @@ var Concert = (function ()
 								thisPublic.addTransformations(singleTargetVersion);
 							}
 
+							// Since we've dealt with the current transformation group already through recursion,
+							// go ahead and skip on to the next loop iteration.
 							continue;
 						}
 
+						// Internally, the sequence stores a set of target sequences--
+						// that is, a set of objects where each contains all the transformations operating on a single target.
+						// Try to find the existing target sequence for the specified target. If one does not yet exist, create one.
 						curTargetSequence = thisProtected.findTargetSequenceByTarget(curGroupTarget);
 						if (curTargetSequence === null)
 						{
@@ -2007,6 +2027,8 @@ var Concert = (function ()
 							existingTargetSequences.push(curTargetSequence);
 						}
 						
+						// Set up variables containing all the assorted properties that will be applied to the transformations in this group,
+						// applying defaults for all those which are not specified in the object that was passed in.
 						curGroupApplicator = _Concert.Util.coalesceUndefined(curTransformationGroup.applicator, defaults.applicator);
 						curGroupFeatures = _Concert.Util.correctFeatureNames(_Concert.Util.isArray(curTransformationGroup.feature) ? curTransformationGroup.feature : [curTransformationGroup.feature], curGroupApplicator);
 						curGroupUnit = _Concert.Util.coalesceUndefined(curTransformationGroup.unit, defaults.unit);
@@ -2014,52 +2036,79 @@ var Concert = (function ()
 						curGroupEasing = _Concert.Util.coalesceUndefined(curTransformationGroup.easing, defaults.easing);
 						curGroupUserProperties = _Concert.Util.coalesceUndefined(curTransformationGroup.userProperties, defaults.userProperties);
 
-						curFeatureSequences = new Array(curGroupFeatures.length);
+						// The internal model has:
+						//   An overall sequence has a set of target sequences, each of which represents all the transformations applying to a single target.
+						//   A target sequence has a set of feature sequences, each of which represents all the transformations applying to a single feature of that target.
+						// Here we produce an array pointing to all the feature sequences being added to by this call to the addTransformations method.
+						curFeatureSequences = new Array(curGroupFeatures.length); // Create an array of the same length as the number of mentioned features.
+						// Iterate through the number of features being touched here.
 						for (j = 0; j < curGroupFeatures.length; j++)
 						{
+							// If the current target sequence already has a feature sequence for this feature, get it.
+							// If not, create one.
 							singleFeatureSequence = curTargetSequence.findFeatureSequenceByFeature(curGroupFeatures[j]);
 							if (singleFeatureSequence === null)
 							{
 								singleFeatureSequence = new _Concert.FeatureSequence(curGroupTarget, curGroupFeatures[j]);
 								curTargetSequence.addFeatureSequence(singleFeatureSequence);
 							}
+							// Add the existing or new feature sequence to an array for use below.
 							curFeatureSequences[j] = singleFeatureSequence;
 						}
 
+						// Grab the specified key frames list, if there was one.
 						curGroupKeyFrames = curTransformationGroup.keyframes;
 						if (typeof curGroupKeyFrames !== "undefined")
 						{
+							// Key frames were indeed specified. Get the times and values or value generators.
 							times = curGroupKeyFrames.times;
 							values = curGroupKeyFrames.values;
 							valueGenerators = curGroupKeyFrames.valueGenerators;
-
+							
+							// Initialize to null a number of variables used to track current and last-iteration values while looping over all the keyframes.
 							lastKeyFrameTime = lastKeyFrameValue = lastKeyFrameValueGenerator = curKeyFrameValue = curKeyFrameValueGenerator = null;
+							
+							// Loop over all the keyframes and create motion segment definitions for the segments defined by those keyframes.
 							for (j = 0, numKeyFrames = times.length; j < numKeyFrames; j++)
 							{
-								curKeyFrameTime = times[j];
+								curKeyFrameTime = times[j]; // Get the time at which the current keyframe occurs.
 								if (values)
-									curKeyFrameValue = values[j];
+									curKeyFrameValue = values[j]; // Get the value matching the current keyframe time.
 								if (valueGenerators)
-									curKeyFrameValueGenerator = valueGenerators[j];
+									curKeyFrameValueGenerator = valueGenerators[j]; // Get the function to be used to generate a value for this keyframe.
 
 								if (lastKeyFrameTime === null)
 								{
+									// There is no previous keyframe. Either this is the very first keyframe,
+									// or there was a null time specified last in the list of keyframes,
+									// which is a way of indicating no transformation segment should be created
+									// between the last actual keyframe and this one.
+									
+									// Set the previous-keyframe storage variables for the next keyframe iteration.
 									lastKeyFrameTime = curKeyFrameTime;
 									lastKeyFrameValue = curKeyFrameValue;
 									lastKeyFrameValueGenerator = curKeyFrameValueGenerator;
 
-									createSegment = ((curKeyFrameTime !== null) && (j === numKeyFrames - 1)); // If this is the last keyframe, preceded by a null keyframe, create a segment out of just this one keyframe.
+									// If this is the very last keyframe, we should create a segment out of just this one keyframe,
+									// since there is no previous keyframe and no next one.
+									createSegment = ((curKeyFrameTime !== null) && (j === numKeyFrames - 1));
 								}
 								else if (curKeyFrameTime === null)
 								{
+									// The present keyframe is not a true keyframe marking the beginning and/or end of a transformation segment.
+									// Rather, it marks a non-animated segment-- that is, a break between segments before and after.
+									// Set the previous-keyframe storage variables all to null for use in the next keyframe iteration,
+									// and do not create a transformation segment.
 									lastKeyFrameTime = lastKeyFrameValue = lastKeyFrameValueGenerator = null;
 									createSegment = false;
 								}
 								else
-									createSegment = true;
+									createSegment = true; // This is the usual case; create a transformation segment from the previous frame to this one.
 
 								if (createSegment)
 								{
+									// Set up properties for a new transformation, using the previous and present times, values,
+									// and other known info about how the target will be transformed in this segment.
 									newTransformationProperties =
 										{
 											target: curGroupTarget,
@@ -2076,13 +2125,26 @@ var Concert = (function ()
 											v1Generator: curKeyFrameValueGenerator,
 											userProperties: curGroupUserProperties
 										};
+									
+									// Create a new Transformation object and add it to the list of all transformations owned by this sequence.
 									newTransformation = new _Concert.Transformation(newTransformationProperties);
 									allTransformations.push(newTransformation);
+									
+									// If this transformation is using value generators, add it to the list maintained internally
+									// of transformations that utilize value generators.
 									if (lastKeyFrameValueGenerator || curKeyFrameValueGenerator)
 										dynamicValueTransformations.push(newTransformation);
+									
+									// A "feature sequence" represents all of the transformations which apply, over the course of the entire animation,
+									// to a particular feature of a particular target. This is tracked as part of Concert's internal data structure which
+									// helps make seek times really fast. Further up above, all the target features touched by this transformation group
+									// were ascertained, and an array (curFeatureSequences) was created to store pointers to their respective feature sequences.
+									// This new transformation, since it modifies each of those features, here gets added to each of those feature sequences'
+									// internal list of transformations applying to it.
 									for(k = 0; k < curFeatureSequences.length; k++)
 										curFeatureSequences[k].transformations.push(newTransformation);
 
+									// Set the previous-keyframe storage variables for the next keyframe iteration.
 									lastKeyFrameTime = curKeyFrameTime;
 									lastKeyFrameValue = curKeyFrameValue;
 								} // end if (createSegment)
@@ -2090,23 +2152,31 @@ var Concert = (function ()
 						} // end if (typeof curGroupKeyFrames != "undefined")
 						else
 						{
+							// Key frames were not specified. Look for and use segment definitions instead.
 							curGroupSegments = curTransformationGroup.segments;
+							// The below code expects an array of segments, so if only one is specified, turn it into a single-element array.
 							if (!(_Concert.Util.isArray(curGroupSegments)))
 								curGroupSegments = [curGroupSegments];
 
+							// Iterate over and add all the new animation segments.
 							for (j = 0, numSegments = curGroupSegments.length; j < numSegments; j++)
 							{
-								curSegment = curGroupSegments[j];
+								curSegment = curGroupSegments[j]; // Get a reference to the current segment to process.
 
+								// Set up the basic properties of the transformation that will represent this segment.
 								newTransformationProperties =
 									{
 										target: curGroupTarget,
-										feature: (curGroupFeatures.length === 1) ? curGroupFeatures[0] : curGroupFeatures,
+										feature: (curGroupFeatures.length === 1) ? curGroupFeatures[0] : curGroupFeatures, // Store the array of features, unless there is only one, in which case store just that value.
 										applicator: curGroupApplicator
 									};
 
+								// Take all the defined properties of the passed-in segment and set those properties on the new transformation object as well.
 								for (propertyName in curSegment) if (curSegment.hasOwnProperty(propertyName))
 									newTransformationProperties[propertyName] = curSegment[propertyName];
+								
+								// Certain properties are required. If those are specified at the individual segment level, that takes precedence.
+								// If they aren't specified at that level, though, then use the values given for the whole group.
 								if (typeof newTransformationProperties.unit === "undefined")
 									newTransformationProperties.unit = curGroupUnit;
 								if (typeof newTransformationProperties.calculator === "undefined")
@@ -2116,10 +2186,21 @@ var Concert = (function ()
 								if (typeof newTransformationProperties.userProperties === "undefined")
 									newTransformationProperties.userProperties = curGroupUserProperties;
 
+								// Create a new Transformation object and add it to the list of all transformations owned by this sequence.
 								newTransformation = new _Concert.Transformation(newTransformationProperties);
 								allTransformations.push(newTransformation);
+
+								// If this transformation is using value generators, add it to the list maintained internally
+								// of transformations that utilize value generators.
 								if ((typeof newTransformationProperties.v0Generator !== "undefined") || (typeof newTransformationProperties.v1Generator !== "undefined"))
 									dynamicValueTransformations.push(newTransformation);
+								
+								// A "feature sequence" represents all of the transformations which apply, over the course of the entire animation,
+								// to a particular feature of a particular target. This is tracked as part of Concert's internal data structure which
+								// helps make seek times really fast. Further up above, all the target features touched by this transformation group
+								// were ascertained, and an array (curFeatureSequences) was created to store pointers to their respective feature sequences.
+								// This new transformation, since it modifies each of those features, here gets added to each of those feature sequences'
+								// internal list of transformations applying to it.
 								for (k = 0; k < curFeatureSequences.length; k++)
 									curFeatureSequences[k].transformations.push(newTransformation);
 							} // end loop through segments
