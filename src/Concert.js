@@ -1536,6 +1536,9 @@ var Concert = (function ()
 				 * Certain of the properties (as indicated below) are optional, and each sequence maintains its own settings for what default values will be applied to transformations
 				 * when the optional properties are not defined. (Note: these defaults are applied at the time the transformations are added, not at run-time, so changing the defaults
 				 * for a sequence will never alter transformations which have already been added to that sequence.)<br><br>
+				 * Important note: Adding two animation segments that overlap in time, and both try to modify the same feature
+				 * of the same target object, produces undefined behavior.<br><br>
+
 				 * The expected layout of the object passed into this method is defined as follows (also see examples below):<pre>
 				 * <strong>transformationSet</strong> = <em>TransformationsObject</em>
 				 * OR
@@ -1695,7 +1698,7 @@ var Concert = (function ()
 				 * <strong><em>SegmentDefinition</em></strong> = 
 				 *   {
 				 *       t0: <em>TimeDefinition</em>, // Start time of this transformation
-				 *       t1: <em>TimeDefinition</em>, // End time of this transformation
+				 *       t1: <em>TimeDefinition</em>, // End time of this transformation: must be equal to or greater than t0.
 				 *
 				 *       v0: <em>ValueDefinition</em>, // Value applied at the start time
 				 *       v1: <em>ValueDefinition</em>, // Value applied at the end time
@@ -1729,6 +1732,11 @@ var Concert = (function ()
 				 * that is broken in two pieces: one animated segment with keyframes at time 0 and 100,
 				 * then no further animation at all until until time 1000, followed by another period
 				 * of animation between the keyframes at times 1000 and 2000.
+				 * Important: Keyframe times for each null-separated segment (or for the whole array, if there are no null breaks)
+				 * must be passed to the function in ascending order. (That is, an array of times such as
+				 * [1000, 2000, 0, 500] will not work properly. But it is perfectly okay to use an array of times such as
+				 * [1000, 2000, null, 0, 500], because that actually produces two entirely separate animation segments,
+				 * and each of them is specified ascending time order.)
 				 * </p>
 				 *
 				 * <p class="ExplanationParagraph">
