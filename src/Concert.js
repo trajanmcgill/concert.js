@@ -169,6 +169,7 @@ var Concert = (function ()
 					{
 						var i, valueLength, returnValue;
 
+						// Utility function for converting a hexadecimal color string to a decimal number.
 						function hexColorToDecimal(hexStr)
 						{
 							if (hexStr.length === 1)
@@ -176,44 +177,61 @@ var Concert = (function ()
 							return parseInt(hexStr, 16);
 						} // end hexColorToDecimal()
 
+						// Utility function for calculating a color some fraction of the distance between two other colors.
 						function interpolateColor(color1, color2, distanceFraction)
 						{
 							var color1Pieces, color2Pieces, calculatedValues, i, curVal1, tempVal, interpolatedValueStr;
-							var hexColors1, hexColors2;
+							var hexColors1, hexColors2, hexWithAlpha;
 							var rgbFunctionPattern = /^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$|^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)$/i;
 							var hslFunctionPattern = /^hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)$|^hsla\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*,\s*([0-9.]+)\s*\)$/i;
-							var hexRGBPattern = /^#([0-9a-f])([0-9a-f])([0-9a-f])$|^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
+							var hexRGBPattern = /^#([0-9a-f])([0-9a-f])([0-9a-f])([0-9a-f])?$|^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})?$/i;
 							var rgbFunctionMatch = false, hslFunctionMatch = false;
 
+							// Try parsing the specified colors as rgb[a] or hsl[a] color functions
 							if ((color1Pieces = rgbFunctionPattern.exec(color1)) !== null)
 							{
+								// First color is an rgb function. Treat the other one as the same.
 								color2Pieces = rgbFunctionPattern.exec(color2);
 								rgbFunctionMatch = true;
 							}
 							else if ((color1Pieces = hslFunctionPattern.exec(color1)) !== null)
 							{
+								// First color is an hsl function. Treat the other one as the same.
 								color2Pieces = hslFunctionPattern.exec(color2);
 								hslFunctionMatch = true;
 							}
 
 							if (rgbFunctionMatch || hslFunctionMatch)
 							{
+								// Process these colors as functions (rgb or hsl).
+
+								// Parse out the results of the regular expression match, to get the pieces of the string corresponding to each value (r, g, and b [and possibly a]; or h, s, and l).
 								calculatedValues = [];
 								for (i = 1; i < 8; i++) // skip the first element, it contains the full string match
 								{
+									// Get one of the arguments of first color's color function.
 									curVal1 = color1Pieces[i];
+
 									if (typeof curVal1 !== "undefined")
 									{
+										// Convert the value to an int.
 										curVal1 = parseInt(curVal1, 10);
+										// Get the corresponding argument of the second color's color function, convert that to an int,
+										// and calculate what the in-between value is, based on the fraction of the distance traversed so far.
 										tempVal = curVal1 + distanceFraction * (parseInt(color2Pieces[i], 10) - curVal1);
+										// Store the calculated value as one of the values that will be used to build the result string.
 										calculatedValues.push((i < 7) ? Math.round(tempVal) : tempVal);
 									}
 								}
 
 								if (rgbFunctionMatch)
+								{
+									// Assemble the interpolated color string, in the form "rgb(1,2,3)" or "rgba(1,2,3,4)".
 									interpolatedValueStr = "rgb" + ((calculatedValues.length === 4) ? "a" : "") + "(" + calculatedValues.join() + ")";
+								}
 								else
 								{
+									// Assemble the interpolated color string, in the form "hsla(1,2%,3%, 4)" or "hsl(1,2%,3%)".
 									tempVal = calculatedValues[0].toString() + "," + calculatedValues[1].toString() + "%," + calculatedValues[2].toString() + "%";
 									if (calculatedValues.length === 4)
 										interpolatedValueStr = "hsla(" + tempVal + "," + calculatedValues[3].toString() + ")";
@@ -223,12 +241,14 @@ var Concert = (function ()
 							}
 							else
 							{
+								// Strings were not in the form of rgb or hsl functions. Process them as hex color values.
 								color1Pieces = hexRGBPattern.exec(color1);
 								color2Pieces = hexRGBPattern.exec(color2);
 								hexColors1 = [];
 								hexColors2 = [];
 
-								for (i = 1; i < 7; i++)
+								// Break out the R, G, B[, and A]
+								for (i = 1; i < 9; i++)
 								{
 									tempVal = color1Pieces[i];
 									if (typeof tempVal !== "undefined")
@@ -238,11 +258,22 @@ var Concert = (function ()
 										hexColors2.push(tempVal);
 								}
 
+								// If either of the colors specifies an alpha value, make sure the other has one as well.
+								if(hexColors1.length > 3 && hexColors2.length < 4)
+									hexColors2.push("ff");
+								else if(hexColors2.length > 3 && hexColors1.length < 4)
+									hexColors1.push("ff");
+
+								// Iterate over each of the colors [and alpha value], building the string containing "#" plus all the interpolated values.
 								interpolatedValueStr = "#";
-								for (i = 0; i < 3; i++)
+								for (i = 0; i < hexColors1.length; i++)
 								{
+									// Convert the first value to an int.
 									curVal1 = hexColorToDecimal(hexColors1[i]);
+									// Get the corresponding value from the second color, convert that to an int,
+									// and calculate what the in-between value is, based on the fraction of the distance traversed so far.
 									tempVal = Math.round(curVal1 + distanceFraction * (hexColorToDecimal(hexColors2[i]) - curVal1));
+									// Concatenate that into the result string.
 									interpolatedValueStr += ((tempVal < 16) ? "0" : "") + tempVal.toString(16);
 								}
 							} // end if/else on (rgbFunctionMatch || hslFunctionMatch)
@@ -252,12 +283,13 @@ var Concert = (function ()
 
 						if (_Concert.Util.isArray(startValue))
 						{
+							// Function is being called on a whole array of values. Generate an array of interpolated colors to return.
 							returnValue = [];
 							for (i = 0, valueLength = startValue.length; i < valueLength; i++)
 								returnValue.push(interpolateColor(startValue[i], endValue[i], distanceFraction));
 						}
 						else
-							returnValue = interpolateColor(startValue, endValue, distanceFraction);
+							returnValue = interpolateColor(startValue, endValue, distanceFraction); // Generate the interpolated color to return.
 
 						return returnValue;
 					}, // end Color Calculator function
