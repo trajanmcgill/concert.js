@@ -13,6 +13,15 @@
 		"url": "https://github.com/trajanmcgill/concert.js/issues"
 	},
 	"homepage": "http://www.concertjs.com/",
+	"browserslist": [
+		"chrome >= 5",
+		"edge >= 12",
+		"firefox >= 4",
+		"safari >= 5",
+		"opera >= 11",
+		"ie >= 9",
+		"cover 95%"
+	],
 	"keywords": [
 		"javascript",
 		"animation",
@@ -23,18 +32,20 @@
 		"src/Concert.js"
 	],
 	"devDependencies": {
+		"eslint-plugin-compat": "^3.3.0",
+		"eslint-plugin-ecmascript-compat": "^1.0.0",
 		"grunt": "^1.0.4",
 		"grunt-cli": "^1.3.2",
 		"grunt-contrib-clean": "^2.0.0",
 		"grunt-contrib-copy": "^1.0.0",
-		"grunt-contrib-jshint": "^2.1.0",
 		"grunt-contrib-uglify": "^4.0.1",
+		"grunt-eslint": "^22.0.0",
 		"grunt-jsdoc": "~2.4.0"
 	},
 	"scripts": {
 		"prepare": "grunt"
 	},
-	"custom_CopyrightNotice": "Copyright 2014-2019 Trajan McGill",
+	"custom_CopyrightNotice": "Copyright 2014-2020 Trajan McGill",
 	"custom_LicenseDescription": "Released under the MIT license.",
 	"custom_LicenseURL": "https://raw.githubusercontent.com/trajanmcgill/concert.js/master/LICENSE"
 }

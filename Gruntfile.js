@@ -16,16 +16,38 @@ module.exports = function(grunt)
 			pkg: grunt.file.readJSON("package.json"),
 
 
-			jshint:
+			eslint:
 			{
-				options:
+				projectStandards:
 				{
-					bitwise: true, browser: true, curly: false, eqeqeq: true, forin: true, immed: true, latedef: "nofunc", laxbreak: true, laxcomma: true, newcap: true,
-					noarg: true, noempty: true, nonew: true, quotmark: "double", smarttabs: true, strict: true, trailing: true, undef: true, unused: true, validthis: true
+					options: { configFile: "eslint.projectStandards.json" },
+					src: ["src/Concert.js"]
 				},
 
-				Concert_js: { src: ["src/Concert.js"] }
-			}, // end jshint task definitions
+				browserAPIs_src:
+				{
+					options: { configFile: "eslint.browserAPIs.json" },
+					src: ["src/Concert.js"]
+				},
+
+				browserAPIs_dist:
+				{
+					options: { configFile: "eslint.browserAPIs.json" },
+					src: ["dist/Concert.js", "dist/Concert.min.js"]
+				},
+
+				browserFeatures_src:
+				{
+					options: { configFile: "eslint.browserFeatures.json" },
+					src: ["src/Concert.js"]
+				},
+
+				browserFeatures_dist:
+				{
+					options: { configFile: "eslint.browserFeatures.json" },
+					src: ["dist/Concert.js", "dist/Concert.min.js"]
+				}
+			}, // end eslint task definitions
 
 
 			jsdoc:
@@ -70,15 +92,25 @@ module.exports = function(grunt)
 	// Load the plugins
 	grunt.loadNpmTasks("grunt-contrib-clean");
 	grunt.loadNpmTasks("grunt-contrib-copy");
-	grunt.loadNpmTasks("grunt-contrib-jshint");
 	grunt.loadNpmTasks("grunt-contrib-uglify");
+	grunt.loadNpmTasks("grunt-eslint");
 	grunt.loadNpmTasks("grunt-jsdoc");
 	
-	grunt.registerTask("lint_all", ["jshint:Concert_js"]);
 	grunt.registerTask("clean_all", ["clean:Concert_js"]);
+
+	grunt.registerTask("lint_src_styles", ["eslint:projectStandards"]);
+	grunt.registerTask("lint_src_browserAPIs", ["eslint:browserAPIs_src"]);
+	grunt.registerTask("lint_src_browserFeatures", ["eslint:browserFeatures_src"]);
+	grunt.registerTask("lint_src", ["lint_src_styles", "lint_src_browserAPIs", "lint_src_browserFeatures"]);
+	grunt.registerTask("lint_dist_browserFeatures", ["eslint:browserFeatures_dist"]);
+	grunt.registerTask("lint_dist_browserAPIs", ["eslint:browserAPIs_dist"]);
+	grunt.registerTask("lint_dist", ["lint_dist_browserAPIs", "lint_dist_browserFeatures"]);
+
 	grunt.registerTask("build_Concert_js", ["copy:Concert_js", "uglify:Concert_js"]);
 	grunt.registerTask("build_reference", ["jsdoc:Concert_js"]);
 	grunt.registerTask("build_all", ["build_Concert_js", "build_reference"]);
+	
 	grunt.registerTask("rebuild_all", ["clean_all", "build_all"]);
-	grunt.registerTask("default", ["lint_all", "rebuild_all"]);
+
+	grunt.registerTask("default", ["lint_src", "rebuild_all", "lint_dist"]);
 };

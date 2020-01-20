@@ -112,10 +112,10 @@ var Concert = (function ()
 				{
 					var propertyName;
 
-					for (propertyName in newPublicData) if (newPublicData.hasOwnProperty(propertyName))
+					for (propertyName in newPublicData) if (Object.prototype.hasOwnProperty.call(newPublicData, propertyName))
 						publicContext[propertyName] = newPublicData[propertyName];
 
-					for (propertyName in newProtectedData) if (newProtectedData.hasOwnProperty(propertyName))
+					for (propertyName in newProtectedData) if (Object.prototype.hasOwnProperty.call(newProtectedData, propertyName))
 						protectedContext[propertyName] = newProtectedData[propertyName];
 				} // end loadObjectData()
 			}, // end Util singleton definition
@@ -181,7 +181,7 @@ var Concert = (function ()
 						function interpolateColor(color1, color2, distanceFraction)
 						{
 							var color1Pieces, color2Pieces, calculatedValues, i, curVal1, tempVal, interpolatedValueStr;
-							var hexColors1, hexColors2, hexWithAlpha;
+							var hexColors1, hexColors2;
 							var rgbFunctionPattern = /^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$|^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)$/i;
 							var hslFunctionPattern = /^hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)$|^hsla\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*,\s*([0-9.]+)\s*\)$/i;
 							var hexRGBPattern = /^#([0-9a-f])([0-9a-f])([0-9a-f])([0-9a-f])?$|^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})?$/i;
@@ -708,7 +708,7 @@ var Concert = (function ()
 					this.transformationID = nextTransformationID++;
 
 					// Initialize data members
-					for (propertyName in properties) if (properties.hasOwnProperty(propertyName))
+					for (propertyName in properties) if (Object.prototype.hasOwnProperty.call(properties, propertyName))
 						this[propertyName] = properties[propertyName];
 					this.userProperties = _Concert.Util.coalesceUndefined(this.userProperties, {});
 					this.lastFrameID = null;
@@ -795,7 +795,7 @@ var Concert = (function ()
 
 					newTransformation = new _Concert.Transformation();
 
-					for (propertyName in this) if (this.hasOwnProperty(propertyName) && !propertiesNotToCopy[propertyName])
+					for (propertyName in this) if (Object.prototype.hasOwnProperty.call(this, propertyName) && !propertiesNotToCopy[propertyName])
 						newTransformation[propertyName] = this[propertyName];
 					newTransformation.target = newTarget;
 					newTransformation.lastAppliedValueContainer =
@@ -807,7 +807,7 @@ var Concert = (function ()
 					newTransformation.lastCalculatedValue = null;
 
 					newUserProperties = newTransformation.userProperties;
-					for (propertyName in userProperties) if (userProperties.hasOwnProperty(propertyName))
+					for (propertyName in userProperties) if (Object.prototype.hasOwnProperty.call(userProperties, propertyName))
 						newUserProperties[propertyName] = userProperties[propertyName];
 
 					return newTransformation;
@@ -1244,13 +1244,13 @@ var Concert = (function ()
 
 					if (initialParams)
 					{
-						for (paramName in initialParams) if (initialParams.hasOwnProperty(paramName))
+						for (paramName in initialParams) if (Object.prototype.hasOwnProperty.call(initialParams, paramName))
 							combined[paramName] = initialParams[paramName];
 					}
 
 					if (overrides)
 					{
-						for (paramName in overrides) if (overrides.hasOwnProperty(paramName))
+						for (paramName in overrides) if (Object.prototype.hasOwnProperty.call(overrides, paramName))
 							combined[paramName] = overrides[paramName];
 					}
 
@@ -1324,7 +1324,7 @@ var Concert = (function ()
 							{
 								distinctValuesObject = indexingProcessData.outputData;
 								distinctValuesArray = [];
-								for (distinctValStr in distinctValuesObject) if (distinctValuesObject.hasOwnProperty(distinctValStr))
+								for (distinctValStr in distinctValuesObject) if (Object.prototype.hasOwnProperty.call(distinctValuesObject, distinctValStr))
 									distinctValuesArray.push(distinctValuesObject[distinctValStr]);
 								indexingProcessData.inputData = distinctValuesArray;
 								indexingProcessData.totalIterationsThisStep = distinctValuesArray.length;
@@ -1547,7 +1547,7 @@ var Concert = (function ()
 							// this step asynchronously and switched to synchronous mode in between rounds, so we also check
 							// whether the input data is an array (in which case we've already skipped the opimization and can
 							// just continue by means of the normal while/switch loop below).
-							for (distinctValStr in inputData) if (inputData.hasOwnProperty(distinctValStr))
+							for (distinctValStr in inputData) if (Object.prototype.hasOwnProperty.call(inputData, distinctValStr))
 								_sortSingleValue(inputData[distinctValStr], outputData);
 						}
 						else
@@ -2142,7 +2142,7 @@ var Concert = (function ()
 							for (j = 0, numCurGroupTargets = curGroupTargets.length; j < numCurGroupTargets; j++)
 							{
 								singleTargetVersion = {};
-								for (propertyName in curTransformationGroup) if (curTransformationGroup.hasOwnProperty(propertyName))
+								for (propertyName in curTransformationGroup) if (Object.prototype.hasOwnProperty.call(curTransformationGroup, propertyName))
 									singleTargetVersion[propertyName] = curTransformationGroup[propertyName];
 								singleTargetVersion.targets = null;
 								singleTargetVersion.target = curGroupTargets[j];
@@ -2309,7 +2309,7 @@ var Concert = (function ()
 									};
 
 								// Take all the defined properties of the passed-in segment and set those properties on the new transformation object as well.
-								for (propertyName in curSegment) if (curSegment.hasOwnProperty(propertyName))
+								for (propertyName in curSegment) if (Object.prototype.hasOwnProperty.call(curSegment, propertyName))
 									newTransformationProperties[propertyName] = curSegment[propertyName];
 								
 								// Certain properties are required. If those are specified at the individual segment level, that takes precedence.
@@ -2478,11 +2478,8 @@ var Concert = (function ()
 					}
 
 					// Grab an array of any and all extra properties belonging to this sequence object, to apply also to the new one.
-					for (propertyName in defaults)
-					{
-						if (defaults.hasOwnProperty(propertyName))
-							newDefaults[propertyName] = defaults[propertyName];
-					}
+					for (propertyName in defaults) if (Object.prototype.hasOwnProperty.call(defaults, propertyName))
+						newDefaults[propertyName] = defaults[propertyName];
 
 					// The newRunning variable has been calculated above to true or false based on whether the new sequence will be created
 					// in an already-running state. (It is possible to clone a running sequence and match its running status.)
@@ -3043,8 +3040,8 @@ var Concert = (function ()
 
 					// Mark the sequence as running, and set the poller going with a callback function to do a seek on every poller tick.
 					thisProtected.running = true;
-          			thisProtected.poller.run(function () { thisPublic.seek(initialSyncSourcePoint + speed * (synchronizer() - initialSyncSourcePoint) + timeOffset, soleControlOptimizationDuringRun); });
-        		} // end __run()
+					thisProtected.poller.run(function () { thisPublic.seek(initialSyncSourcePoint + speed * (synchronizer() - initialSyncSourcePoint) + timeOffset, soleControlOptimizationDuringRun); });
+				} // end __run()
 
 
 				/**
@@ -3272,11 +3269,8 @@ var Concert = (function ()
 					var propertyName, defaults = thisProtected.defaults;
 
 					// Copy all the properties from the passed-in object to this sequence's defaults object.
-					for (propertyName in newDefaults)
-					{
-						if (newDefaults.hasOwnProperty(propertyName))
-							defaults[propertyName] = newDefaults[propertyName];
-					}
+					for (propertyName in newDefaults) if (Object.prototype.hasOwnProperty.call(newDefaults, propertyName))
+						defaults[propertyName] = newDefaults[propertyName];
 				} // end __setDefaults()
 
 
