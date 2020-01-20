@@ -1381,7 +1381,7 @@ var Concert = (function ()
 								break;
 							}
 						}
-					} while (rangeStart < rangeEnd);
+					} while (rangeStart <= rangeEnd);
 
 					return { segmentNumber: currentSegmentNumber, timeMatchType: currentTimeMatchType };
 				} // end __findSequenceSegmentNumberInRange()
