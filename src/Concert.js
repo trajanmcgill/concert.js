@@ -3170,6 +3170,7 @@ var Concert = (function ()
 
 					var propertyName, defaults = thisProtected.defaults;
 
+					// Copy all the properties from the passed-in object to this sequence's defaults object.
 					for (propertyName in newDefaults)
 					{
 						if (newDefaults.hasOwnProperty(propertyName))
@@ -3193,6 +3194,7 @@ var Concert = (function ()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
+					// Set the running state to false, stop the poller from generating new frames, and then remove the poller.
 					thisProtected.running = false;
 					if (thisProtected.poller)
 					{
@@ -3236,6 +3238,9 @@ var Concert = (function ()
 				{
 					var thisPublic = this.thisPublic; //, thisProtected = _getProtectedMembers.call(thisPublic); // Can save a few bytes in the minified version since thisProtected isn't used in this function
 
+					// Run this sequence, synchronized to the specified function or object,
+					// starting from the present position (no initial seek), and not stopping automatically.
+					// That is, the sequence will stay synchronized with whatever it is being synched to until it is explicitly stopped.
 					thisPublic.run(_getCombinedParams({ synchronizeTo: syncSource, initialSeek: null, timeOffset: 0, autoStopAtEnd: false }, parameters));
 				} // end __syncTo()
 
