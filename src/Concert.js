@@ -299,6 +299,9 @@ var Concert = (function ()
 					{
 						var i, returnValue, valueLength;
 
+						// Return an array of values if passed in an array of values, and a single value otherwise.
+						// Either way, the value returned is either the start value or the end value,
+						// (altered by any specified modifiers, such as modulo, rounding, or a multiplier)
 						if (_Concert.Util.isArray(startValue))
 						{
 							returnValue = [];
@@ -316,6 +319,9 @@ var Concert = (function ()
 					{
 						var i, valueLength, curStartValue, returnValue;
 
+						// Return an array of values if passed in an array of values, and a single value otherwise.
+						// Either way, the value returned is a simple interpolation of numeric values,
+						// (altered by any specified modifiers, such as modulo, rounding, or a multiplier)
 						if (_Concert.Util.isArray(startValue))
 						{
 							returnValue = [];
@@ -334,6 +340,9 @@ var Concert = (function ()
 				Rotational:
 					function (distanceFraction, startValue, endValue, userProperties)
 					{
+						// Using a center point and offsets, and two values specified by radius and angle,
+						// calculate the coordinates of the point found by interpolating between the start
+						// and end radius and angle values.
 						var centerX = userProperties.center[0], centerY = userProperties.center[1],
 							offsetX = userProperties.offset[0], offsetY = userProperties.offset[1],
 							startRadius = startValue[0], endRadius = endValue[0],
