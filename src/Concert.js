@@ -1273,82 +1273,110 @@ var Concert = (function ()
 				} // end __setIndexingCurrentStep()
 
 
+				// Find the array index of the animation segment (in the timelineSegments array) that is active at the specified time.
 				function __findSequenceSegmentNumberByTime(time)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					var match, currentSegmentNumber, currentSegment, currentSegmentEnd;
 
-					var timelineSegments = thisProtected.timelineSegments;
-					var numSegments = timelineSegments.length;
+					// Get the array of all the blocks of time in the sequence in which animation is actively occurring.
+					var timelineSegments = thisProtected.timelineSegments,
+						numSegments = timelineSegments.length;
 
-					if (numSegments > 0)
+					if (numSegments < 1)
+						match = null; // There are no segments at all, so none of them could possibly be active at the specified time. We will return null.
+					else
 					{
+						// Figure out which segment was last returned by this function. Get that segment and its end time.
+						// Since very often the next segment is either same as the one last needed, or the one right after that,
+						// it speeds things up a lot to start searching there.
 						currentSegmentNumber = thisProtected.lastUsedTimelineSegmentNumber;
 						currentSegment = timelineSegments[currentSegmentNumber];
 						currentSegmentEnd = currentSegment.endTime;
 
+						// Compare the passed-in time to the start time of the last-used segment.
 						if (time >= currentSegment.startTime)
 						{
+							// The specified time is after the beginning of the current segment (as of the last call to this function).
+
 							if (time < currentSegmentEnd)
-								match = { segmentNumber: currentSegmentNumber, timeMatchType: 0 };
+								match = { segmentNumber: currentSegmentNumber, timeMatchType: 0 }; // Specified time is in the present segment. That's the one we'll return.
 							else if (currentSegmentNumber === numSegments - 1)
-								match = { segmentNumber: currentSegmentNumber, timeMatchType: 1 };
+								match = { segmentNumber: currentSegmentNumber, timeMatchType: 1 }; // Specified time is after the present segment, but the present segment is the last one. Return this one, but indicate we're outside its final bounds.
 							else
 							{
+								// Specified time is in some segment following the current one.
+								// Begin a search of the segments ranging from the next one through the last one.
+
 								currentSegmentNumber++;
 								currentSegment = timelineSegments[currentSegmentNumber];
 								currentSegmentEnd = currentSegment.endTime;
 
+								// For an optimized search, recognize that a significant amount of the time the correct segment, if it isn't the last-used one,
+								// will be the very next one. So before we launch into the binary search done by findSequenceNumberInRange, first check
+								// the very next segment to see if it matches the passed-in time.
 								if (time < currentSegmentEnd)
-									match = { segmentNumber: currentSegmentNumber, timeMatchType: 0 };
+									match = { segmentNumber: currentSegmentNumber, timeMatchType: 0 }; // Specified time is within the bounds of that segment. That's the one we'll return.
 								else if (currentSegmentNumber === numSegments - 1)
-									match = { segmentNumber: currentSegmentNumber, timeMatchType: 1 };
+									match = { segmentNumber: currentSegmentNumber, timeMatchType: 1 }; // Specified time is after the bounds of that segment, but there are no more segments after that. Return that one,  but indicate we're outside its final bounds.
 								else
-									match = thisProtected.findSequenceSegmentNumberInRange(time, currentSegmentNumber + 1, numSegments - 1);
+									match = thisProtected.findSequenceSegmentNumberInRange(time, currentSegmentNumber + 1, numSegments - 1); // Jump into a binary search of the segments between here and the end.
 							}
 						}
 						else
 						{
+							// The specified time is before the beginning of the current segment (as of the last call to this function).
+
 							if (currentSegmentNumber === 0)
-								match = { segmentNumber: 0, timeMatchType: -1 };
+								match = { segmentNumber: 0, timeMatchType: -1 }; // The current segment is the first segment of all, and the specified time comes before it, so return this segment, but indicating this time is prior to its actual start.
 							else
-								match = thisProtected.findSequenceSegmentNumberInRange(time, 0, currentSegmentNumber - 1);
+								match = thisProtected.findSequenceSegmentNumberInRange(time, 0, currentSegmentNumber - 1); // Jump into a binary search of the segments between the first one and this one.
 						}
+
+						// Store the last segment found by this function, for use the next time.
 						thisProtected.lastUsedTimelineSegmentNumber = match.segmentNumber;
 					}
-					else
-						match = null;
 
 					return match;
 				} // end __findSequenceSegmentNumberByTime()
 
 
+				// Find the array index of the animation segment (in the timelineSegments array) that is active at the specified time, searching only within the specified range of indices.
 				function __findSequenceSegmentNumberInRange(time, rangeStart, rangeEnd)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					var currentSegmentNumber, currentSegment, currentTimeMatchType;
 
+					// Do an iterative binary search.
 					do
 					{
+						// Find the segment at the middle of the range presently being searched.
 						currentSegmentNumber = Math.floor((rangeStart + rangeEnd) / 2);
 						currentSegment = thisProtected.timelineSegments[currentSegmentNumber];
 
 						if (time < currentSegment.startTime)
 						{
+							// The sought-after segment is before the current one.
+							// Change the end of the search range to the segment just before this one.
 							rangeEnd = currentSegmentNumber - 1;
 							currentTimeMatchType = -1;
 						}
 						else
 						{
+							// The sought-after segment is in or after the current one.
+
 							if (time >= currentSegment.endTime)
 							{
+								// The sought-after segment is after the current one.
+								// Change the beginning of the search range to the segment just after this one.
 								rangeStart = currentSegmentNumber + 1;
 								currentTimeMatchType = 1;
 							}
 							else
 							{
+								// The specified time falls within this segment's start and end times. This is the one we'll return.
 								currentTimeMatchType = 0;
 								break;
 							}
@@ -2233,6 +2261,7 @@ var Concert = (function ()
 				{
 					var thisPublic = this.thisPublic; //, thisProtected = _getProtectedMembers.call(thisPublic); // Can save a few bytes in the minified version since thisProtected isn't used in this function
 
+					// Run this sequence, synchronized to no user object (i.e., synched to the system clock), starting at the beginning with no time offset and stopping at the end.
 					thisPublic.run(_getCombinedParams({ synchronizeTo: null, initialSeek: 0, timeOffset: null, autoStopAtEnd: true }, parameters));
 				} // end __begin()
 
@@ -2285,8 +2314,9 @@ var Concert = (function ()
 				 */
 				function __clone(targetLookupFunction, matchRunningStatus, doInitialSeek)
 				{
-					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic); // Get ahold of this object's basic properties
 
+					// Initialize all the variables needed for this function, and calculate many of the values which will be copied into the new sequence object.
 					var i, j, propertyName, curTargetTransformations, curTargetNumTransformations, newPoller,
 						newRunning = (matchRunningStatus && thisProtected.running), newCurrentTime = thisProtected.currentTime,
 						newSynchronizer = thisProtected.synchronizer, newSpeed = thisProtected.speed,
@@ -2304,41 +2334,62 @@ var Concert = (function ()
 						newSequence = new _Concert.Sequence(), newPublicData = {}, newProtectedData,
 						newSoleControlOptimizationDuringRun = thisProtected.soleControlOptimizationDuringRun;
 
+					// Iterate through all the target sequences of this sequence, for each one creating a new one that is identical
+					// except for the target object.
 					for (i = 0; i < numTargetSequences; i++)
 					{
+						// Get the current target sequence. Look up the new animation target, using the target lookup function
+						// passed into this function. Call the target sequence's clone() method to create a copy of it
+						// that has a different target.
 						curTargetSequence = targetSequences[i];
 						targetSequenceCloneReturn = curTargetSequence.clone(targetLookupFunction(curTargetSequence.getTarget()));
 
+						// The return value of the clone() method called above is an object with two properties:
+						//   targetSequence: the new target sequence clone that was created
+						//   transformations: an array of all the transformations that were created in that clone
+						// Get ahold of those things. For each new transformation, add it to an array containing all the
+						// new transformations being added for all the target sequences in the cloned sequence.
 						newTargetSequences[i] = targetSequenceCloneReturn.targetSequence;
-
 						curTargetTransformations = targetSequenceCloneReturn.transformations;
 						for (j = 0, curTargetNumTransformations = curTargetTransformations.length; j < curTargetNumTransformations; j++)
 						{
 							curNewTransformation = curTargetTransformations[j];
 							allNewTransformations[newTransformationsAdded] = curNewTransformation;
 							newTransformationsAdded++;
+							
+							// If this new transformation uses value generators, add it to the array of all new transformations that use those, also.
+							// That list will need to be part of the internal data structure of the new clone sequence.
 							if (curNewTransformation.hasDynamicValues())
 							{
 								newDynamicValueTransformations[newDynamicValueTransformationsAdded] = curNewTransformation;
 								newDynamicValueTransformationsAdded++;
 							}
-						}
-					}
+						} // end for loop iterating over all target transformations of the current target sequence
+					} // end for loop iterating over all target sequences
 
+					// The timelineSegments array stores all the blocks of time (start and end times) in which animation is occurring during the sequence.
+					// This is used for indexing and quickly seeking to any time.
+					// Create a duplicate of this array for use in the new (cloned) sequence.
 					for (i = 0; i < numTimelineSegments; i++)
 					{
 						curTimelineSegment = timelineSegments[i];
 						newTimelineSegments[i] = new _Concert.TimelineSegment(curTimelineSegment.startTime, curTimelineSegment.endTime);
 					}
 
+					// Grab an array of any and all extra properties belonging to this sequence object, to apply also to the new one.
 					for (propertyName in defaults)
 					{
 						if (defaults.hasOwnProperty(propertyName))
 							newDefaults[propertyName] = defaults[propertyName];
 					}
 
+					// The newRunning variable has been calculated above to true or false based on whether the new sequence will be created
+					// in an already-running state. (It is possible to clone a running sequence and match its running status.)
+					// If creating an already-running sequence, assign it a poller matching the present one; otherwise it gets no poller (null).
 					newPoller = newRunning ? (newPoller = (newPollingInterval < 1) ? (new _Concert.Pollers.Auto()) : (new _Concert.Pollers.FixedInterval(newPollingInterval))) : null;
 
+					// Set up an object containing all the protected data that will belong to the new sequence object,
+					// as calculated in above steps or as copied from existing data members of this sequence object.
 					newProtectedData =
 						{
 							targetSequences: newTargetSequences,
@@ -2374,11 +2425,14 @@ var Concert = (function ()
 							soleControlOptimizationDuringRun: newSoleControlOptimizationDuringRun
 						};
 
+					// Call a utility function to fill in values for all the new sequence object's data members.
 					_loadObjectData.call(newSequence, newPublicData, newProtectedData);
 
+					// If the caller specified immediately seeking the new sequence to the same point as the one being cloned, call its seek() method.
 					if (doInitialSeek)
 						newSequence.seek(newCurrentTime, newSoleControlOptimizationDuringRun);
 
+					// If the caller specified immediately running the new sequence, start its poller running and seeking the new sequence on every poller tick.
 					if (newRunning)
 						newPoller.run(function () { newSequence.seek(newInitialSyncSourcePoint + newSpeed * (newSynchronizer() - newInitialSyncSourcePoint) + newTimeOffset, newSoleControlOptimizationDuringRun); });
 
@@ -2423,6 +2477,7 @@ var Concert = (function ()
 				{
 					var thisPublic = this.thisPublic; //, thisProtected = _getProtectedMembers.call(thisPublic); // Can save a few bytes in the minified version since thisProtected isn't used in this function
 
+					// Run this sequence, synchronized to the specified object, starting at this sequence's present seek point.
 					thisPublic.run(_getCombinedParams({ synchronizeTo: syncSource, initialSeek: null, timeOffset: null }, parameters));
 				} // end __follow()
 
@@ -2444,9 +2499,14 @@ var Concert = (function ()
 				function __generateValues()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
+					var i;
 
-					var i, dynamicValueTransformations = thisProtected.dynamicValueTransformations, numDynamicValueTransformations = dynamicValueTransformations.length;
+					// Get ahold of the array of all transformations in the sequence that use value generators instead of having
+					// values specified at the time the transformations were added to the sequence.
+					var dynamicValueTransformations = thisProtected.dynamicValueTransformations,
+						numDynamicValueTransformations = dynamicValueTransformations.length;
 
+					// Iterate over all the transformations that use value generators, and for each one, tell it to generate its values.
 					for (i = 0; i < numDynamicValueTransformations; i++)
 						dynamicValueTransformations[i].generateValues(thisPublic);
 				} // end __generateValues();
@@ -2480,6 +2540,7 @@ var Concert = (function ()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
+					// If the sequence isn't yet indexed, run the indexer first, so we can have a known end time to return.
 					if (!(thisProtected.indexed))
 						thisPublic.index(null, false);
 
@@ -2515,9 +2576,16 @@ var Concert = (function ()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
+					// If the sequence isn't yet indexed, run the indexer first, so we can have a known start time to return.
 					if (!(thisProtected.indexed))
 						thisPublic.index(null, false);
 
+					// Sequences have an option called stretchStartTimeToZero, which allows the sequence to act as though its start time is 0
+					// even if the first transformation in the sequence starts at a time greater than 0. This prevents a sequence whose first
+					// animations begin some time into the timeline from auto-stopping or triggering its before-start behavior when being run
+					// from time 0.
+					// So here we return the sequence's start time, unless stretchStartTimeToZero is true, in which case the lesser is returned
+					// of the actual start time and 0.
 					return (thisProtected.stretchStartTimeToZero ? Math.min(thisProtected.sequenceStartTime, 0) : thisProtected.sequenceStartTime);
 				} // end __getStartTime()
 
@@ -2556,23 +2624,34 @@ var Concert = (function ()
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
 					if (thisProtected.indexed && completionCallback)
-						completionCallback(thisPublic);
+						completionCallback(thisPublic); // Indexing is already completed. Just go ahead and call the on-completion callback function.
 					else if (thisProtected.allTransformations.length < 1)
 					{
+						// Indexing is not completed, but there are no transformations to index.
+						// Set the indexed variable to true, indicating indexing is now completed, and call the on-completion callback function.
 						thisProtected.indexed = true;
 						if (completionCallback)
 							completionCallback(thisPublic);
 					}
 					else
 					{
+						// Indexing is not completed. We need to do the indexing now.
+
+						// If a callback function was passed in to run on completion, add it to the array of functions to call
+						// upon indexing completion (this is done because it is possible this function was called while indexing was
+						// already in progress with a callback function waiting for its completion, meaning now there is more than one
+						// function needing to be called at index completion time.)
 						if (completionCallback)
 							thisProtected.indexCompletionCallbacks.push(completionCallback);
 
+						// If indexing is already in progress, cancel it, and reset all the internal variables tracking indexing status.
 						if (!thisProtected.indexingInProgress)
 							thisProtected.resetIndexing();
 
+						// Record internally whether the indexing will proceed synchronously or asynchronously.
 						thisProtected.indexingProcessData.isAsynchronous = isAsynchronous ? true : false;
 
+						// Start the sequence indexing process.
 						thisProtected.runIndexing();
 					}
 				} // end __index()
@@ -2609,7 +2688,13 @@ var Concert = (function ()
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
-					var i, curTargetSequence, targetSequences = thisProtected.targetSequences, numTargetSequences = targetSequences.length;
+					// Get the array of all target sequences (that is, an array of all the transformation sequences organized by the objects they target).
+					var targetSequences = thisProtected.targetSequences, numTargetSequences = targetSequences.length;
+
+					// Iterate over all the target sequences. For each one, tell it to retarget all its transformations to whatever target object
+					// is returned by calling the target lookup function that was passed in, passing it the current target to use in looking up
+					// what the corresponding new target should be.
+					var i, curTargetSequence;
 					for (i = 0; i < numTargetSequences; i++)
 					{
 						curTargetSequence = targetSequences[i];
@@ -2802,19 +2887,26 @@ var Concert = (function ()
 					var synchronizeTo, speed, timeOffset, initialSeek, pollingInterval,
 						synchronizer, initialSyncSourcePoint, soleControlOptimizationDuringRun;
 
+					// Need to halt before re-running with the new parameters.
 					if (thisProtected.running)
 						thisPublic.stop();
 
+					// Sequence needs to be indexed before it can run.
 					if (!(thisProtected.indexed))
 						thisPublic.index(null, false);
 
+					// If the parameters passed in specify generating all the start and end values now, do so.
+					// Otherwise, we assume they have already been generated at a time chosen by the user.
 					if (_getParamValue(parameters, "generateValues", true))
 						thisPublic.generateValues();
 
+					// Determine if the caller specified an initial seek point. If so, jump to it.
 					initialSeek = _getParamValue(parameters, "initialSeek", null);
 					if (initialSeek !== null)
 						thisPublic.seek(initialSeek, false);
 
+					// Determine a number of run-time parameters needed. If they were specified in the passed-in parameters,
+					// use the specified values. Otherwise, use the values already stored in the sequence.
 					thisProtected.speed = speed = _getParamValue(parameters, "speed", thisProtected.speed);
 					thisProtected.after = _getParamValue(parameters, "after", thisProtected.after);
 					thisProtected.before = _getParamValue(parameters, "before", thisProtected.before);
@@ -2823,9 +2915,17 @@ var Concert = (function ()
 					thisProtected.stretchStartTimeToZero = _getParamValue(parameters, "stretchStartTimeToZero", thisProtected.stretchStartTimeToZero);
 					thisProtected.soleControlOptimizationDuringRun = soleControlOptimizationDuringRun = _getParamValue(parameters, "useSoleControlOptimization", thisProtected.soleControlOptimizationDuringRun);
 
+					// Set up a poller. If a polling interval was specified (or, more precisely, if one of 1ms or greater was specified),
+					// create a fixed-interval poller. Otherwise, create an automatic one.
 					thisProtected.pollingInterval = pollingInterval = _getParamValue(parameters, "pollingInterval", thisProtected.pollingInterval);
 					thisProtected.poller = (pollingInterval < 1) ? (new _Concert.Pollers.Auto()) : (new _Concert.Pollers.FixedInterval(pollingInterval));
 
+					// Set the synchronization function for this run.
+					// If the synchronization value passed in (or, if none, the one belonging to the sequence) is null,
+					// create a synch function that synchronizes to the system clock, starting with the present time.
+					// If the synchronization value passed in is a function, use that as the synchronization function.
+					// Otherwise, create a synch function that attaches to the currentTime property of the thing passed in
+					// (which is presumed to be something like an HTML audio or video element, having a currentTime property whose value is measured in seconds.)
 					synchronizeTo = _getParamValue(parameters, "synchronizeTo", thisProtected.synchronizeTo);
 					if (synchronizeTo === null)
 						synchronizer = function () { return getNowTime(); };
@@ -2833,28 +2933,36 @@ var Concert = (function ()
 						synchronizer = ((typeof synchronizeTo) === "function") ? synchronizeTo : function () { return 1000 * synchronizeTo.currentTime; };
 					thisProtected.synchronizer = synchronizer;
 
+					// Record the initial point we are synchronizing to. Adjust it by the time offset, if one was specified.
 					thisProtected.initialSyncSourcePoint = initialSyncSourcePoint = synchronizer();
 					timeOffset = _getParamValue(parameters, "timeOffset", null);
 					if (timeOffset === null)
 						timeOffset = (thisProtected.unadjustedTime !== null) ? (thisProtected.unadjustedTime - initialSyncSourcePoint) : (thisPublic.getStartTime() - initialSyncSourcePoint);
 					thisProtected.timeOffset = timeOffset;
 
+					// Mark the sequence as running, and set the poller going with a callback function to do a seek on every poller tick.
 					thisProtected.running = true;
-          thisProtected.poller.run(function () { thisPublic.seek(initialSyncSourcePoint + speed * (synchronizer() - initialSyncSourcePoint) + timeOffset, soleControlOptimizationDuringRun); });
-        } // end __run()
+          			thisProtected.poller.run(function () { thisPublic.seek(initialSyncSourcePoint + speed * (synchronizer() - initialSyncSourcePoint) + timeOffset, soleControlOptimizationDuringRun); });
+        		} // end __run()
 
 
 				/**
-				 * Seeks to the specified point along the sequence timeline. If the <code>time</code> value is less than the sequence's start time or greater than the sequence's end time,
-				 * the resulting behavior will be defined by the sequence's "before" or "after" repeating behavior settings, as controlled by the [setBefore]{@link Concert.Sequence#setBefore} and
-				 * [setAfter]{@link Concert.Sequence#setAfter} methods or by the options passed into the [run]{@link Concert.Sequence#run}, [begin]{@link Concert.Sequence#begin},
-				 * [follow]{@link Concert.Sequence#follow}, or [syncTo]{@link Concert.Sequence#syncTo} methods. The default behavior, if none has explicitly been specified, is
-				 * [Concert.Repeating.None]{@link Concert.Repeating}, which seeks to the sequence start time for any <code>time</code> value less than or equal to the sequence's
-				 * start time, and to the end time for any <code>time</code> value greater than or equal to the sequence's end time. The <code>useSoleControlOptimization</code> option,
-				 * when set to true, enhances run-time performance, but should only be used if nothing other than the Concert sequence will be modifying any target object properties that are modified
-				 * by transformations in the sequence. Essentially it skips updating target object properties any time a newly calculated value is the same as the last one applied. This speeds up
-				 * seek times, especially when doing relatively slow things such as DOM updates. However, if a target object property's value has been changed by something else since the last time
-				 * the sequence object touched it, this optimization can result in that value not being updated by the seek() function.
+				 * Seeks to the specified point along the sequence timeline.
+				 * If the <code>time</code> value is less than the sequence's start time or greater than the sequence's end time,
+				 * the resulting behavior will be defined by the sequence's "before" or "after" repeating behavior settings,
+				 * as controlled by the [setBefore]{@link Concert.Sequence#setBefore} and [setAfter]{@link Concert.Sequence#setAfter} methods
+				 * or by the options passed into the [run]{@link Concert.Sequence#run}, [begin]{@link Concert.Sequence#begin},
+				 * [follow]{@link Concert.Sequence#follow}, or [syncTo]{@link Concert.Sequence#syncTo} methods.
+				 * The default behavior, if none has explicitly been specified, is [Concert.Repeating.None]{@link Concert.Repeating},
+				 * which seeks to the sequence start time for any <code>time</code> value less than or equal to the sequence's
+				 * start time, and to the end time for any <code>time</code> value greater than or equal to the sequence's end time.
+				 * The <code>useSoleControlOptimization</code> option, when set to true, enhances run-time performance,
+				 * but should only be used if nothing other than the Concert sequence will be modifying any target object properties
+				 * that are modified by transformations in the sequence. Essentially it skips updating target object properties
+				 * any time a newly calculated value is the same as the last one applied. This speeds up seek times,
+				 * especially when doing relatively slow things such as DOM updates. However, if a target object property's value
+				 * has been changed by something else since the last time the sequence object touched it, this optimization
+				 * can result in that value not being updated by the seek() function.
 				 * @name seek
 				 * @memberof Concert.Sequence#
 				 * @public
@@ -2872,14 +2980,24 @@ var Concert = (function ()
 					    targetSequences = thisProtected.targetSequences,
 					    numTargetSequences = targetSequences.length;
 
+					// Before seeking anywhere, the sequence needs to be indexed.
 					if (!(thisProtected.indexed))
 						thisPublic.index(null, false);
 
+					// Get / calculate the overall start and end times for the sequence.
 					sequenceStart = thisPublic.getStartTime();
 					sequenceEnd = thisProtected.sequenceEndTime;
 
+					// Set a present frame number.
 					frameID = thisProtected.nextFrameID++;
 
+					// The time we are seeking to could be before the beginning of the sequence or after its end.
+					// Sequences can have defined before-the-beginning and after-the-end behavior (such as looping, or bouncing, etc.),
+					// so if we are before the beginning or after the end, we here look up what the "before" or "after" behavior definition
+					// mandates based on how far past the beginning or end we are, whether we've hit the final end (or beginning),
+					// and what the calculated equivalent time point is in the sequence to which we should seek. (For instance,
+					// if looping twice, and we've gone just past the end in real time, the calculated seek point should be just past
+					// the beginning, since we're on the first loop back to the beginning.)
 					if (time < sequenceStart)
 					{
 						adjustedTimeContainer = thisProtected.before(sequenceStart, sequenceEnd, time);
@@ -2893,15 +3011,23 @@ var Concert = (function ()
 						hitFinalBoundary = adjustedTimeContainer.hitFinalBoundary;
 					}
 					else
-						adjustedTime = time;
+						adjustedTime = time; // Not past the beginning or end, so the time to seek to is the real present time.
 
+					// Record the seek-to time and the real time.
 					thisProtected.currentTime = adjustedTime;
 					thisProtected.unadjustedTime = time;
 
+					// Find the indexed sequence segment that this moment in time fits within (if there is one), and seek to the right spot in it.
 					segmentMatch = thisProtected.findSequenceSegmentNumberByTime(adjustedTime);
 					if (segmentMatch !== null)
 					{
 						segmentNumber = segmentMatch.segmentNumber;
+
+						// We track the last segment number to which we have done a seek.
+						// This allows an optimization of not actually forcing updates when values have not changed.
+						// If the present segment is not the same as the last one to which we have done a seek,
+						// then force all updates when doing this seek. Otherwise, forcing updates of all targets occurs,
+						// or does not occur, based on whether the useSoleControlOptimization option is set.
 						if (segmentNumber !== thisProtected.lastSegmentNumber)
 						{
 							forceApplication = true;
@@ -2909,11 +3035,19 @@ var Concert = (function ()
 						}
 						else
 							forceApplication = (typeof useSoleControlOptimization === "undefined") ? true : !useSoleControlOptimization;
+						
+						// For each target object, tell its corresponding target sequence to do whatever needs to happen to that target
+						// to seek its animation to the correct time.
 						for (i = 0; i < numTargetSequences; i++)
 							targetSequences[i].seek(segmentNumber, adjustedTime, frameID, forceApplication);
+						
+						// Return the value indicating whether we're before the beginning, in the middle of, or at/past the end of the 
 						returnVal = segmentMatch.timeMatchType;
 					}
 
+					// If the seek point is outside the time boundaries of the sequence, and the sequence is running,
+					// and the sequence is set to auto-stop, this is when we should stop, and invoke the callback function
+					// stored (if the user specified one) for when auto-stop occurs.
 					if (hitFinalBoundary && thisProtected.running && thisProtected.autoStopAtEnd)
 					{
 						thisPublic.stop();
@@ -3030,7 +3164,7 @@ var Concert = (function ()
 				 * Common values would include "px", "%", "em", and so on.
 				 * </p>
 				 */
-        function __setDefaults(newDefaults)
+				function __setDefaults(newDefaults)
 				{
 					var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
