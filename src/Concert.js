@@ -453,17 +453,32 @@ var Concert = (function ()
 				Bounce:
 					function (bounceCount)
 					{
+						// Interprete no bounce count at all as infinite bouncing.
 						var infinite = ((typeof bounceCount) === "undefined" || bounceCount === null);
 
+						// Generate a function that calculates the appropriate seek time within the sequence,
+						// when passed a raw time value which is outside the sequence, to result in
+						// the sequence bouncing (running back and forth) the specified number of times.
 						function bounceFunction(sequenceStart, sequenceEnd, unadjustedTime)
 						{
-							var distanceOut, bounceNum, curBounceOffset, duration = sequenceEnd - sequenceStart;
+							var distanceOut, bounceNum, curBounceOffset,
+								duration = sequenceEnd - sequenceStart; // length of the sequence
 
 							if (unadjustedTime < sequenceStart)
 							{
+								// The raw time value is before the beginning of the sequence.
+
+								// Calculate how far before the beginning it is, and figure out
+								// how many sequence durations outside the sequence timeline the present time is
+								// (that is, how many bounces away from the beginning we are).
 								distanceOut = sequenceStart - unadjustedTime;
 								bounceNum = Math.floor(distanceOut / duration) + 1;
 
+								// Determine whether (based on the number of bounces being even or odd)
+								// the sequence would be running forward or backward, and calculate accordingly
+								// the equivalent seek time inside the sequence to get to this spot in the bounce.
+								// If we're outside the specified number of bounces, the equivalent seek time
+								// is the very beginning or end of the sequence.
 								if (infinite || bounceNum <= bounceCount)
 								{
 									curBounceOffset = distanceOut % duration;
@@ -474,9 +489,19 @@ var Concert = (function ()
 							}
 							else
 							{
+								// The raw time value is after the end of the sequence.
+
+								// Calculate how far after the end it is, and figure out
+								// how many sequence durations outside the sequence timeline the present time is
+								// (that is, how many bounces away from the end we are).
 								distanceOut = unadjustedTime - sequenceEnd;
 								bounceNum = Math.floor(distanceOut / duration) + 1;
 
+								// Determine whether (based on the number of bounces being even or odd)
+								// the sequence would be running forward or backward, and calculate accordingly
+								// the equivalent seek time inside the sequence to get to this spot in the bounce.
+								// If we're outside the specified number of bounces, the equivalent seek time
+								// is the very beginning or end of the sequence.
 								if (infinite || bounceNum <= bounceCount)
 								{
 									curBounceOffset = distanceOut % duration;
@@ -493,16 +518,26 @@ var Concert = (function ()
 				Loop:
 					function (loopbackCount)
 					{
+						// Interprete no loop count at all as infinite looping.
 						var infinite = ((typeof loopbackCount) === "undefined" || loopbackCount === null);
 
+						// Generate a function that calculates the appropriate seek time within the sequence,
+						// when passed a raw time value which is outside the sequence, to result in
+						// the sequence looping (running in a forward direction again and again) the specified number of times.
 						function loopFunction(sequenceStart, sequenceEnd, unadjustedTime)
 						{
-							var distanceOut, duration = sequenceEnd - sequenceStart;
+							var distanceOut,
+								duration = sequenceEnd - sequenceStart; // length of the sequence
 
 							if (unadjustedTime < sequenceStart)
 							{
+								// The raw time value is before the beginning of the sequence.
+								// Calculate how far outside the sequence we are.
 								distanceOut = sequenceStart - unadjustedTime;
 
+								// If we are inside the specified number of loopbacks, calculate how far into the present
+								// loop we are, and return that as the adjusted time. Otherwise, the adjusted time is
+								// the beginning of the sequence.
 								if (infinite || (distanceOut / duration) <= loopbackCount)
 									return { adjustedTime: (sequenceEnd - (distanceOut % duration)), hitFinalBoundary: false };
 								else
@@ -510,8 +545,13 @@ var Concert = (function ()
 							}
 							else
 							{
+								// The raw time value is after the end of the sequence.
+								// Calculate how far outside the sequence we are.
 								distanceOut = unadjustedTime - sequenceEnd;
 
+								// If we are inside the specified number of loopbacks, calculate how far into the present
+								// loop we are, and return that as the adjusted time. Otherwise, the adjusted time is
+								// the end of the sequence.
 								if (infinite || (distanceOut / duration) <= loopbackCount)
 									return { adjustedTime: (sequenceStart + (distanceOut % duration)), hitFinalBoundary: false };
 								else
@@ -525,6 +565,9 @@ var Concert = (function ()
 				None:
 					function (sequenceStart, sequenceEnd, unadjustedTime)
 					{
+						// When reaching the end, just stop.
+						// Any seek time before the beginning of the sequence gets adjusted to the start time of the sequence.
+						// Any seek time after the end of the sequence gets adjusted to the end time of the sequence.
 						return ((unadjustedTime < sequenceStart) ? { adjustedTime: sequenceStart, hitFinalBoundary: true } : { adjustedTime: sequenceEnd, hitFinalBoundary: true });
 					}
 			},
@@ -537,6 +580,9 @@ var Concert = (function ()
 					{
 						function AutoConstructor()
 						{
+							// The Auto constructor tries to use window.requestAnimationFrame().
+							// However, if the current browser does not support that, instead of creating an auto
+							// poller, create and return a fixed interval poller, using the default polling interval.
 							if (!window.cancelAnimationFrame)
 								return new _Concert.Pollers.FixedInterval(_Concert.Definitions.FallbackAutoPollerInterval);
 
@@ -559,14 +605,22 @@ var Concert = (function ()
 
 							var doNextFrame;
 
+							// If there is a stored frame request ID from a previous call to requestAnimationFrame(),
+							// this poller is already running, so do nothing. If there isn't one, however, go ahead
+							// and initiate the running of this poller.
 							if (thisProtected.frameRequestID === null)
 							{
+								// Create a function which, when requestAnimationFrame() returns,
+								// 1) immediately asks for another frame; and
+								// 2) invokes the callback function that this poller exists to call (which is ordinarily a function that seeks a sequence).
 								doNextFrame =
 									function ()
 									{
 										thisProtected.frameRequestID = window.requestAnimationFrame(doNextFrame);
 										callbackFunction();
 									};
+								
+								// Go ahead and call the function the first time to kick everything off.
 								doNextFrame();
 							}
 						} // end __run()
@@ -576,8 +630,11 @@ var Concert = (function ()
 						{
 							var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
+							// If there is a stored ID that came from a call to requestAnimationFrame, that means
+							// the poller is running.
 							if (thisProtected.frameRequestID !== null)
 							{
+								// Cancel the next frame, and erase the previously stored requestAnimationFrame() ID.
 								window.cancelAnimationFrame(thisProtected.frameRequestID);
 								thisProtected.frameRequestID = null;
 							}
@@ -610,6 +667,7 @@ var Concert = (function ()
 						{
 							var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
+							// Running a fixed-interval poller is simple. Just set an interval on which to run the callback function.
 							if (thisProtected.intervalID === null)
 								thisProtected.intervalID = setInterval(callbackFunction, thisProtected.interval);
 						} // end __run()
@@ -619,6 +677,8 @@ var Concert = (function ()
 						{
 							var thisPublic = this.thisPublic, thisProtected = _getProtectedMembers.call(thisPublic);
 
+							// If this poller is running (that is, we've previously called window.setInterval() and stored the ID it returned),
+							// then clear that interval, and drop the stored interval ID that indicates the poller is presently running.
 							if (thisProtected.intervalID !== null)
 							{
 								clearInterval(thisProtected.intervalID);
