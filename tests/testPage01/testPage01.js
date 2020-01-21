@@ -3,7 +3,8 @@
 	"use strict";
 
 	window.sequence = new Concert.Sequence();
-	let littleBox = document.getElementById("LittleBox"), bigBox = document.getElementById("BigBox");
+	let littleBox = document.getElementById("LittleBox"), bigBox = document.getElementById("BigBox"),
+		theRect = document.getElementById("TheRect");
 
 	sequence.addTransformations(
 		[
@@ -24,7 +25,6 @@
 				feature: "background-color",
 				applicator: Concert.Applicators.Style,
 				calculator: Concert.Calculators.Color,
-				easingFunction: Concert.EasingFunctions.ConstantRate,
 				keyframes: { times: [0, 4000], values: ["#ff0000", "#ff000000"] }
 			}
 		]);
