@@ -4,7 +4,8 @@
 
 	window.sequence = new Concert.Sequence();
 	let littleBox = document.getElementById("LittleBox"), bigBox = document.getElementById("BigBox"),
-		theRect = document.getElementById("TheRect");
+		theRect = document.getElementById("TheRect"),
+		centerBox = document.getElementById("CenterBox"), orbitingBox = document.getElementById("OrbitingBox");
 
 	sequence.addTransformations(
 		[
@@ -25,10 +26,83 @@
 				feature: "background-color",
 				applicator: Concert.Applicators.Style,
 				calculator: Concert.Calculators.Color,
-				keyframes: { times: [0, 4000], values: ["#ff0000", "#ff000000"] }
+				keyframes: { times: [0, 4000], values: ["hsl(63,100%,50%)", "hsl(357,100%,50%)"] }
+			},
+			{
+				target: littleBox,
+				feature: ["left", "top"],
+				unit: "px",
+				applicator: Concert.Applicators.Style,
+				calculator: Concert.Calculators.Linear,
+				keyframes:
+					{
+						times: [2000, 4000],
+						values: [[415, 190], [200, 400]]
+					}
 			}
 		]);
-/*
+	sequence.addTransformations(
+		{
+			target: bigBox,
+			feature: "top",
+			unit: "px",
+			applicator: Concert.Applicators.Style,
+			calculator: Concert.Calculators.Linear,
+			calculatorModifiers: {},
+			keyframes:
+				{
+					times: [0, 2000],
+					values: [200, 400]
+				}
+		});
+	sequence.addTransformations(
+		{
+			target: bigBox,
+			feature: "top",
+			unit: "px",
+			applicator: Concert.Applicators.Style,
+			calculator: Concert.Calculators.Linear,
+			calculatorModifiers: { multiply: 50, modulo: 250, round: 50, offset: 400 },
+			segments: [{ t0: 2000, t1: 3000, v0: 0, v1: 10, calculatorModifiers: { multiply: 50, round: 50, offset: 400 } }]
+		});
+	
+	sequence.addTransformations(
+		[
+			{
+				target: centerBox,
+				feature: "left",
+				unit: "px",
+				applicator: Concert.Applicators.Style,
+				calculator: Concert.Calculators.Linear,
+				keyframes: { times: [0, 4000], values: [0, 395] }
+			},
+			{
+				target: orbitingBox,
+				feature: ["left", "top"],
+				unit: "px",
+				applicator: Concert.Applicators.Style,
+				calculator: Concert.Calculators.Rotational,
+				calculatorModifiers:
+					{
+						centerX: {},
+						centerY: {},
+						radius: { multiply: 2 },
+						angle: { round: Math.PI / 4 },
+						offsetX: {},
+						offsetY: {}
+					},
+				keyframes:
+					{
+						times: [0, 4000],
+						values:
+							[
+								{ centerX: 5, centerY: 400, radius: 30, angle: 0, offsetX: -25, offsetY: -25 },
+								{ centerX: 400, centerY: 400, radius: 30, angle: 4*Math.PI, offsetX: -25, offsetY: -25 }
+							]
+					}
+			}
+		]);
+	/*
 	sequence.addTransformations(
 		{
 			target: littleBox,

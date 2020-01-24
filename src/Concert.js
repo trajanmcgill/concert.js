@@ -45,22 +45,39 @@ var Concert = (function ()
 		// Some utility functions for use throughout.
 		Util:
 			{
-				applyUserPropertyCalculations: function(originalValue, userProperties)
+				applyCalculatorModifiers: function(originalValue, calculatorModifiers)
 				{
-					var multiplicationFactor = userProperties.multiply, doMultiply = (typeof multiplicationFactor !== "undefined"),
-						moduloFactor = userProperties.modulo, doModulo = (typeof moduloFactor !== "undefined"),
-						roundFactor = userProperties.round, doRound = (typeof roundFactor !== "undefined"),
+					var doMultiply, multiplicationFactor, doModulo, moduloFactor, doRound, roundFactor, addOffset, offset,
 						returnValue = originalValue;
 
-					if (doMultiply)
-						returnValue *= multiplicationFactor;
-					if (doModulo)
-						returnValue %= moduloFactor;
-					if (doRound)
-						returnValue = roundFactor * Math.round(returnValue / roundFactor);
+					// Only bother taking the time to check for individual modifiers and do the corresponding calculations
+					// if a calculatorModifiers object exists in the first place. If not, we'll just return the unmodified original value.
+					if (typeof calculatorModifiers === "object")
+					{
+						multiplicationFactor = calculatorModifiers.multiply;
+						doMultiply = (typeof multiplicationFactor === "number" || multiplicationFactor instanceof Number);
+
+						moduloFactor = calculatorModifiers.modulo;
+						doModulo = (typeof moduloFactor === "number" || moduloFactor instanceof Number);
+
+						roundFactor = calculatorModifiers.round;
+						doRound = (typeof roundFactor === "number" || roundFactor instanceof Number);
+
+						offset = calculatorModifiers.offset;
+						addOffset = (typeof offset === "number" || offset instanceof Number);
+
+						if (doMultiply)
+							returnValue *= multiplicationFactor;
+						if (doModulo)
+							returnValue %= moduloFactor;
+						if (doRound)
+							returnValue = roundFactor * Math.round(returnValue / roundFactor);
+						if (addOffset)
+							returnValue += offset;
+					}
 
 					return returnValue;
-				}, // end applyUserPropertyCalculations()
+				}, // end applyCalculatorModifiers()
 
 
 				arraysShallowlyEqual: function (array1, array2)
@@ -295,63 +312,77 @@ var Concert = (function ()
 					}, // end Color Calculator function
 
 				Discrete:
-					function (distanceFraction, startValue, endValue, userProperties)
+					function (distanceFraction, startValue, endValue, calculatorModifiers)
 					{
 						var i, returnValue, valueLength;
 
 						// Return an array of values if passed in an array of values, and a single value otherwise.
 						// Either way, the value returned is either the start value or the end value,
-						// (altered by any specified modifiers, such as modulo, rounding, or a multiplier)
+						// (altered by any specified modifiers, such as modulo, rounding, a multiplier, or an offset)
 						if (_Concert.Util.isArray(startValue))
 						{
 							returnValue = [];
 							for (i = 0, valueLength = startValue.length; i < valueLength; i++)
-								returnValue.push(_Concert.Util.applyUserPropertyCalculations(((distanceFraction < 1) ? startValue[i] : endValue[i]), userProperties));
+								returnValue.push(_Concert.Util.applyCalculatorModifiers(((distanceFraction < 1) ? startValue[i] : endValue[i]), calculatorModifiers));
 						}
 						else
-							returnValue = _Concert.Util.applyUserPropertyCalculations(((distanceFraction < 1) ? startValue : endValue), userProperties);
+							returnValue = _Concert.Util.applyCalculatorModifiers(((distanceFraction < 1) ? startValue : endValue), calculatorModifiers);
 
 						return returnValue;
 					}, // end Discrete Calculator function
 
 				Linear:
-					function (distanceFraction, startValue, endValue, userProperties)
+					function (distanceFraction, startValue, endValue, calculatorModifiers)
 					{
 						var i, valueLength, curStartValue, returnValue;
 
 						// Return an array of values if passed in an array of values, and a single value otherwise.
 						// Either way, the value returned is a simple interpolation of numeric values,
-						// (altered by any specified modifiers, such as modulo, rounding, or a multiplier)
+						// (altered by any specified modifiers, such as modulo, rounding, a multiplier, or an offset)
 						if (_Concert.Util.isArray(startValue))
 						{
 							returnValue = [];
 							for (i = 0, valueLength = startValue.length; i < valueLength; i++)
 							{
 								curStartValue = startValue[i];
-								returnValue.push(_Concert.Util.applyUserPropertyCalculations(curStartValue + distanceFraction * (endValue[i] - curStartValue), userProperties));
+								returnValue.push(_Concert.Util.applyCalculatorModifiers(curStartValue + distanceFraction * (endValue[i] - curStartValue), calculatorModifiers));
 							}
 						}
 						else
-							returnValue = _Concert.Util.applyUserPropertyCalculations(startValue + distanceFraction * (endValue - startValue), userProperties);
+							returnValue = _Concert.Util.applyCalculatorModifiers(startValue + distanceFraction * (endValue - startValue), calculatorModifiers);
 
 						return returnValue;
 					}, // end Linear Calculator function
 
 				Rotational:
-					function (distanceFraction, startValue, endValue, userProperties)
+					function (distanceFraction, startValue, endValue, calculatorModifiers)
 					{
-						// Using a center point and offsets, and two values specified by radius and angle,
-						// calculate the coordinates of the point found by interpolating between the start
-						// and end radius and angle values.
-						var centerX = userProperties.center[0], centerY = userProperties.center[1],
-							offsetX = userProperties.offset[0], offsetY = userProperties.offset[1],
-							startRadius = startValue[0], endRadius = endValue[0],
-							startAngle = startValue[1], endAngle = endValue[1],
-							newRadius = startRadius + distanceFraction * (endRadius - startRadius),
-							newAngle = startAngle + distanceFraction * (endAngle - startAngle),
-							resultX = centerX + newRadius * Math.cos(newAngle) + offsetX,
-							resultY = centerY + newRadius * Math.sin(newAngle) + offsetY;
-						return [_Concert.Util.applyUserPropertyCalculations(resultX, userProperties), _Concert.Util.applyUserPropertyCalculations(resultY, userProperties)];
+						// Calculate the coordinates of the point found by interpolating between the start and end values specified
+						// for center coordinates, radius, angle, and x- and y-offset.
+						// startValue and endValue should each look like this:
+						//   { centerX: xCoordinate, centerY: yCoordinate, radius: r, angle: a, offsetX: xCoordinate, offsetY: yCoordinate }
+						// calculatorModifiers for rotational transformations are expected to look like this:
+						//   { centerX: xModifier, centerY: yModifier, radius: rModifier, angle: aModifier, offsetX: xModifier, offsetY: yModifier] }
+						var startCenterX = startValue.centerX, startCenterY = startValue.centerY,
+							startRadius = startValue.radius, startAngle = startValue.angle,
+							startOffsetX = startValue.offsetX, startOffsetY = startValue.offsetY,
+							endCenterX = endValue.centerX, endCenterY = endValue.centerY,
+							endRadius = endValue.radius, endAngle = endValue.angle,
+							endOffsetX = endValue.offsetX, endOffsetY = endValue.offsetY,
+							calculatedCenterX, calculatedCenterY, calculatedRadius, calculatedAngle, calculatedOffsetX, calculatedOffsetY,
+							returnX, returnY;
+						
+						calculatedCenterX = _Concert.Calculators.Linear(distanceFraction, startCenterX, endCenterX, calculatorModifiers.centerX);
+						calculatedCenterY = _Concert.Calculators.Linear(distanceFraction, startCenterY, endCenterY, calculatorModifiers.centerY);
+						calculatedRadius = _Concert.Calculators.Linear(distanceFraction, startRadius, endRadius, calculatorModifiers.radius);
+						calculatedAngle = _Concert.Calculators.Linear(distanceFraction, startAngle, endAngle, calculatorModifiers.angle);
+						calculatedOffsetX = _Concert.Calculators.Linear(distanceFraction, startOffsetX, endOffsetX, calculatorModifiers.offsetX);
+						calculatedOffsetY = _Concert.Calculators.Linear(distanceFraction, startOffsetY, endOffsetY, calculatorModifiers.offsetY);
+
+						returnX = calculatedCenterX + calculatedRadius * Math.cos(calculatedAngle) + calculatedOffsetX;
+						returnY = calculatedCenterY + calculatedRadius * Math.sin(calculatedAngle) + calculatedOffsetY;
+
+						return [returnX, returnY];
 					} // end Rotational Calculator function
 			}, // end Calculator singleton / namespace definition
 
@@ -710,7 +741,10 @@ var Concert = (function ()
 					// Initialize data members
 					for (propertyName in properties) if (Object.prototype.hasOwnProperty.call(properties, propertyName))
 						this[propertyName] = properties[propertyName];
-					this.userProperties = _Concert.Util.coalesceUndefined(this.userProperties, {});
+					if (typeof this.calculatorModifiers !== "object")
+						this.calculatorModifiers = {};
+					if (typeof this.userProperties !== "object")
+						this.userProperties = {};
 					this.lastFrameID = null;
 					this.lastCalculatedValue = null;
 					this.lastAppliedValueContainer =
@@ -786,10 +820,13 @@ var Concert = (function ()
 
 				function __clone(newTarget)
 				{
-					var newTransformation, propertyName, userProperties = this.userProperties, newUserProperties,
+					var newTransformation, propertyName,
+						calculatorModifiers = this.calculatorModifiers, newCalculatorModifiers,
+						userProperties = this.userProperties, newUserProperties,
 						propertiesNotToCopy =
 						{
-							transformationID: true, userProperties: true, target: true, lastAppliedValueContainer: true, lastFrameID: true, lastCalculatedValue: true,
+							transformationID: true, calculatorModifiers: true, userProperties: true, target: true,
+							lastAppliedValueContainer: true, lastFrameID: true, lastCalculatedValue: true,
 							clone: true, generateValues: true, hasDynamicValues: true, retarget: true, seek: true
 						};
 
@@ -806,6 +843,11 @@ var Concert = (function ()
 					newTransformation.lastFrameID = null;
 					newTransformation.lastCalculatedValue = null;
 
+					// The cloned transformation doesn't share a calculatorModifiers object with the original; it gets a new object with the properties copied in.
+					newCalculatorModifiers = newTransformation.calculatorModifiers;
+					for (propertyName in calculatorModifiers) if (Object.prototype.hasOwnProperty.call(calculatorModifiers, propertyName))
+						newCalculatorModifiers[propertyName] = calculatorModifiers[propertyName];
+					// The cloned transformation doesn't share a userProperties object with the original; it gets a new object with the properties copied in.
 					newUserProperties = newTransformation.userProperties;
 					for (propertyName in userProperties) if (Object.prototype.hasOwnProperty.call(userProperties, propertyName))
 						newUserProperties[propertyName] = userProperties[propertyName];
@@ -847,7 +889,7 @@ var Concert = (function ()
 					var newValue =
 						(frameID === this.lastFrameID)
 						? this.lastCalculatedValue
-						: this.calculator(this.easing(this.t0, this.t1, time), this.v0, this.v1, this.userProperties);
+						: this.calculator(this.easing(this.t0, this.t1, time), this.v0, this.v1, this.calculatorModifiers, this.userProperties);
 
 					_applyValue(this.applicator, this.target, this.feature, seekFeature,
 					            { value: newValue, unit: this.unit },
@@ -1185,7 +1227,9 @@ var Concert = (function ()
 							unit: null,
 							applicator: Concert.Applicators.Property,
 							easing: Concert.EasingFunctions.ConstantRate,
-							calculator: Concert.Calculators.Linear
+							calculator: Concert.Calculators.Linear,
+							calculatorModifiers: {},
+							userProperties: null
 						};
 
 					thisProtected.synchronizeTo = null;
@@ -1683,6 +1727,7 @@ var Concert = (function ()
 				 *       [unit: <em>UnitDefinition</em>,] // If absent, uses sequence's default value
 				 *       [applicator: <em>ApplicatorFunction</em>,] // If absent, uses sequence's default value
 				 *       [calculator: <em>CalculatorFunction</em>,] // If absent, uses sequence's default value
+				 *       [calculatorModifiers: <em>CalculatorModifiersObject</em>,]
 				 *       [easing: <em>EasingFunction</em>,] // If absent, uses sequence's default value
 				 *       [userProperties: <em>UserPropertiesObject</em>,]
 				 *
@@ -1750,6 +1795,53 @@ var Concert = (function ()
 				 *   <code><em>function calculatorFunction(distanceFraction, startValue, endValue, addlProperties)</em></code>
 				 * See below examples for a sample of a custom calculator.
 				 * </p>
+				 * 
+				 * <p class="ExplanationParagraph">
+				 * <code>
+				 * 	<strong><em>CalculatorModifiersObject</em></strong>
+				 * 	= Object used to apply additional factors used to modify calculations during the animation of these transformations.
+				 * </code>
+				 * Several such factors can be specified. For non-rotational transformations, takes the form:
+				 * <pre>    {
+				 *         [multiply: <em>multiplicationFactorValue</em>,]
+				 *         [modulo: <em>moduloFactorValue</em>,]
+				 *         [roundFactor: <em>roundFactorValue</em>,]
+				 *         [offset: <em>offsetValue</em>,]
+				 *     }</pre>
+				 * These options are modifiers to the animation calculation engine, applied in the following ways and in the following order:
+				 * <ul>
+				 * 	<li>
+				 * 		<code><strong><em>multiplicationFactorValue</em></strong></code>: While animating the target object,
+				 * 		the value to be applied to the target feature is multiplied by this number.
+				 * 	</li>
+				 * 	<li>
+				 *		<code><strong><em>moduloFactorValue</em></strong></code>: While animating the target object,
+				 *		the value to be applied to the target feature is divided by this number, and
+				 *		the remainder is actually what is applied.
+				 *	</li>
+				 *	<li>
+				 *		<code><strong><em>roundFactorValue</em></strong></code>: While animating the target property,
+				 *		the value to be applied is rounded to the nearest multiple of this number.
+				 *	</li>
+				 *	<li>
+				 *		<code><strong><em>offsetValue</em></strong></code>: While animating the target property,
+				 *		this value is added to the value to be applied to the target feature.
+				 *	</li>
+				 * </ul>
+				 * When the <code>Rotational</code> calculator (see [Concert.Calculators]{@link Concert.Calculators})
+				 * is being used (i.e., when this transformation is animating rotational motion),
+				 * the object should be of the form:
+				 * <pre>    {
+				 *         center: [<em>CalculatorModifiersObject</em>, <em>CalculatorModifiersObject</em>], // Modifiers for the x coordinate and y coordinate, respectively.
+				 *         radius:<em>CalculatorModifiersObject</em>,
+				 *         angle: <em>CalculatorModifiersObject</em>,
+				 *         offset: [<em>CalculatorModifiersObject</em>, <em>CalculatorModifiersObject</em>] // Modifiers for the x coordinate and y coordinate, respectively.
+				 *     }</pre>
+				 * This allows a separate set of modifiers to be applied to each of the values that can be animated in a
+				 * rotational transformation. For instance, the angle could be rounded to the nearest multiple of a number.
+				 * A very common use case would be specifying an offset so that the center of an element is what is rotated
+				 * around the specified center point rather than its upper left corner.
+				 * </p>
 				 *
 				 * <p class="ExplanationParagraph">
 				 * <code>
@@ -1766,53 +1858,12 @@ var Concert = (function ()
 				 * <p class="ExplanationParagraph">
 				 * <code>
 				 * 	<strong><em>UserPropertiesObject</em></strong>
-				 * 	= Object used to apply additional, optional, special properties to each of transformations being added.
+				 * 	= Object used to apply additional, optional, user properties to each of transformations being added.
 				 * </code>
-				 * Several such properties can be specified. Takes the form:
-				 * <pre>    {
-				 *         [multiply: <em>multiplicationFactorValue</em>,]
-				 *         [modulo: <em>moduloFactorValue</em>,]
-				 *         [roundFactor: <em>roundFactorValue</em>,]
-				 *         [center: <em>centerCoordinateArray</em>]
-				 *         [offset: <em>offsetArray</em>,]
-				 *         [customUserProperty<sub>1</sub>: customUserValue<sub>1</sub>,...]
-				 *         [userProperty<sub>2</sub>: userValue<sub>2</sub>]...
-				 *     }</pre>
-				 * The first three options are modifiers to the animation calculation engine, applied
-				 * in the following ways and in the following order:
-				 * <ul>
-				 * 	<li>
-				 * 		<code><strong><em>multiplicationFactorValue</em></strong></code>: While animating the target object,
-				 * 		the value being applied to the target feature is multiplied by this number.
-				 * 	</li>
-				 * 	<li>
-				 *		<code><strong><em>moduloFactorValue</em></strong></code>: While animating the target object,
-				 *		the value being applied to the target feature is divided by this number, and
-				 *		the remainder is actually what is applied.
-				 *	</li>
-				 *	<li>
-				 *		<code><strong><em>roundFactorValue</em></strong></code>: While animating the target property,
-				 *		the value being applied is rounded to the nearest multiple of this number.
-				 *	</li>
-				 *	<li>
-				 *		The next two options are required when the <code>Rotational</code> calculator (see [Concert.Calculators]{@link Concert.Calculators})
-				 *		is being used (i.e., when this transformation is animating rotational motion):
-				 * 		<ul>
-				 * 			<li>
-				 *				<code><strong><em>centerCoordinateArray</em></strong></code>: An array of the form <code>[left, top]</code>,
-				 *				 defining a center point around which the rotational calculations will take place.
-				 *			</li>
-				 * 			<li>
-				 *				<code><strong><em>offsetArray</em></strong></code>: An array of the form <code>[horizontalOffset, verticalOffset]</code>,
-				 *				defining a fixed offset to be added to the pair of values returned by the <code>Rotational</code> calculator.
-				 * 			</li>
-				 * 		</ul>
-				 * 	<li>
-				 * 		Any other (custom) properties included in this object are attached to the Transformation object, and are passed
-				 * 		into calculator functions-- setting custom properties and values in this way could therefore be useful if using
-				 * 		a custom calculator function.
-				 * 	</li>
-				 * </ul>
+				 * The primary use case of this object is when employing user-defined, custom calculator functions.
+				 * If the Transformation uses a custom calculator, this UserPropertiesObject is passed into the calculator function
+				 * as an argument. This allows setting user-defined properties on the Transformation object that can be used
+				 * by a user-defined calculator function.
 				 * </p>
 				 * 
 				 * <pre><strong><em>KeyframesDefinition</em></strong> =
@@ -1838,6 +1889,15 @@ var Concert = (function ()
 				 *       [calculator: <em>CalculatorFunction</em>,] // If absent, falls back to the calculator
 				 *       // defined at the <em>TransformationsObject</em> level; if also absent there, to the
 				 *       // sequence's default calculator.
+				 *
+				 *       [calculatorModifers: <em>CalculatorModifiersObject</em>,] // If absent, falls back
+				 *       to the calculatorModifiers object defined at the <em>TransformationsObject</em> level;
+				 *       if also absent there, no special modifiers are applied. WORKING HERE this might not be true- user can set his own defaults, right?
+				 * <code>
+				 * 	<strong><em>CalculatorModifiersObject</em></strong>
+				 * 	= Object used to apply additional factors used to modify calculations during the animation of these transformations.
+				 * </code>
+				 *       ADD CODE HERE: can specify calculatorModifier here also (and, I think, userProperties)
 				 *
 				 *       [easing: <em>EasingFunction</em>,] // If absent, falls back to the easing function
 				 *       // defined at the <em>TransformationsObject</em> level; if also absent there, to the
@@ -2100,7 +2160,8 @@ var Concert = (function ()
 
 					// Initialize all the variables needed for this function
 					var i, j, k, numTransformationGroups, curTransformationGroup, curGroupTarget, curGroupTargets, numCurGroupTargets, singleTargetVersion,
-						curGroupFeatures, curGroupUnit, curGroupCalculator, curGroupEasing, curGroupUserProperties, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
+						curGroupFeatures, curGroupUnit, curGroupCalculator, curGroupCalculatorModifiers,
+						curGroupEasing, curGroupUserProperties, curGroupApplicator, curGroupKeyFrames, curGroupSegments,
 						numSegments, curSegment, propertyName, newTransformationProperties, newTransformation, singleFeatureSequence, curFeatureSequences,
 						existingTargetSequences = thisProtected.targetSequences, curTargetSequence = null, defaults = thisProtected.defaults, numKeyFrames, times,
 						values, valueGenerators, curKeyFrameTime, curKeyFrameValue, curKeyFrameValueGenerator, lastKeyFrameTime, lastKeyFrameValue, lastKeyFrameValueGenerator,
@@ -2170,6 +2231,7 @@ var Concert = (function ()
 						curGroupFeatures = _Concert.Util.correctFeatureNames(_Concert.Util.isArray(curTransformationGroup.feature) ? curTransformationGroup.feature : [curTransformationGroup.feature], curGroupApplicator);
 						curGroupUnit = _Concert.Util.coalesceUndefined(curTransformationGroup.unit, defaults.unit);
 						curGroupCalculator = _Concert.Util.coalesceUndefined(curTransformationGroup.calculator, defaults.calculator);
+						curGroupCalculatorModifiers = _Concert.Util.coalesceUndefined(curTransformationGroup.calculatorModifiers, defaults.calculatorModifiers);
 						curGroupEasing = _Concert.Util.coalesceUndefined(curTransformationGroup.easing, defaults.easing);
 						curGroupUserProperties = _Concert.Util.coalesceUndefined(curTransformationGroup.userProperties, defaults.userProperties);
 
@@ -2195,7 +2257,7 @@ var Concert = (function ()
 
 						// Grab the specified key frames list, if there was one.
 						curGroupKeyFrames = curTransformationGroup.keyframes;
-						if (typeof curGroupKeyFrames !== "undefined")
+						if (typeof curGroupKeyFrames === "object" && curGroupKeyFrames !== null)
 						{
 							// Key frames were indeed specified. Get the times and values or value generators.
 							times = curGroupKeyFrames.times;
@@ -2253,6 +2315,7 @@ var Concert = (function ()
 											applicator: curGroupApplicator,
 											unit: curGroupUnit,
 											calculator: curGroupCalculator,
+											calculatorModifiers: curGroupCalculatorModifiers,
 											easing: curGroupEasing,
 											t0: lastKeyFrameTime,
 											t1: curKeyFrameTime,
@@ -2318,6 +2381,8 @@ var Concert = (function ()
 									newTransformationProperties.unit = curGroupUnit;
 								if (typeof newTransformationProperties.calculator === "undefined")
 									newTransformationProperties.calculator = curGroupCalculator;
+								if (typeof newTransformationProperties.calculatorModifiers === "undefined")
+									newTransformationProperties.calculatorModifiers = curGroupCalculatorModifiers;
 								if (typeof newTransformationProperties.easing === "undefined")
 									newTransformationProperties.easing = curGroupEasing;
 								if (typeof newTransformationProperties.userProperties === "undefined")
