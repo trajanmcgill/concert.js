@@ -1058,13 +1058,13 @@ var Concert = (function ()
 						transformations[i].retarget(newTarget);
 
 					this.target = newTarget;
-				} // end _retarget()
+				} // end __retarget()
 
 
 				function __seek(sequenceSegmentNumber, time, frameID, forceApplication)
 				{
-					return this.transformationIndexBySegment[sequenceSegmentNumber].seek(time, frameID, this.feature, forceApplication);
-				} // end _seek()
+					this.transformationIndexBySegment[sequenceSegmentNumber].seek(time, frameID, this.feature, forceApplication);
+				} // end __seek()
 
 				// ===============================================
 
@@ -3167,7 +3167,7 @@ var Concert = (function ()
 
 					var i, segmentMatch, segmentNumber, sequenceStart, sequenceEnd,
 						adjustedTimeContainer, adjustedTime, frameID, forceApplication,
-					    hitFinalBoundary = false, returnVal = null,
+					    hitFinalBoundary = false,
 					    targetSequences = thisProtected.targetSequences,
 					    numTargetSequences = targetSequences.length;
 
@@ -3231,10 +3231,7 @@ var Concert = (function ()
 						// to seek its animation to the correct time.
 						for (i = 0; i < numTargetSequences; i++)
 							targetSequences[i].seek(segmentNumber, adjustedTime, frameID, forceApplication);
-						
-						// Return the value indicating whether we're before the beginning, in the middle of, or at/past the end of the 
-						returnVal = segmentMatch.timeMatchType;
-					}
+					} // end if (segmentMatch !== null)
 
 					// If the seek point is outside the time boundaries of the sequence, and the sequence is running,
 					// and the sequence is set to auto-stop, this is when we should stop, and invoke the callback function
@@ -3245,8 +3242,6 @@ var Concert = (function ()
 						if (thisProtected.onAutoStop)
 							thisProtected.onAutoStop(thisPublic);
 					}
-
-					return returnVal;
 				} // end __seek()
 
 
