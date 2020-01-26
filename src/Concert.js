@@ -174,10 +174,35 @@ var Concert = (function ()
 		 * @public
 		 * @namespace
 		 * @memberof Concert
-		 * @property {function} Color - Calculates a color in between the colors specified as start and end values.<br><br><em>Expected start / end values</em>: <strong>CSS color style value strings</strong>, specified in any of hex, rgb, rgba, hsl, or hsla format (start and end values must be in the same format as each other).<br><br><em>Returns</em>: <strong>A CSS color style value string</strong> in the same format as the start and end values.
-		 * @property {function} Discrete - Used when output needed should jump directly from one value to another rather than gradually moving from the start value to the end value.<br><br><em>Expected start / end values</em>: <strong>(Any type)</strong><br><br><em>Returns</em>: Either the start value (if the transformation is not yet complete) or the end value (if the transformation is complete).<br><br>If the transformation has a property called <code>round</code> whose value is X the value will be treated as numeric and the return value will be rounded to the nearest multiple of X.
-		 * @property {function} Linear - Calculates a value based on linear interpolation between the start and end values.<br><br><em>Expected start / end values</em>: <strong>Numeric</strong><br><br><em>Returns</em>: <strong>Numeric</strong>.<br><br>If the transformation has a property called <code>round</code> whose value is X the value will be treated as numeric and the return value will be rounded to the nearest multiple of X.<br><br><em>Note: This should not be confused with the [ConstantRate easing function]{@link Concert.EasingFunctions}. The easing function is used to determine what fraction of the transformation is complete (i.e., it affects the <em>rate</em> of the transformation), whereas the selected calculator function determines the method by which the values are calculated (i.e., numeric interpolation vs. discrete values, vs. specialized calculations such as determining what color is partway between two other colors).</em>
-		 * @property {function} Rotational - Calculates a set of coordinates resulting from rotational motion.<br><br><em>Expected start / end values</em>: <strong>Numeric Array</strong>, in the form <code>[radius, angle]</code>. Additionally, the transformation must have userProperties values called <code>center</code>, an array of the form <code>[left, top]</code> defining the center point around which the rotation takes place, and <code>offset</code>, an array of the form <code>[horizontalOffset, verticalOffset]</code> defining an offset to be added to the resulting coordinates (for instance, a center of [100, 100] with an offset of [0, 0] would rotate the upper left corner of the target object around the point [100, 100]).</code><br><br><em>Returns</em>: <strong>Numeric Array</strong> determined from calculating the current rotational position and converting it to resulting coordinates in the form <code>[left, top]</code>.
+		 * @property {function} Color - Calculates a color in between the colors specified as start and end values.
+		 * <br><br><em>Expected start / end values</em>: <strong>CSS color style value strings</strong>, specified in any of hex, rgb, rgba, hsl, or hsla format
+		 * (start and end values must be in the same format as each other).
+		 * <br><br><em>Returns</em>: <strong>A CSS color style value string</strong> in the same format as the start and end values.
+		 * @property {function} Discrete - Used when output needed should jump directly from one value to another
+		 * rather than gradually moving from the start value to the end value.
+		 * <br><br><em>Expected start / end values</em>: <strong>(Any type)</strong>
+		 * <br><br><em>Returns</em>: Either the start value (if the transformation is not yet complete) or the end value (if the transformation is complete).
+		 * <br><br>If the transformation has a property called <code>round</code> whose value is X the value will be treated as numeric
+		 * and the return value will be rounded to the nearest multiple of X.
+		 * @property {function} Linear - Calculates a value based on linear interpolation between the start and end values.
+		 * <br><br><em>Expected start / end values</em>: <strong>Numeric</strong>
+		 * <br><br><em>Returns</em>: <strong>Numeric</strong>.
+		 * <br><br>If the transformation has a property called <code>round</code> whose value is X the value will be treated as numeric
+		 * and the return value will be rounded to the nearest multiple of X.
+		 * <br><br><em>Note: This should not be confused with the [ConstantRate easing function]{@link Concert.EasingFunctions}.
+		 * The easing function is used to determine what fraction of the transformation is complete (i.e., it affects the <em>rate</em> of the transformation),
+		 * whereas the selected calculator function determines the method by which the values are calculated
+		 * (i.e., numeric interpolation vs. discrete values, vs. specialized calculations such as determining what color is partway between two other colors).</em>
+		 * @property {function} Rotational - Calculates a set of coordinates resulting from rotational motion.
+		 * <br><br><em>Expected start / end values</em>: <strong>Object</strong>, in the form
+		 * <br><code>{ centerX: xCoordinate, centerY: yCoordinate, radius: r, angle: angleRadians, offsetX: xDistance, offsetY: yDistance }</code>.<br>
+		 * These values define the center point around which the rotation occurs, the distance from that point, the angle (in radians),
+		 * and an offset added to the resulting point. (The offset is useful, for instance, for making an object's centerpoint orbit the rotational center
+		 * rather than its upper left corner being the anchor point for the rotational movement.)
+		 * Each of these values can be animated separately. For instance, giving different start and end values for <code>angle</code> results in
+		 * rotational movement, and also giving different start and end values for <code>radius</code> would result in spiraling movement.
+		 * <br><br><em>Returns</em>: <strong>Numeric Array</strong> determined from calculating the current rotational position
+		 * and converting it to resulting coordinates in the form <code>[left, top]</code>.
 		 */
 		Calculators:
 			{
@@ -1832,11 +1857,15 @@ var Concert = (function ()
 				 * is being used (i.e., when this transformation is animating rotational motion),
 				 * the object should be of the form:
 				 * <pre>    {
-				 *         center: [<em>CalculatorModifiersObject</em>, <em>CalculatorModifiersObject</em>], // Modifiers for the x coordinate and y coordinate, respectively.
-				 *         radius:<em>CalculatorModifiersObject</em>,
-				 *         angle: <em>CalculatorModifiersObject</em>,
-				 *         offset: [<em>CalculatorModifiersObject</em>, <em>CalculatorModifiersObject</em>] // Modifiers for the x coordinate and y coordinate, respectively.
+				 *         [centerX: <em>CalculatorModifiersObject</em>,]
+				 *         [centerY: <em>CalculatorModifiersObject</em>,]
+				 *         [radius:<em>CalculatorModifiersObject</em>,]
+				 *         [angle: <em>CalculatorModifiersObject</em>,]
+				 *         [offsetX: <em>CalculatorModifiersObject</em>,]
+				 *         [offsetY: <em>CalculatorModifiersObject</em>]
 				 *     }</pre>
+				 * Each individual <code>CalculatorModifiersObject</code> specified is an object of the form described above
+				 * (an object with some or all of these properties: multiply, modulo, roundFactor, offset).
 				 * This allows a separate set of modifiers to be applied to each of the values that can be animated in a
 				 * rotational transformation. For instance, the angle could be rounded to the nearest multiple of a number.
 				 * A very common use case would be specifying an offset so that the center of an element is what is rotated
@@ -1882,7 +1911,7 @@ var Concert = (function ()
 				 *
 				 *       v0: <em>ValueDefinition</em>, // Value applied at the start time
 				 *       v1: <em>ValueDefinition</em>, // Value applied at the end time
-				 *       OR
+				 *       // OR //
 				 *       v0Generator: <em>ValueGenerator</em>, // Function to calculate v0
 				 *       v1Generator: <em>ValueGenerator</em>, // Function to calculate v1
 				 *
@@ -1891,13 +1920,8 @@ var Concert = (function ()
 				 *       // sequence's default calculator.
 				 *
 				 *       [calculatorModifers: <em>CalculatorModifiersObject</em>,] // If absent, falls back
-				 *       to the calculatorModifiers object defined at the <em>TransformationsObject</em> level;
-				 *       if also absent there, no special modifiers are applied. WORKING HERE this might not be true- user can set his own defaults, right?
-				 * <code>
-				 * 	<strong><em>CalculatorModifiersObject</em></strong>
-				 * 	= Object used to apply additional factors used to modify calculations during the animation of these transformations.
-				 * </code>
-				 *       ADD CODE HERE: can specify calculatorModifier here also (and, I think, userProperties)
+				 *       // to the calculatorModifiers object defined at the <em>TransformationsObject</em> level;
+				 *       // if also absent there, to the sequence's default calculatorModifiers object.
 				 *
 				 *       [easing: <em>EasingFunction</em>,] // If absent, falls back to the easing function
 				 *       // defined at the <em>TransformationsObject</em> level; if also absent there, to the
@@ -1906,6 +1930,10 @@ var Concert = (function ()
 				 *       [unit: <em>UnitDefinition</em>,] // If absent, falls back to the unit defined at the
 				 *       // <em>TransformationsObject</em> level; if also absent there, to the sequence's
 				 *       // default unit.
+				 * 
+				 *       [userProperties: <em>CalculatorModifiersObject</em>] // If absent, falls back
+				 *       // to the userProperties object defined at the <em>TransformationsObject</em> level;
+				 *       // if also absent there, to the sequence's default userProperties object.
 				 *   };</pre>
 				 *
 				 * <p class="ExplanationParagraph">
