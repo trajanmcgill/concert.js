@@ -5,24 +5,39 @@
  * @author Trajan McGill <code@trajanmcgill.com>
  */
 
-(function(rootContext)
-{
 
+(function(globalContext)
+{
 "use strict";
 
-
-/** @namespace Concert */
-var Concert = (function ()
+// Set up Concert object as a module, if possible; otherwise as a global object.
+var setGlobal = false, previousNameSpaceValue;
+if (typeof define === "function" && typeof define.amd === "object")
+	define(ConcertFactory); // In an AMD module context; set this up as such.
+else if (typeof module === "object" && typeof exports === "object")
+	module.exports = ConcertFactory(); // In a CommonJS module context; set this up as such.
+else
 {
+	// Modules not in use. Fall back to creating a global Concert object.
+
 	// Save any prior value of the global variable Concert, so the
 	// user can revert to it with revertNameSpace() if there is a collision.
-	var previousNameSpaceValue = rootContext.Concert;
+	setGlobal = true;
+	previousNameSpaceValue = globalContext.Concert;
 
+	// Create the global Concert object.
+	globalContext.Concert = ConcertFactory();
+}
+// =============================================================================
+
+
+function ConcertFactory()
+{
 	var getNowTime = Date.now;
 
 	var BaseObject = (function(){var b;function C(){var c=this;c.thisPublic=this;var d={thisPublic:c};c.___accessProtectedMembers=function(){b = d;};}function g(){this.___accessProtectedMembers();return b;}function B(){}C.extend=function(h){var c=h(g, this);B.prototype=this.prototype;c.prototype=new B();c.prototype.constructor=c;c.extend=this.extend;return c;};return C;})();
 
-
+	/** @namespace Concert */
 	var _Concert =
 	{
 		nextSequenceID: 0,
@@ -1253,9 +1268,9 @@ var Concert = (function ()
 					thisProtected.defaults =
 						{
 							unit: null,
-							applicator: Concert.Applicators.Property,
-							easing: Concert.EasingFunctions.ConstantRate,
-							calculator: Concert.Calculators.Linear,
+							applicator: _Concert.Applicators.Property,
+							easing: _Concert.EasingFunctions.ConstantRate,
+							calculator: _Concert.Calculators.Linear,
 							calculatorModifiers: {},
 							userProperties: null
 						};
@@ -3449,7 +3464,8 @@ var Concert = (function ()
 		revertNameSpace:
 			function ()
 			{
-				rootContext.Concert = previousNameSpaceValue;
+				if (setGlobal)
+					globalContext.Concert = previousNameSpaceValue;
 			} // end revertNameSpace()
 	}; // end _Concert
 
@@ -3468,13 +3484,6 @@ var Concert = (function ()
 
 
 	return __Concert_PublicInterface;
-})(); // end Concert namespace
-
-
-// Set up AMD module if possible; otherwise, create a global Concert object.
-if(typeof rootContext.define === "function" && typeof rootContext.define.amd === "object")
-	rootContext.define(Concert);
-else
-	rootContext.Concert = Concert;
+} // end ConcertFactory()
 
 })(this);

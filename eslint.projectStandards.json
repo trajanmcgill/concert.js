@@ -11,6 +11,12 @@
 	
 	"parserOptions": { "ecmaVersion": 2018 },
 	
+	"globals":
+	{
+		"define": "readonly",
+		"module": "readonly"
+	},
+
 	"rules":
 	{
 		"no-bitwise": ["error"],
