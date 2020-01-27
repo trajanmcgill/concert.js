@@ -5,15 +5,18 @@
  * @author Trajan McGill <code@trajanmcgill.com>
  */
 
-/** @namespace */
+(function(rootContext)
+{
+
+"use strict";
+
+
+/** @namespace Concert */
 var Concert = (function ()
 {
-	"use strict";
-
-
 	// Save any prior value of the global variable Concert, so the
 	// user can revert to it with revertNameSpace() if there is a collision.
-	var previousNameSpaceValue = Concert;
+	var previousNameSpaceValue = rootContext.Concert;
 
 	var getNowTime = Date.now;
 
@@ -3446,7 +3449,7 @@ var Concert = (function ()
 		revertNameSpace:
 			function ()
 			{
-				Concert = previousNameSpaceValue;
+				rootContext.Concert = previousNameSpaceValue;
 			} // end revertNameSpace()
 	}; // end _Concert
 
@@ -3466,3 +3469,12 @@ var Concert = (function ()
 
 	return __Concert_PublicInterface;
 })(); // end Concert namespace
+
+
+// Set up AMD module if possible; otherwise, create a global Concert object.
+if(typeof rootContext.define === "function" && typeof rootContext.define.amd === "object")
+	rootContext.define(Concert);
+else
+	rootContext.Concert = Concert;
+
+})(this);
