@@ -30,7 +30,8 @@ node_modules/
 # dotenv environment variables file
 .env
 
-# project build output
+# project build working area and output
+assembly/
 dist/
 
 # Visual Studio user-specific project files

@@ -1,17 +1,20 @@
 ﻿/**
  * @file Concert.js: Easy synchronized animation with JavaScript.
  * @name Concert.js
- * @version 1.0.0-alpha.4
+ * @version 1.0.0-alpha.5
  * @author Trajan McGill <code@trajanmcgill.com>
  */
 
-
+/* @ifndef ES_MODULE */
 (function(globalContext)
 {
 "use strict";
+/* @endif */
 
+var setGlobal = false, previousNameSpaceValue; // Used for tracking if we replaced a global object and restoring it if needed.
+
+/* @ifndef ES_MODULE */
 // Set up Concert object as a module, if possible; otherwise as a global object.
-var setGlobal = false, previousNameSpaceValue;
 if (typeof define === "function" && typeof define.amd === "object")
 	define(ConcertFactory); // In an AMD module context; set this up as such.
 else if (typeof module === "object" && typeof exports === "object")
@@ -33,6 +36,7 @@ else
 
 function ConcertFactory()
 {
+	/* @endif */
 	var getNowTime = Date.now;
 
 	var BaseObject = (function(){var b;function C(){var c=this;c.thisPublic=this;var d={thisPublic:c};c.___accessProtectedMembers=function(){b = d;};}function g(){this.___accessProtectedMembers();return b;}function B(){}C.extend=function(h){var c=h(g, this);B.prototype=this.prototype;c.prototype=new B();c.prototype.constructor=c;c.extend=this.extend;return c;};return C;})();
@@ -3482,8 +3486,9 @@ function ConcertFactory()
 			revertNameSpace: _Concert.revertNameSpace
 		};
 
-
+/* @ifndef ES_MODULE */
 	return __Concert_PublicInterface;
 } // end ConcertFactory()
 
 })(this);
+/* @endif */

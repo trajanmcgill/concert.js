@@ -9,6 +9,7 @@ module.exports = function(grunt)
 		+ " * <%= pkg.custom_LicenseURL %>\r\n"
 		+ " */\r\n";
 
+	var ESModuleFooter = "export const Concert = __Concert_PublicInterface;";
 
 	// Project configuration.
 	grunt.initConfig(
@@ -30,10 +31,16 @@ module.exports = function(grunt)
 					src: ["src/Concert.js"]
 				},
 
-				browserAPIs_dist:
+				browserAPIs_dist_standard:
 				{
 					options: { configFile: "eslint.browserAPIs.json" },
 					src: ["dist/Concert.js", "dist/Concert.min.js"]
+				},
+
+				browserAPIs_dist_ESModule:
+				{
+					options: { configFile: "eslint.browserAPIs.ESModule.json" },
+					src: ["dist/Concert.mjs", "dist/Concert.min.mjs"]
 				},
 
 				browserFeatures_src:
@@ -42,17 +49,23 @@ module.exports = function(grunt)
 					src: ["src/Concert.js"]
 				},
 
-				browserFeatures_dist:
+				browserFeatures_dist_standard:
 				{
 					options: { configFile: "eslint.browserFeatures.json" },
 					src: ["dist/Concert.js", "dist/Concert.min.js"]
+				},
+
+				browserFeatures_dist_ESModule:
+				{
+					options: { configFile: "eslint.browserFeatures.ESModule.json" },
+					src: ["dist/Concert.mjs", "dist/Concert.min.mjs"]
 				}
 			}, // end eslint task definitions
 
 
 			jsdoc:
 			{
-				Concert_js:
+				Concert:
 				{
 					src: ["src/Concert.js"],
 					options:
@@ -66,25 +79,69 @@ module.exports = function(grunt)
 
 			clean:
 			{
-				Concert_js: ["dist/**/*"]
+				assembly: ["assembly/**/*"],
+				dist: ["dist/**/*"]
 			}, // end clean task definitions
 
 
 			copy:
 			{
-				Concert_js:
+				standard:
 				{
-					files: [{ src: ["src/Concert.js"], dest: "dist/Concert.js" }],
-					options: { process: function (content, srcpath) { return (grunt.config.process(LicenseBanner) + content); } }
+					files: [{ src: ["assembly/Concert.js"], dest: "dist/Concert.js" }],
+					options:
+					{
+						process: function (content, srcpath) { return (grunt.config.process(LicenseBanner) + content); }
+					}
+				},
+				ESModule:
+				{
+					files: [{ src: ["assembly/Concert.mjs"], dest: "dist/Concert.mjs" }],
+					options:
+					{
+						process: function (content, srcpath) { return (grunt.config.process(LicenseBanner) + content + ESModuleFooter); }
+					}
 				}
 			}, // end copy task defitions
+
+
+			preprocess:
+			{
+				standard:
+				{
+					files: [{ src: ["src/Concert.js"], dest: "assembly/Concert.js" }],
+					options: { context: { } }
+				},
+
+				ESModule:
+				{
+					files: [{ src: ["src/Concert.js"], dest: "assembly/Concert.mjs" }],
+					options: { context: { ES_MODULE: true } }
+				}
+			}, // end preprocess task defitions
+			
 
 			uglify:
 			{
 				options: { sequences: false, verbose: true, warnings: true },
 
-				Concert_js: { options: { banner: LicenseBanner, screwIE8: false }, src: ["src/Concert.js"], dest: "dist/Concert.min.js" },
-				Concert_js_DeUglify: { options: { beautify: true }, src: ["src/Concert.min.js"], dest: "dist/Concert.min.max.js" }
+				standard:
+				{
+					files:
+					[
+						{ src: ["dist/Concert.js"], dest: "dist/Concert.min.js" }
+					],
+					options: { banner: LicenseBanner, screwIE8: false },
+				},
+
+				ESModule:
+				{
+					files:
+					[
+						{ src: ["assembly/Concert.mjs"], dest: "dist/Concert.min.mjs" }
+					],
+					options: { banner: LicenseBanner, footer: ESModuleFooter },
+				}
 			} // end uglify task definitions
 		});
 	
@@ -95,20 +152,28 @@ module.exports = function(grunt)
 	grunt.loadNpmTasks("grunt-contrib-uglify");
 	grunt.loadNpmTasks("grunt-eslint");
 	grunt.loadNpmTasks("grunt-jsdoc");
+	grunt.loadNpmTasks("grunt-preprocess");
 	
-	grunt.registerTask("clean_all", ["clean:Concert_js"]);
+	grunt.registerTask("clean_all", ["clean:assembly", "clean:dist"]);
 
 	grunt.registerTask("lint_src_styles", ["eslint:projectStandards"]);
-	grunt.registerTask("lint_src_browserAPIs", ["eslint:browserAPIs_src"]);
-	grunt.registerTask("lint_src_browserFeatures", ["eslint:browserFeatures_src"]);
-	grunt.registerTask("lint_src", ["lint_src_styles", "lint_src_browserAPIs", "lint_src_browserFeatures"]);
-	grunt.registerTask("lint_dist_browserFeatures", ["eslint:browserFeatures_dist"]);
-	grunt.registerTask("lint_dist_browserAPIs", ["eslint:browserAPIs_dist"]);
-	grunt.registerTask("lint_dist", ["lint_dist_browserAPIs", "lint_dist_browserFeatures"]);
+	grunt.registerTask("lint_src", ["lint_src_styles", "eslint:browserAPIs_src", "eslint:browserFeatures_src"]);
+	grunt.registerTask(
+		"lint_dist",
+		[
+			"eslint:browserAPIs_dist_standard","eslint:browserAPIs_dist_ESModule",
+			"eslint:browserFeatures_dist_standard", "eslint:browserFeatures_dist_ESModule"
+		]);
 
-	grunt.registerTask("build_Concert_js", ["copy:Concert_js", "uglify:Concert_js"]);
-	grunt.registerTask("build_reference", ["jsdoc:Concert_js"]);
-	grunt.registerTask("build_all", ["build_Concert_js", "build_reference"]);
+	grunt.registerTask("preprocess_all", ["preprocess:standard", "preprocess:ESModule"]);
+
+	grunt.registerTask("copy_all", ["copy:standard", "copy:ESModule"]);
+
+	grunt.registerTask("uglify_all", ["uglify:standard", "uglify:ESModule"]);
+
+	grunt.registerTask("build_Concert", ["preprocess_all", "copy_all", "uglify_all"]);
+	grunt.registerTask("build_reference", ["jsdoc:Concert"]);
+	grunt.registerTask("build_all", ["build_Concert", "build_reference"]);
 	
 	grunt.registerTask("rebuild_all", ["clean_all", "build_all"]);
 
