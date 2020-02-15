@@ -3,7 +3,9 @@
 	"use strict";
 
 	window.sequence = new Concert.Sequence();
-	let littleBox = document.getElementById("LittleBox"), bigBox = document.getElementById("BigBox"),
+	let littleBox = document.getElementById("LittleBox"),
+		easingMotionBall = document.getElementById("EasingMotionBall"),
+		bigBox = document.getElementById("BigBox"),
 		theRect = document.getElementById("TheRect"),
 		centerBox = document.getElementById("CenterBox"), orbitingBox = document.getElementById("OrbitingBox");
 
@@ -41,6 +43,20 @@
 					}
 			}
 		]);
+	sequence.addTransformations(
+		{
+			target: easingMotionBall,
+			feature: "left",
+			unit: "px",
+			applicator: Concert.Applicators.Style,
+			calculator: Concert.Calculators.Linear,
+			easing: Concert.EasingFunctions.Smoothstep,
+			keyframes:
+				{
+					times: [0, 1000],
+					values: [0, 600]
+				}
+		});
 	sequence.addTransformations(
 		{
 			target: bigBox,

@@ -138,7 +138,7 @@ function ConcertFactory()
 						correctedFeatureNames.push(featureNames[i].replace(/^-ms/, "ms").replace(/-(\w)/g, camelizeFeatureName));
 
 					return correctedFeatureNames;
-				}, // end correctFeatureNames
+				}, // end correctFeatureNames()
 
 
 				isArray: function (testVar)
@@ -156,7 +156,27 @@ function ConcertFactory()
 
 					for (propertyName in newProtectedData) if (Object.prototype.hasOwnProperty.call(newProtectedData, propertyName))
 						protectedContext[propertyName] = newProtectedData[propertyName];
-				} // end loadObjectData()
+				}, // end loadObjectData()
+
+
+				requireFunctionOrNothing: function (userObject, propertyName, errorMsg_Undefined, errorMsg_invalid, defaultFunction)
+				{
+					var propertyType,
+						functionToUse = defaultFunction;
+
+					if (Object.prototype.hasOwnProperty.call(userObject, propertyName))
+					{
+						propertyType = typeof userObject[propertyName];
+						if (propertyType === "function")
+							functionToUse = userObject[propertyName];
+						else if (propertyType === "undefined")
+							throw errorMsg_Undefined;
+						else
+							throw errorMsg_invalid;
+					}
+
+					return functionToUse;
+				} // end requireFunctionOrNothing()
 			}, // end Util singleton definition
 
 
@@ -2276,13 +2296,14 @@ function ConcertFactory()
 						}
 						
 						// Set up variables containing all the assorted properties that will be applied to the transformations in this group,
-						// applying defaults for all those which are not specified in the object that was passed in.
-						curGroupApplicator = _Concert.Util.coalesceUndefined(curTransformationGroup.applicator, defaults.applicator);
+						// applying defaults for all those which are not specified in the object that was passed in,
+						// and throwing errors for those which were specified but clearly not valid.
+						curGroupApplicator = _Concert.Util.requireFunctionOrNothing(curTransformationGroup, "applicator", "Error: Undefined applicator function (check spelling and capitalization?)", "Error: Invalid applicator specified (must be a function)", defaults.applicator);
 						curGroupFeatures = _Concert.Util.correctFeatureNames(_Concert.Util.isArray(curTransformationGroup.feature) ? curTransformationGroup.feature : [curTransformationGroup.feature], curGroupApplicator);
 						curGroupUnit = _Concert.Util.coalesceUndefined(curTransformationGroup.unit, defaults.unit);
-						curGroupCalculator = _Concert.Util.coalesceUndefined(curTransformationGroup.calculator, defaults.calculator);
+						curGroupCalculator = _Concert.Util.requireFunctionOrNothing(curTransformationGroup, "calculator", "Error: Undefined calculator function (check spelling and capitalization?)", "Error: Invalid calculator specified (must be a function)", defaults.calculator);
 						curGroupCalculatorModifiers = _Concert.Util.coalesceUndefined(curTransformationGroup.calculatorModifiers, defaults.calculatorModifiers);
-						curGroupEasing = _Concert.Util.coalesceUndefined(curTransformationGroup.easing, defaults.easing);
+						curGroupEasing = _Concert.Util.requireFunctionOrNothing(curTransformationGroup, "easing", "Error: Undefined easing function (check spelling and capitalization?)", "Error: Invalid easing specified (must be a function)", defaults.easing);
 						curGroupUserProperties = _Concert.Util.coalesceUndefined(curTransformationGroup.userProperties, defaults.userProperties);
 
 						// The internal model has:
