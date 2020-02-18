@@ -1,7 +1,7 @@
 ﻿/**
  * @file Concert.js: Easy synchronized animation with JavaScript.
  * @name Concert.js
- * @version 1.0.1
+ * @version 1.0.2
  * @author Trajan McGill <code@trajanmcgill.com>
  */
 
@@ -2712,7 +2712,7 @@ function ConcertFactory()
 					var thisPublic = this.thisPublic; //, thisProtected = _getProtectedMembers.call(thisPublic); // Can save a few bytes in the minified version since thisProtected isn't used in this function
 
 					// Run this sequence, synchronized to the specified object, starting at this sequence's present seek point.
-					thisPublic.run(_getCombinedParams({ synchronizeTo: syncSource, initialSeek: null, timeOffset: null }, parameters));
+					thisPublic.run(_getCombinedParams({ synchronizeTo: syncSource, initialSeek: null, timeOffset: null, autoStopAtEnd: false }, parameters));
 				} // end __follow()
 
 

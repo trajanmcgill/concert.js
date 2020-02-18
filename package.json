@@ -3,7 +3,7 @@
 	"description": "Easy synchronized animation with JavaScript.",
 	"author": "Trajan McGill <code@trajanmcgill.com>",
 	"license": "MIT",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"browser": "src/Concert.js",
 	"repository": {
 		"type": "git",
