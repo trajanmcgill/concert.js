@@ -1,7 +1,7 @@
 ﻿/**
  * @file Concert.js: Easy synchronized animation with JavaScript.
  * @name Concert.js
- * @version 1.0.2
+ * @version 1.0.3
  * @author Trajan McGill <code@trajanmcgill.com>
  */
 
