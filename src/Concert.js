@@ -1782,25 +1782,50 @@ function ConcertFactory()
 				 * The expected layout of the object passed into this method is defined as follows (also see examples below):<pre>
 				 * <strong>transformationSet</strong> = <em>TransformationsObject</em>
 				 * OR
-				 * <strong>transformationSet</strong> = [<em>TransformationsObject<sub>1</sub></em>, <em>TransformationsObject<sub>2</sub></em>, ...]
+				 * <strong>transformationSet</strong> =
+				 *   [
+				 *     <em>TransformationsObject<sub>1</sub></em>,
+				 *     <em>TransformationsObject<sub>2</sub></em>,
+				 *   ...]
 				 * 
 				 * <strong><em>TransformationsObject</em></strong> =
-				 *   {
-				 *       target: <em>TargetObjectDefinition</em>,
-				 *       AND/OR
-				 *       targets: [<em>TargetObjectDefinition<sub>1</sub></em>, <em>TargetObjectDefinition<sub>2</sub></em>, ...],
+				 * {
+				 *   target: <em>TargetObjectDefinition</em>,
+				 *   AND/OR
+				 *   targets:
+				 *   [
+				 *     <em>TargetObjectDefinition<sub>1</sub></em>,
+				 *     <em>TargetObjectDefinition<sub>2</sub></em>,
+				 *   ...],
 				 *
-				 *       feature: <em>FeatureDefinition</em>,
-				 *       [unit: <em>UnitDefinition</em>,] // If absent, uses sequence's default value
-				 *       [applicator: <em>ApplicatorFunction</em>,] // If absent, uses sequence's default value
-				 *       [calculator: <em>CalculatorFunction</em>,] // If absent, uses sequence's default value
-				 *       [calculatorModifiers: <em>CalculatorModifiersObject</em>,]
-				 *       [easing: <em>EasingFunction</em>,] // If absent, uses sequence's default value
-				 *       [userProperties: <em>UserPropertiesObject</em>,]
+				 *   feature: <em>FeatureDefinition</em>,
+				 * 
+				 *   // If absent, uses sequence's default value
+				 *   [unit: <em>UnitDefinition</em>,]
+				 * 
+				 *   // If absent, uses sequence's default value
+				 *   [applicator: <em>ApplicatorFunction</em>,]
+				 * 
+				 *   // If absent, uses sequence's default value
+				 *   [calculator: <em>CalculatorFunction</em>,]
+				 * 
+				 *   [calculatorModifiers:
+				 *     <em>CalculatorModifiersObject</em>,]
+				 * 
+				 *   // If absent, uses sequence's default value
+				 *   [easing: <em>EasingFunction</em>,]
+				 * 
+				 *   [userProperties: <em>UserPropertiesObject</em>,]
 				 *
-				 *       keyframes: <em>KeyframesDefinition</em>
+				 *     keyframes: <em>KeyframesDefinition</em>
+				 *     OR
+				 *     segments:
+				 *       <em>SegmentDefinition</em>
 				 *       OR
-				 *       segments: <em>SegmentDefinition</em> OR [<em>SegmentDefinition<sub>1</sub></em>, <em>SegmentDefinition<sub>2</sub></em>, ...]
+				 *       [
+				 *         <em>SegmentDefinition<sub>1</sub></em>,
+				 *         <em>SegmentDefinition<sub>2</sub></em>,
+				 *       ...]
 				 *   };
 				 * 
 				 * </pre>
@@ -1939,49 +1964,73 @@ function ConcertFactory()
 				 * 
 				 * <pre><strong><em>KeyframesDefinition</em></strong> =
 				 * 	 {
-				 *       times: <em>KeyframeTimesArray</em>,
+				 *     times: <em>KeyframeTimesArray</em>,
 				 *
-				 *       [values: <em>KeyframeValuesArray</em>]
-				 *       OR
-				 *       [valueGenerators: <em>ValueGeneratorsArray</em>]
+				 *     [values: <em>KeyframeValuesArray</em>]
+				 *     OR
+				 *     [valueGenerators: <em>ValueGeneratorsArray</em>]
 				 *   };
 				 * 
 				 * <strong><em>SegmentDefinition</em></strong> = 
-				 *   {
-				 *       t0: <em>TimeDefinition</em>, // Start time of this transformation
-				 *       t1: <em>TimeDefinition</em>, // End time of this transformation: must be equal to or greater than t0.
-				 *
-				 *       v0: <em>ValueDefinition</em>, // Value applied at the start time
-				 *       v1: <em>ValueDefinition</em>, // Value applied at the end time
-				 *       // OR //
-				 *       v0Generator: <em>ValueGenerator</em>, // Function to calculate v0
-				 *       v1Generator: <em>ValueGenerator</em>, // Function to calculate v1
-				 *
-				 *       [calculator: <em>CalculatorFunction</em>,] // If absent, falls back to the calculator
-				 *       // defined at the <em>TransformationsObject</em> level; if also absent there, to the
-				 *       // sequence's default calculator.
-				 *
-				 *       [calculatorModifers: <em>CalculatorModifiersObject</em>,] // If absent, falls back
-				 *       // to the calculatorModifiers object defined at the <em>TransformationsObject</em> level;
-				 *       // if also absent there, to the sequence's default calculatorModifiers object.
-				 *
-				 *       [easing: <em>EasingFunction</em>,] // If absent, falls back to the easing function
-				 *       // defined at the <em>TransformationsObject</em> level; if also absent there, to the
-				 *       // sequence's default easing.
-				 *
-				 *       [unit: <em>UnitDefinition</em>,] // If absent, falls back to the unit defined at the
-				 *       // <em>TransformationsObject</em> level; if also absent there, to the sequence's
-				 *       // default unit.
+				 * {
+				 *   // Start time of this transformation
+				 *   t0: <em>TimeDefinition</em>,
+				 *   // End time: must be >= t0.
+				 *   t1: <em>TimeDefinition</em>,
 				 * 
-				 *       [userProperties: <em>CalculatorModifiersObject</em>] // If absent, falls back
-				 *       // to the userProperties object defined at the <em>TransformationsObject</em> level;
-				 *       // if also absent there, to the sequence's default userProperties object.
-				 *   };</pre>
+				 *   // Value applied at the start time
+				 *   v0: <em>ValueDefinition</em>,
+				 *   // Value applied at the end time
+				 *   v1: <em>ValueDefinition</em>,
+				 *   // OR //
+				 *   // Function to calculate v0
+				 *   v0Generator: <em>ValueGenerator</em>,
+				 *   // Function to calculate v1
+				 *   v1Generator: <em>ValueGenerator</em>,
+				 *
+				 *   // If absent, falls back to the calculator
+				 *   // defined at the <em>TransformationsObject</em>
+				 *   // level; if also absent there, to the
+				 *   // sequence's default calculator.
+				 *   [calculator: <em>CalculatorFunction</em>,]
+				 *
+				 *   // If absent, falls back to the
+				 *   // calculatorModifiers object defined
+				 *   // at the <em>TransformationsObject</em> level;
+				 *   // if also absent there, to the sequence's
+				 *   // default calculatorModifiers object.
+				 *   [calculatorModifers:
+				 *     <em>CalculatorModifiersObject</em>,]
+				 *
+				 *   // If absent, falls back to easing function
+				 *   // defined at the <em>TransformationsObject</em>
+				 *   // level; if also absent there, to the
+				 *   // sequence's default easing.
+				 *   [easing: <em>EasingFunction</em>,]
+				 *
+				 *   // If absent, falls back to the unit defined
+				 *   // at the <em>TransformationsObject</em> level;
+				 *   // if also absent there, to the sequence's
+				 *   // default unit.
+				 *   [unit: <em>UnitDefinition</em>,]
+				 * 
+				 *   // If absent, falls back to userProperties
+				 *   // object defined at the 
+				 *   // <em>TransformationsObject</em> level;
+				 *   // if also absent there, to the sequence's
+				 *   // default userProperties object.
+				 *   [userProperties:
+				 *     <em>userPropertiesObject</em>]
+				 * };</pre>
 				 *
 				 * <p class="ExplanationParagraph">
 				 * <code>
 				 * 	<strong><em>KeyframeTimesArray</em></strong>
-				 * 	= An array of the form [<em>TimeDefinition<sub>1</sub></em>, <em>TimeDefinition<sub>2</sub></em>, ...].
+				 * 	= An array of the form
+				 *    [
+				 *      <em>TimeDefinition<sub>1</sub></em>,
+				 *      <em>TimeDefinition<sub>2</sub></em>,
+				 *    ...]
 				 * </code>
 				 * This defines the timeline points used as keyframes for this transformation series,
 				 * to be matched up with the values in the corresponding <code><em>KeyframeValuesArray</em></code>. A null
@@ -2194,15 +2243,20 @@ function ConcertFactory()
 				 *   target.each(function () { $(this).css(feature, value + unit); });
 				 * }
 				 * 
-				 * function customCalculator(distanceFraction, startValue, endValue, addlProperties)
+				 * function customCalculator(distanceFraction, startValue,
+				 *   endValue, addlProperties)
 				 * {
-				 *   var outerBoxWidth = $("#OuterBox").innerWidth();
-				 *   return (distanceFraction * (endValue - startValue) * outerBoxWidth);
+				 *   var outerBoxWidth = $("#OuterBox").innerWidth(),
+				 *       calculatedValue =
+				 *         (distanceFraction
+				 *         * (endValue - startValue) * outerBoxWidth);
+				 *   return calculatedValue;
 				 * }
 				 * 
 				 * function customEasing(startTime, endTime, currentTime)
 				 * {
-				 *   var fractionComplete = (currentTime - startTime) / (endTime - startTime);
+				 *   var fractionComplete =
+				 *       (currentTime - startTime) / (endTime - startTime);
 				 *   if (fractionComplete < 2 / 3)
 				 *     return (fractionComplete / 2);
 				 *   else
@@ -2953,18 +3007,41 @@ function ConcertFactory()
 				 * Defined as follows below. Any or all of the below options may be specified:
 				 * <pre><code><em>parameters =
 				 * {
-				 *   <strong>after</strong>: <em>VALUE</em>, // Initial default: Concert.Repeating.None
-				 *   <strong>autoStopAtEnd</strong>: <em>VALUE</em>, // Initial default: true
-				 *   <strong>before</strong>: <em>VALUE</em>, // Initial default: Concert.Repeating.None
-				 *   <strong>generateValues</strong>: <em>VALUE</em>, // Default value: true
-				 *   <strong>initialSeek</strong>: <em>VALUE</em>, // Default: null
-				 *   <strong>onAutoStop</strong>: <em>VALUE</em>, // Initial default: null
-				 *   <strong>pollingInterval</strong>: <em>VALUE</em>, // Initial default: 0
-				 *   <strong>speed</strong>: <em>VALUE</em>, // Initial default: 1
-				 *   <strong>stretchStartTimeToZero</strong>: <em>VALUE</em>, // Initial default: true
-				 *   <strong>synchronizeTo</strong>: <em>VALUE</em>, // Initial default: null
-				 *   <strong>timeOffset</strong>: <em>VALUE</em>, // Default value: null
-				 *   <strong>useSoleControlOptimization</strong>: <em>VALUE</em> // Initial default: true
+				 *   // Initial default: Concert.Repeating.None
+				 *   <strong>after</strong>: <em>VALUE</em>,
+				 * 
+				 *   // Initial default: true
+				 *   <strong>autoStopAtEnd</strong>: <em>VALUE</em>,
+				 * 
+				 *   // Initial default: Concert.Repeating.None
+				 *   <strong>before</strong>: <em>VALUE</em>,
+				 * 
+				 *   // Default value: true
+				 *   <strong>generateValues</strong>: <em>VALUE</em>,
+				 * 
+				 *   // Default: null
+				 *   <strong>initialSeek</strong>: <em>VALUE</em>,
+				 * 
+				 *   // Initial default: null
+				 *   <strong>onAutoStop</strong>: <em>VALUE</em>,
+				 * 
+				 *   // Initial default: 0
+				 *   <strong>pollingInterval</strong>: <em>VALUE</em>,
+				 * 
+				 *   // Initial default: 1
+				 *   <strong>speed</strong>: <em>VALUE</em>,
+				 * 
+				 *   // Initial default: true
+				 *   <strong>stretchStartTimeToZero</strong>: <em>VALUE</em>,
+				 * 
+				 *   // Initial default: null
+				 *   <strong>synchronizeTo</strong>: <em>VALUE</em>,
+				 * 
+				 *   // Default value: null
+				 *   <strong>timeOffset</strong>: <em>VALUE</em>,
+				 * 
+				 *  // Initial default: true
+				 *   <strong>useSoleControlOptimization</strong>: <em>VALUE</em>
 				 * }</em></code></pre>
 				 * 
 				 * <p class="ExplanationParagraph">
@@ -3348,10 +3425,17 @@ function ConcertFactory()
 				 * Any or all of the below options may be specified.
 				 * <pre><code><em>newDefaults =
 				 * {
-				 *   <strong>applicator</strong>: VALUE, // Initial default value: Concert.Applicators.Property
-				 *   <strong>calculator</strong>: VALUE, // Initial default value: Concert.Calculators.Linear
-				 *   <strong>easing</strong>: VALUE, // Initial default value: Concert.EasingFunctions.ConstantRate
-				 *   <strong>unit</strong>: VALUE, // Initial default value: null (no unit at all)
+				 *   // Default: Concert.Applicators.Property
+				 *   <strong>applicator</strong>: VALUE,
+				 * 
+				 *   // Default: Concert.Calculators.Linear
+				 *   <strong>calculator</strong>: VALUE,
+				 * 
+				 *   // Default: Concert.EasingFunctions.ConstantRate
+				 *   <strong>easing</strong>: VALUE,
+				 * 
+				 *  // Default: null (no unit at all)
+				 *   <strong>unit</strong>: VALUE,
 				 * }</em></code></pre>
 				 * 
 				 * <p class="ExplanationParagraph">
